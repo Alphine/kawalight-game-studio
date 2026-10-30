@@ -26,6 +26,15 @@ def cmd_validate(args: argparse.Namespace) -> int:
         if template_id == "phaser.endless-runner":
             from .validation import validate_endless_runner_config
             report = validate_endless_runner_config(data)
+        elif template_id == "phaser.side-scroller":
+            from .validation import validate_side_scroller_config
+            report = validate_side_scroller_config(data)
+        elif template_id == "phaser.battle-2d":
+            from .validation import validate_battle_2d_config
+            report = validate_battle_2d_config(data)
+        elif template_id == "phaser.farming":
+            from .validation import validate_farming_config
+            report = validate_farming_config(data)
         else:
             report = validate_space_shooter_config(data)
     else:
@@ -39,7 +48,10 @@ def cmd_validate(args: argparse.Namespace) -> int:
 def cmd_assemble(args: argparse.Namespace) -> int:
     from .blueprint import (
         AssemblyError,
+        assemble_battle_2d,
         assemble_endless_runner,
+        assemble_farming,
+        assemble_side_scroller,
         assemble_space_shooter,
     )
 
@@ -49,6 +61,12 @@ def cmd_assemble(args: argparse.Namespace) -> int:
         assemble = assemble_endless_runner
     elif genre == "space-shooter":
         assemble = assemble_space_shooter
+    elif genre == "side-scroller":
+        assemble = assemble_side_scroller
+    elif genre == "battle-2d":
+        assemble = assemble_battle_2d
+    elif genre == "farming":
+        assemble = assemble_farming
     else:
         print(f"error: no assembler for genre {genre!r}", file=sys.stderr)
         return 1

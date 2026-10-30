@@ -36,13 +36,19 @@ projects/                  local project data root (user content, git-ignored)
 ## Quickstart
 
 ```powershell
-# worker tests (160; test_api.py needs a real localhost socket,
+# worker tests (205; test_api.py needs a real localhost socket,
 # so run outside sandboxes that forbid listen())
 .\.venv\Scripts\python.exe -m pytest apps\worker\tests -q
+
+# godot exporter tests (60, no sockets needed)
+.\.venv\Scripts\python.exe -m pytest packages\templates\godot\tests -q
 
 # template logic tests (no browser needed)
 node --test packages\templates\phaser\space-shooter\test\logic.test.js
 node --test packages\templates\phaser\endless-runner\test\logic.test.js
+node --test packages\templates\phaser\side-scroller\test\logic.test.js
+node --test packages\templates\phaser\battle-2d\test\logic.test.js
+node --test packages\templates\phaser\farming\test\logic.test.js
 
 # UI logic tests (no browser needed)
 node --test apps\desktop\ui\js\util.test.js
@@ -52,6 +58,12 @@ node packages\templates\phaser\tools\stage-demo.mjs space-shooter
 node packages\templates\phaser\tools\smoke.mjs space-shooter
 node packages\templates\phaser\tools\stage-demo.mjs endless-runner
 node packages\templates\phaser\tools\smoke.mjs endless-runner
+node packages\templates\phaser\tools\stage-demo.mjs side-scroller
+node packages\templates\phaser\tools\smoke.mjs side-scroller
+node packages\templates\phaser\tools\stage-demo.mjs battle-2d
+node packages\templates\phaser\tools\smoke.mjs battle-2d
+node packages\templates\phaser\tools\stage-demo.mjs farming
+node packages\templates\phaser\tools\smoke.mjs farming
 ```
 
 ## Milestones
@@ -60,9 +72,9 @@ node packages\templates\phaser\tools\smoke.mjs endless-runner
 |---|-------|--------|
 | M0 | Repo scaffold, schemas, worker core (projects, providers-mock, assets, validation, Phaser export), space-shooter template playable, dashboard home, smoke tests | done |
 | M1 | Worker HTTP API (39 endpoints, contract v1 frozen), full dashboard UI (11 views: Home, New Game wizard, Blueprint, Asset Forge/Lab, Level Studio, Game Settings, Playtest, Validation, Export, Settings), openai-compat provider | done |
-| M2 | Endless-runner template (playable, tested, smoke-green) + full worker support (schema, validate, assemble, export, CLI), backup/restore (worker + CLI + UI), audio import (worker + CLI) | partial — no audio UI view yet; no auto-stage/preview wiring; Level Studio config editor still shooter-only |
-| M3 | Side-scroller, battle 2D templates, Godot exporter | planned |
-| M4 | Farming template, polish, packaging | partial — binary/installer v0.1.0 done; farming template pending |
+| M2 | Endless-runner template (playable, tested, smoke-green) + full worker support (schema, validate, assemble, export, CLI), backup/restore (worker + CLI + UI), audio import (worker + CLI + UI view), auto-stage/preview Playtest wiring, multi-genre Level Studio | done |
+| M3 | Side-scroller + battle-2D templates (playable, tested, smoke-green, full worker support), Godot 4 exporter (standalone + worker/UI wiring, secret-scanned ZIP) | done — Godot output not yet opened in a real Godot editor (acceptance pass open) |
+| M4 | Farming template (playable, tested, smoke-green, full worker support), UI polish pass, binary/installer v0.1.0 packaging | done |
 
 ## Working agreements
 

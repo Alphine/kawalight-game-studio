@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixel Pass — KGSM side-scroller template</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="stage">
+  <div id="game"></div>
+  <p id="hint">Move: Left/Right or A/D · Jump: Space/W/Up · Pause: P/Esc</p>
+  <pre id="kgsm-autotest" hidden></pre>
+  <pre id="kgsm-errors" hidden></pre>
+</main>
+<script src="js/vendor/phaser.min.js"></script>
+<script>
+if (!window.Phaser) {
+  document.write('<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"><\/script>');
+}
+</script>
+<script>
+window.__kgsmErrors = [];
+window.addEventListener('error', (e) => {
+  window.__kgsmErrors.push('window.onerror: ' + (e.message || ('resource: ' + (e.target && e.target.src || e.type))));
+  const el = document.getElementById('kgsm-errors');
+  el.hidden = false;
+  el.textContent = window.__kgsmErrors.join('\n');
+}, true);
+window.addEventListener('unhandledrejection', (e) => {
+  window.__kgsmErrors.push('unhandledrejection: ' + ((e.reason && e.reason.message) || e.reason));
+  const el = document.getElementById('kgsm-errors');
+  el.hidden = false;
+  el.textContent = window.__kgsmErrors.join('\n');
+});
+</script>
+<script type="module" src="js/game/main.js"></script>
+</body>
+</html>

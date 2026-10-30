@@ -1,0 +1,9 @@
+{
+  "id": "godot.space-shooter",
+  "version": "1.0.0",
+  "genre": "space-shooter",
+  "runtime": { "name": "godot", "version": "4.3" },
+  "configSchema": "space-shooter.config.schema.json",
+  "entry": "project.godot",
+  "screens": ["title", "hud", "pause-overlay", "game-over", "stage-clear"]
+}

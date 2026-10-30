@@ -139,3 +139,42 @@ def test_package_rejects_unknown_template_id(store, tmp_path):
         package_all(
             project_name="X", genre="space-shooter", config=bad,
             project_dir=tmp_path, builds_dir=tmp_path / "builds")
+
+
+def test_package_new_genres_with_real_template(store, tmp_path):
+    from kgsm import paths as paths_mod
+    from kgsm.blueprint import (
+        assemble_battle_2d,
+        assemble_farming,
+        assemble_side_scroller,
+    )
+    from test_config_validator import (
+        make_battle_blueprint,
+        make_farm_blueprint,
+        make_side_blueprint,
+    )
+
+    cases = [
+        ("Cliff Hopper", "side-scroller", "phaser.side-scroller",
+         make_side_blueprint, assemble_side_scroller),
+        ("Arena Clash", "battle-2d", "phaser.battle-2d",
+         make_battle_blueprint, assemble_battle_2d),
+        ("Sunny Acres", "farming", "phaser.farming",
+         make_farm_blueprint, assemble_farming),
+    ]
+    for name, genre, template_id, make_bp, assemble in cases:
+        project_dir = tmp_path / f"proj-{genre}"
+        project_dir.mkdir()
+        config = assemble(make_bp())
+        result = package_all(
+            project_name=name, genre=genre, config=config,
+            project_dir=project_dir,
+            builds_dir=tmp_path / f"builds-{genre}",
+            template_dir=paths_mod.templates_dir() / "phaser" / genre)
+        for key in ("playable", "source"):
+            with zipfile.ZipFile(result[key]) as zf:
+                names = zf.namelist()
+                manifest = json.loads(zf.read("kgsm-manifest.json"))
+            assert "index.html" in names
+            assert "config.json" in names
+            assert manifest["template"]["id"] == template_id

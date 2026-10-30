@@ -1,0 +1,9 @@
+{
+  "id": "phaser.side-scroller",
+  "version": "1.0.0",
+  "genre": "side-scroller",
+  "runtime": { "name": "phaser", "version": "3.80.1" },
+  "configSchema": "side-scroller.config.schema.json",
+  "entry": "demo/index.html",
+  "screens": ["title", "hud", "pause-overlay", "win", "game-over"]
+}

@@ -9,6 +9,7 @@
     ['blueprint', 'Game Blueprint'],
     ['forge', 'Asset Forge'],
     ['lab', 'Asset Lab'],
+    ['audio', 'Audio'],
     ['levels', 'Level Studio'],
     ['settings-game', 'Game Settings'],
     ['playtest', 'Playtest'],

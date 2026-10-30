@@ -295,11 +295,11 @@ def test_blueprint_assemble(api):
     assert status == 422 and body["error"]["code"] == "assembly-failed"
 
 
-def test_assemble_rejects_non_space_shooter_project(api):
+def test_assemble_rejects_genre_mismatch(api):
     pid = make_project(api, "Farm", "farming")["id"]
     status, body = call(api, "POST", f"/projects/{pid}/blueprint/assemble",
                         {"blueprint": make_blueprint()})
-    assert status == 501 and body["error"]["code"] == "unknown-genre"
+    assert status == 422 and body["error"]["code"] == "assembly-failed"
 
 
 # --------------------------------------------------------------------------
@@ -316,7 +316,7 @@ def test_configs_validate(api):
                         {"genre": "space-shooter", "config": bad})
     assert status == 200 and body["report"]["ok"] is False
     status, body = call(api, "POST", "/configs/validate",
-                        {"genre": "farming", "config": {}})
+                        {"genre": "racing", "config": {}})
     assert status == 501 and body["error"]["code"] == "unknown-genre"
 
 
@@ -340,11 +340,13 @@ def test_config_put_get_roundtrip(api):
     assert body["report"]["ok"] is False
 
 
-def test_config_put_rejects_other_genres(api):
+def test_config_put_rejects_mismatched_schema(api):
     pid = make_project(api, "Farm", "farming")["id"]
     status, body = call(api, "PUT", f"/projects/{pid}/config",
                         {"config": make_config()})
-    assert status == 501 and body["error"]["code"] == "unknown-genre"
+    assert status == 422
+    assert body["error"]["code"] == "validation-failed"
+    assert body["report"]["ok"] is False
 
 
 # --------------------------------------------------------------------------
@@ -633,12 +635,34 @@ def test_export_errors(api):
     assert status == 201, body
 
 
-def test_export_godot_stub(api):
-    pid = make_project(api)["id"]
+def test_export_godot_flow(api):
+    project = make_project(api, "Galaxy Strike")
+    pid = project["id"]
+    status, body = call(api, "PUT", f"/projects/{pid}/blueprint",
+                        {"blueprint": make_blueprint()})
+    assert status == 200
+    status, body = call(api, "PUT", f"/projects/{pid}/config",
+                        {"config": make_config()})
+    assert status == 200
+
     status, body = call(api, "POST", f"/projects/{pid}/exports/godot", {})
-    assert status == 501
-    assert body["error"]["code"] == "godot-not-implemented"
-    assert body["error"]["message"] == "Godot export is planned for M3 (FR-021)."
+    assert status == 201, body
+    assert body["godot"] == "builds/galaxy-strike-godot4.zip"
+    assert isinstance(body["warnings"], list)
+    assert body["manifest"]["projectName"] == "Galaxy Strike"
+    assert body["manifest"]["template"]["id"] == "godot.space-shooter"
+    with zipfile.ZipFile(
+            _project_file(api, pid, body["godot"])) as zf:
+        names = zf.namelist()
+        assert "kgsm-manifest.json" in names
+        assert "project.godot" in names
+
+    bad = make_config()
+    bad["victory"] = {"afterWave": 99}
+    status, body = call(api, "POST", f"/projects/{pid}/exports/godot",
+                        {"config": bad})
+    assert status == 422
+    assert body["error"]["code"] == "validation-failed"
 
 
 def test_runner_assemble_validate_store_export(api):
@@ -666,3 +690,40 @@ def test_runner_assemble_validate_store_export(api):
     status, body = call(api, "POST", f"/projects/{pid}/exports", {})
     assert status == 201, body
     assert body["manifest"]["template"]["id"] == "phaser.endless-runner"
+
+
+@pytest.mark.parametrize("genre,template_id,bp_name,cfg_name", [
+    ("side-scroller", "phaser.side-scroller",
+     "make_side_blueprint", "make_side_config"),
+    ("battle-2d", "phaser.battle-2d",
+     "make_battle_blueprint", "make_battle_config"),
+    ("farming", "phaser.farming",
+     "make_farm_blueprint", "make_farm_config"),
+])
+def test_new_genre_assemble_validate_store_export(
+        api, genre, template_id, bp_name, cfg_name):
+    import test_config_validator as fixtures
+
+    pid = make_project(api, f"Demo {genre}", genre)["id"]
+    status, body = call(api, "POST", f"/projects/{pid}/blueprint/assemble",
+                        {"blueprint": getattr(fixtures, bp_name)()})
+    assert status == 200, body
+    assert body["report"]["ok"] is True
+    assert body["config"]["template"]["id"] == template_id
+
+    status, body = call(api, "POST", "/configs/validate",
+                        {"genre": genre,
+                         "config": getattr(fixtures, cfg_name)()})
+    assert status == 200 and body["report"]["ok"] is True
+
+    status, body = call(api, "GET", f"/projects/{pid}/config")
+    assert status == 200
+    assert body["config"]["template"]["id"] == template_id
+
+    status, body = call(api, "PUT", f"/projects/{pid}/config",
+                        {"config": getattr(fixtures, cfg_name)()})
+    assert status == 200 and body["stored"] is True
+
+    status, body = call(api, "POST", f"/projects/{pid}/exports", {})
+    assert status == 201, body
+    assert body["manifest"]["template"]["id"] == template_id

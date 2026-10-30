@@ -1,12 +1,21 @@
-"""The repo's own demo fixtures must validate (both genres)."""
+"""The repo's own demo fixtures must validate (all genres)."""
 
 import json
 
 from kgsm import paths as paths_mod
-from kgsm.blueprint import assemble_endless_runner, assemble_space_shooter
+from kgsm.blueprint import (
+    assemble_battle_2d,
+    assemble_endless_runner,
+    assemble_farming,
+    assemble_side_scroller,
+    assemble_space_shooter,
+)
 from kgsm.validation import (
+    validate_battle_2d_config,
     validate_blueprint,
     validate_endless_runner_config,
+    validate_farming_config,
+    validate_side_scroller_config,
     validate_space_shooter_config,
 )
 
@@ -15,6 +24,11 @@ GENRES = {
                       "phaser.space-shooter"),
     "endless-runner": (assemble_endless_runner, validate_endless_runner_config,
                        "phaser.endless-runner"),
+    "side-scroller": (assemble_side_scroller, validate_side_scroller_config,
+                      "phaser.side-scroller"),
+    "battle-2d": (assemble_battle_2d, validate_battle_2d_config,
+                  "phaser.battle-2d"),
+    "farming": (assemble_farming, validate_farming_config, "phaser.farming"),
 }
 
 

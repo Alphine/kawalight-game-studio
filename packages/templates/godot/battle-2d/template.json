@@ -1,0 +1,9 @@
+{
+  "id": "godot.battle-2d",
+  "version": "1.0.0",
+  "genre": "battle-2d",
+  "runtime": { "name": "godot", "version": "4.3" },
+  "configSchema": "battle-2d.config.schema.json",
+  "entry": "project.godot",
+  "screens": ["title", "hud", "pause-overlay", "game-over", "stage-clear"]
+}

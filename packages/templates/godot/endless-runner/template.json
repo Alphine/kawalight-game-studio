@@ -1,0 +1,9 @@
+{
+  "id": "godot.endless-runner",
+  "version": "1.0.0",
+  "genre": "endless-runner",
+  "runtime": { "name": "godot", "version": "4.3" },
+  "configSchema": "endless-runner.config.schema.json",
+  "entry": "project.godot",
+  "screens": ["title", "hud", "pause-overlay", "game-over"]
+}

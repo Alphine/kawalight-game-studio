@@ -10,15 +10,15 @@
   function go(name) { globalThis.KgsmApp.go(name); }
 
   var GENRE_META = {
-    'space-shooter': { name: 'Space Shooter', color: '#3b82f6', ready: true, icon: 'ship',
+    'space-shooter': { name: 'Space Shooter', color: '#3b82f6', icon: 'ship',
       blurb: 'Classic 2D shooter with enemy waves and bosses.', tags: ['Shooter', 'Arcade', 'Sci-Fi'] },
-    'endless-runner': { name: 'Endless Runner', color: '#ec4899', ready: false, icon: 'bolt',
+    'endless-runner': { name: 'Endless Runner', color: '#ec4899', icon: 'bolt',
       blurb: 'Auto-run with obstacles, power-ups, and high scores.', tags: ['Runner', 'Arcade', 'Casual'] },
-    'side-scroller': { name: 'Side-Scroller', color: '#f59e0b', ready: false, icon: 'steps',
+    'side-scroller': { name: 'Side-Scroller', color: '#f59e0b', icon: 'steps',
       blurb: 'Action platform adventure with levels and enemies.', tags: ['Platformer', 'Adventure', 'Action'] },
-    'battle-2d': { name: 'Battle 2D', color: '#7c5cff', ready: false, icon: 'swords',
+    'battle-2d': { name: 'Battle 2D', color: '#7c5cff', icon: 'swords',
       blurb: 'Bounded 2D action combat with waves and loot.', tags: ['Action', 'Combat', 'Fantasy'] },
-    farming: { name: 'Farming', color: '#22c55e', ready: false, icon: 'barn',
+    farming: { name: 'Farming', color: '#22c55e', icon: 'barn',
       blurb: 'Plant, grow, harvest, and build your dream farm.', tags: ['Farming', 'Life Sim', 'Management'] },
   };
 
@@ -48,7 +48,7 @@
         var m = GENRE_META[g];
         return '<div class="genre-card"><div class="genre-art">'
           + ICONS[m.icon].split('COLOR').join(m.color) + '</div>'
-          + '<h3>' + U().esc(m.name) + (m.ready ? '' : ' <span class="pill mini warn">M2</span>') + '</h3>'
+          + '<h3>' + U().esc(m.name) + '</h3>'
           + '<p>' + U().esc(m.blurb) + '</p>'
           + '<div class="tags">' + m.tags.map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</div>'
           + '<button type="button" class="btn" data-genre="' + g + '" style="background:' + m.color + ';border-color:' + m.color + ';color:#fff">Select</button></div>';
@@ -73,8 +73,7 @@
         d.genre = b.dataset.genre;
         wiz = { step: 0, data: d, preview: null };
         var m = GENRE_META[b.dataset.genre];
-        UI().toast(m.name + ' selected — ' + (m.ready ? 'template ready.' : 'blueprint only in wave 1; template is M2.'),
-          m.ready ? 'success' : 'info');
+        UI().toast(m.name + ' selected — template ready.', 'success');
         go('new');
       });
     });
@@ -296,7 +295,7 @@
         + field('Genre', '<select data-f="genre">' + U().GENRES.map(function (g) {
           var m = GENRE_META[g];
           return '<option value="' + g + '"' + (w.genre === g ? ' selected' : '') + '>'
-            + m.name + (m.ready ? '' : ' (template after M1)') + '</option>';
+            + m.name + '</option>';
         }).join('') + '</select>')
         + field('Theme', '<input data-f="theme" value="' + U().esc(w.theme) + '" maxlength="120" placeholder="Neon asteroid belt">')
         + field('Visual style', '<select data-f="visualStyle">'
@@ -307,13 +306,13 @@
           + ['phaser3-html5', 'godot4'].map(function (s) {
             return '<option' + (w.targetRuntime === s ? ' selected' : '') + '>' + s + '</option>';
           }).join('') + '</select>')
-        + '</div><p class="muted small">Wave 1 assembles space-shooter only; other genres still produce a valid blueprint for review.</p>';
+        + '</div><p class="muted small">All five genres assemble into engine-ready configs with per-genre Level Studio editors.</p>';
     } else if (wiz.step === 1) {
       body.innerHTML = '<div class="form-grid">'
         + field('Width (480..1920)', '<input data-f="width" type="number" min="480" max="1920" value="' + w.width + '">')
         + field('Height (270..1080)', '<input data-f="height" type="number" min="270" max="1080" value="' + w.height + '">')
         + field('Controls', '<select data-f="scheme">'
-          + ['keyboard', 'keyboard-gamepad'].map(function (s) {
+          + ['keyboard', 'keyboard-gamepad', 'mouse-keyboard'].map(function (s) {
             return '<option' + (w.scheme === s ? ' selected' : '') + '>' + s + '</option>';
           }).join('') + '</select>')
         + field('Difficulty', '<select data-f="difficulty">'

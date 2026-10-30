@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectName": "Sunny Acres",
+  "genre": "farming",
+  "theme": "Sunny Acres",
+  "visualStyle": "pixel-art",
+  "targetRuntime": "phaser3-html5",
+  "resolution": { "width": 960, "height": 540 },
+  "controls": { "scheme": "mouse-keyboard", "actions": ["plant", "water", "harvest", "sleep"] },
+  "difficulty": { "preset": "normal", "ramp": "gradual" },
+  "gameLoop": "Work a 6x4 field: plant turnip or pumpkin seeds, water every growth stage, harvest ripe crops for coins, and bank 500 coins to win.",
+  "player": { "abilities": ["plant", "water", "harvest"], "health": 1, "lives": 1 },
+  "obstacles": [
+    { "id": "thirst", "role": "each growth stage needs watering before it grows" },
+    { "id": "funds", "role": "seeds cost coins; pumpkins pay best but tie up plots longest" }
+  ],
+  "collectibles": "Harvest payouts: 12 coins per turnip, 55 per pumpkin.",
+  "progression": "Day cycle: 60-second days; morning rain may water thirsty plots.",
+  "scoring": "Coins from harvests; banked total persists as the local best.",
+  "winCondition": "Bank 500 coins from harvests.",
+  "loseCondition": "None: endless cozy farming until the goal is banked.",
+  "seed": 7,
+  "notes": "Demo blueprint for the farming template."
+}

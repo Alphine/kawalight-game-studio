@@ -4,12 +4,18 @@ from __future__ import annotations
 
 from ..blueprint import (
     AssemblyError,
+    assemble_battle_2d,
     assemble_endless_runner,
+    assemble_farming,
+    assemble_side_scroller,
     assemble_space_shooter,
 )
 from ..validation import (
+    validate_battle_2d_config,
     validate_blueprint,
     validate_endless_runner_config,
+    validate_farming_config,
+    validate_side_scroller_config,
     validate_space_shooter_config,
 )
 from . import (
@@ -23,7 +29,8 @@ from . import (
     write_project_json,
 )
 
-SUPPORTED_GENRES = ("space-shooter", "endless-runner")
+SUPPORTED_GENRES = ("space-shooter", "endless-runner", "side-scroller",
+                    "battle-2d", "farming")
 
 
 def _for_genre(genre: str):
@@ -32,6 +39,12 @@ def _for_genre(genre: str):
         return assemble_space_shooter, validate_space_shooter_config
     if genre == "endless-runner":
         return assemble_endless_runner, validate_endless_runner_config
+    if genre == "side-scroller":
+        return assemble_side_scroller, validate_side_scroller_config
+    if genre == "battle-2d":
+        return assemble_battle_2d, validate_battle_2d_config
+    if genre == "farming":
+        return assemble_farming, validate_farming_config
     raise ApiError(
         "unknown-genre",
         f"genre {genre!r} is not served"

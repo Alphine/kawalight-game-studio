@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kawalight Game Studio Maker // Unified High-Tech Dual HUD v1.0</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        kawa: {
+                            bgDark: '#090d16',
+                            bgLight: '#f8fafc',
+                            cyan: '#06b6d4',
+                            sky: '#0284c7',
+                            brightSky: '#38bdf8',
+                            indigo: '#6366f1',
+                            purple: '#a855f7',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            rose: '#f43f5e'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                        orbitron: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts for Kalem & Modern High-Tech Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* --- DARK MODE STYLES --- */
+        html.dark body {
+            background-color: #090d16;
+            color: #94a3b8;
+        }
+
+        html.dark .glass-panel {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.85) 0%, rgba(11, 17, 32, 0.90) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), inset 0 1px 1px 0 rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+        }
+
+        html.dark .glass-panel-glow {
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.1), inset 0 0 15px rgba(56, 189, 248, 0.05);
+        }
+
+        html.dark .glass-nav-item:hover, html.dark .glass-nav-item.active-nav {
+            background: rgba(56, 189, 248, 0.08);
+            border-left-color: #38bdf8;
+            color: #f8fafc;
+            box-shadow: inset 0 0 10px rgba(56, 189, 248, 0.05);
+        }
+
+        html.dark .modern-bg {
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 85% 100%, rgba(99, 102, 241, 0.04) 0%, transparent 50%);
+        }
+
+        /* --- LIGHT MODE STYLES --- */
+        html:not(.dark) body {
+            background-color: #f8fafc;
+            color: #334155;
+        }
+
+        html:not(.dark) .glass-panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(241, 245, 249, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(203, 213, 225, 0.8);
+            box-shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.2), inset 0 1px 1px 0 rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+        }
+
+        html:not(.dark) .glass-panel-glow {
+            border: 1px solid rgba(2, 132, 199, 0.4);
+            box-shadow: 0 0 25px rgba(2, 132, 199, 0.15), inset 0 0 15px rgba(2, 132, 199, 0.05);
+        }
+
+        html:not(.dark) .glass-nav-item:hover, html:not(.dark) .glass-nav-item.active-nav {
+            background: rgba(2, 132, 199, 0.08);
+            border-left-color: #0284c7;
+            color: #0f172a;
+            box-shadow: inset 0 0 10px rgba(2, 132, 199, 0.05);
+        }
+
+        html:not(.dark) .modern-bg {
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(2, 132, 199, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 85% 100%, rgba(79, 70, 229, 0.05) 0%, transparent 50%);
+        }
+
+        /* --- SHARED STYLES --- */
+        .glass-nav-item {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            border-left: 3px solid transparent;
+        }
+
+        /* Smooth Rotating Ring Animations */
+        @keyframes spin-cw {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes spin-ccw {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+
+        .animate-ring-cw { animation: spin-cw 40s linear infinite; }
+        .animate-ring-ccw { animation: spin-ccw 55s linear infinite; }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        html.dark ::-webkit-scrollbar-track { background: rgba(9, 13, 22, 0.9); }
+        html.dark ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 10px; }
+        html.dark ::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.5); }
+
+        html:not(.dark) ::-webkit-scrollbar-track { background: rgba(241, 245, 249, 0.9); }
+        html:not(.dark) ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.4); border-radius: 10px; }
+        html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: rgba(2, 132, 199, 0.6); }
+    </style>
+</head>
+<body class="min-h-screen modern-bg relative flex flex-col justify-between">
+
+    <!-- TOP HIGH-TECH RADIAL HUD NAVIGATION BAR -->
+    <header class="w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl px-6 py-2.5 flex justify-between items-center z-50 sticky top-0 transition-colors">
+        <div class="flex items-center space-x-4">
+            <!-- Radial HUD Studio Logo Core -->
+            <div class="relative w-11 h-11 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border border-sky-500/40 dark:border-sky-400/40 border-dashed animate-ring-cw"></div>
+                <div class="absolute inset-1 rounded-full border border-slate-300 dark:border-slate-700 border-t-sky-600 dark:border-t-sky-400 animate-ring-ccw"></div>
+                <div class="w-8 h-8 rounded-full bg-white dark:bg-slate-900 border border-sky-500/50 dark:border-sky-400/50 flex items-center justify-center text-sky-600 dark:text-sky-400 font-extrabold text-lg shadow-sm z-10">
+                    <i class="fa-solid fa-k"></i>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center space-x-3">
+                    <h1 class="font-orbitron font-bold text-lg tracking-wider text-slate-900 dark:text-slate-100">
+                        KAWALIGHT GAME STUDIO
+                    </h1>
+                    <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-sky-50 dark:bg-slate-900 border border-sky-200 dark:border-slate-700 text-sky-700 dark:text-sky-400 font-mono tracking-widest uppercase font-semibold">
+                        MAKER v1.0.0
+                    </span>
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 tracking-widest font-mono flex items-center space-x-2">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                    <span>AI-POWERED HYBRID CREATION DECK</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Right System Metrics, Theme Switcher & Profile -->
+        <div class="flex items-center space-x-4 sm:space-x-6">
+            <div class="hidden lg:flex items-center space-x-5 bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 px-4 py-1.5 rounded-2xl text-xs font-mono shadow-inner">
+                <span class="text-slate-600 dark:text-slate-400">FPS: <strong class="text-emerald-600 dark:text-emerald-400 font-orbitron">144</strong></span>
+                <span class="text-slate-300 dark:text-slate-700">|</span>
+                <span class="text-slate-600 dark:text-slate-400">GPU VRAM: <strong class="text-sky-600 dark:text-sky-300 font-orbitron">4.2/12 GB</strong></span>
+                <span class="text-slate-300 dark:text-slate-700">|</span>
+                <span class="text-slate-600 dark:text-slate-400">AI TOKENS: <strong class="text-amber-600 dark:text-amber-400 font-orbitron">2,850 CR</strong></span>
+            </div>
+
+            <!-- THEME TOGGLE BUTTON -->
+            <button onclick="toggleTheme()" class="px-3 py-1.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-sky-600 dark:hover:text-sky-400 transition flex items-center space-x-2 text-xs font-orbitron font-semibold shadow-sm" title="Toggle Light/Dark Mode">
+                <i id="theme-icon" class="fa-solid fa-moon text-sky-500"></i>
+                <span id="theme-text" class="hidden sm:inline">DARK</span>
+            </button>
+
+            <div class="flex items-center space-x-3 border-l border-slate-200 dark:border-slate-800 pl-4">
+                <div class="relative w-9 h-9">
+                    <div class="w-9 h-9 rounded-full bg-sky-100 dark:bg-slate-900 border border-sky-300 dark:border-slate-700 flex items-center justify-center text-sky-700 dark:text-sky-300 font-bold text-xs shadow-sm">
+                        KS
+                    </div>
+                </div>
+                <div class="hidden sm:block text-xs">
+                    <div class="font-bold text-slate-800 dark:text-slate-200 font-orbitron">Kawalight Studio</div>
+                    <div class="text-[10px] text-sky-600 dark:text-sky-400 font-mono font-semibold">PRO PLAN ACTIVE</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP STRUCTURE: SIDE NAVIGATION + HUD WORKSPACE -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- LEFT HIGH-TECH SIDEBAR MENU -->
+        <aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950/70 backdrop-blur-xl flex flex-col justify-between p-3 z-30 shrink-0 transition-colors">
+            
+            <div class="space-y-6">
+                <!-- MAIN MENU SECTION -->
+                <div>
+                    <div class="text-[10px] font-orbitron font-bold text-slate-400 uppercase tracking-widest px-3 mb-2 flex items-center justify-between">
+                        <span>CREATE & BUILD</span>
+                        <i class="fa-solid fa-microchip text-slate-400"></i>
+                    </div>
+                    <nav class="space-y-1 font-mono text-xs">
+                        <button onclick="switchTab('home')" id="nav-home" class="glass-nav-item active-nav w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-900 dark:text-slate-100 font-semibold">
+                            <i class="fa-solid fa-house w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>Home</span>
+                        </button>
+                        <button onclick="switchTab('newgame')" id="nav-newgame" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-circle-plus w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>New Game</span>
+                        </button>
+                        <button onclick="switchTab('assetfactory')" id="nav-assetfactory" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-wand-magic-sparkles w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>Asset Factory</span>
+                        </button>
+                        <button onclick="switchTab('levelgenerator')" id="nav-levelgenerator" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-map w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>Level Generator</span>
+                        </button>
+                        <button onclick="switchTab('gamesettings')" id="nav-gamesettings" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-sliders w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>Game Settings</span>
+                        </button>
+                        <button onclick="switchTab('playtest')" id="nav-playtest" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-circle-play w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>Playtest</span>
+                        </button>
+                        <button onclick="switchTab('export')" id="nav-export" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-file-export w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>Export & Build</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- LIBRARY & CONFIG SECTION -->
+                <div>
+                    <div class="text-[10px] font-orbitron font-bold text-slate-400 uppercase tracking-widest px-3 mb-2 flex items-center justify-between">
+                        <span>WORKSPACE & ASSETS</span>
+                        <i class="fa-solid fa-database text-slate-400"></i>
+                    </div>
+                    <nav class="space-y-1 font-mono text-xs">
+                        <button onclick="switchTab('projects')" id="nav-projects" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-folder-open w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>Projects</span>
+                        </button>
+                        <button onclick="switchTab('assetlibrary')" id="nav-assetlibrary" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-cubes w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>Asset Library</span>
+                        </button>
+                        <button onclick="switchTab('templates')" id="nav-templates" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-layer-group w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>Templates</span>
+                        </button>
+                        <button onclick="switchTab('api')" id="nav-api" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-key w-5 text-center text-sky-600 dark:text-sky-400"></i>
+                            <span>API & Billing</span>
+                        </button>
+                        <button onclick="switchTab('settings')" id="nav-settings" class="glass-nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
+                            <i class="fa-solid fa-gear w-5 text-center text-slate-400"></i>
+                            <span>Settings</span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- RADIAL MINI CORE WIDGET -->
+            <div class="glass-panel p-3 border border-slate-200 dark:border-slate-800 text-center relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 w-20 h-20 rounded-full border border-slate-200 dark:border-slate-800 animate-ring-cw pointer-events-none"></div>
+                <div class="text-[10px] font-orbitron text-slate-500 dark:text-slate-400 mb-1">RADIAL ENGINE CORE</div>
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">STATUS: OPTIMAL</div>
+                <div class="w-full bg-slate-200 dark:bg-slate-900 rounded-full h-1.5 mt-2 border border-slate-300 dark:border-slate-800 overflow-hidden">
+                    <div class="bg-sky-600 dark:bg-sky-400 h-full w-4/5"></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT WORKSPACE AREA -->
+        <main id="main-content-area" class="flex-1 p-6 overflow-y-auto relative min-w-0">
+            <!-- Content loaded dynamically via JavaScript -->
+        </main>
+    </div>
+
+    <!-- BOTTOM STATUS LOG FOOTER -->
+    <footer class="w-full border-t border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl px-6 py-2 flex flex-wrap justify-between items-center z-50 text-xs font-mono text-slate-600 dark:text-slate-400 transition-colors">
+        <div class="flex items-center space-x-4">
+            <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 mr-2"></span> KAWALIGHT HYBRID CORE ONLINE</span>
+            <span class="text-slate-300 dark:text-slate-700">|</span>
+            <span class="text-sky-600 dark:text-sky-400 font-semibold">ACTIVE PROJECT: GALAXY STRIKE (HTML5)</span>
+        </div>
+        <div class="flex items-center space-x-6">
+            <span>RADIAL ACCELERATOR: <strong class="text-emerald-600 dark:text-emerald-400">ACTIVE</strong></span>
+            <span>LATENCY: <strong class="text-sky-600 dark:text-sky-300">1ms</strong></span>
+        </div>
+    </footer>
+
+    <!-- MODAL POPUP -->
+    <div id="hud-modal" class="fixed inset-0 bg-slate-900/30 dark:bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-panel glass-panel-glow p-6 max-w-md w-full border border-sky-500/40 dark:border-sky-400/40">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+                <h3 id="modal-title" class="font-orbitron font-bold text-slate-900 dark:text-slate-200 text-sm tracking-wider uppercase">KAWALIGHT STUDIO SYSTEM NOTIFICATION</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p id="modal-msg" class="text-xs font-mono text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">Action completed successfully.</p>
+            <div class="flex justify-end">
+                <button onclick="closeModal()" class="px-5 py-2 bg-sky-600 dark:bg-sky-500 hover:bg-sky-500 dark:hover:bg-sky-400 text-white dark:text-slate-950 font-bold rounded-xl font-orbitron text-xs tracking-wider transition shadow-md">CONFIRM</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT FOR DYNAMIC VIEWS & RADIAL INTERACTION -->
+    <script>
+        let currentTab = 'home';
+
+        // --- THEME SWITCHER LOGIC ---
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+
+            if (htmlEl.classList.contains('dark')) {
+                htmlEl.classList.remove('dark');
+                icon.className = 'fa-solid fa-sun text-amber-500';
+                text.innerText = 'LIGHT';
+                localStorage.setItem('kawalight_theme', 'light');
+            } else {
+                htmlEl.classList.add('dark');
+                icon.className = 'fa-solid fa-moon text-sky-400';
+                text.innerText = 'DARK';
+                localStorage.setItem('kawalight_theme', 'dark');
+            }
+        }
+
+        // Initialize Theme from localStorage or default to Dark
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('kawalight_theme');
+            const htmlEl = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+
+            if (savedTheme === 'light') {
+                htmlEl.classList.remove('dark');
+                if (icon && text) {
+                    icon.className = 'fa-solid fa-sun text-amber-500';
+                    text.innerText = 'LIGHT';
+                }
+            } else {
+                htmlEl.classList.add('dark');
+                if (icon && text) {
+                    icon.className = 'fa-solid fa-moon text-sky-400';
+                    text.innerText = 'DARK';
+                }
+            }
+
+            switchTab('home');
+        });
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+
+            // Update Navigation Menu Styling
+            document.querySelectorAll('.glass-nav-item').forEach(btn => {
+                btn.classList.remove('active-nav', 'text-slate-900', 'dark:text-slate-100', 'font-semibold');
+                btn.classList.add('text-slate-600', 'dark:text-slate-400');
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('active-nav', 'text-slate-900', 'dark:text-slate-100', 'font-semibold');
+                activeBtn.classList.remove('text-slate-600', 'dark:text-slate-400');
+            }
+
+            renderView(tabId);
+        }
+
+        function renderView(tabId) {
+            const main = document.getElementById('main-content-area');
+
+            switch (tabId) {
+                case 'home':
+                    main.innerHTML = `
+                        <div class="space-y-6">
+                            <!-- HERO BANNER -->
+                            <div class="relative glass-panel p-8 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between shadow-sm">
+                                <!-- Background Radial Rotating Rings HUD Effect -->
+                                <div class="absolute -right-20 -top-20 w-96 h-96 rounded-full border border-slate-200 dark:border-slate-800 animate-ring-cw pointer-events-none flex items-center justify-center">
+                                    <div class="w-80 h-80 rounded-full border border-slate-300/60 dark:border-slate-800/60 border-dashed animate-ring-ccw"></div>
+                                    <div class="w-56 h-56 rounded-full border border-slate-200/40 dark:border-slate-800/40"></div>
+                                </div>
+
+                                <div class="relative z-10 max-w-xl space-y-3">
+                                    <span class="px-3 py-1 rounded-full bg-sky-100 dark:bg-sky-500/10 border border-sky-300 dark:border-sky-400/30 text-sky-700 dark:text-sky-400 text-xs font-mono font-bold">
+                                        AI GAME ENGINE v1.0
+                                    </span>
+                                    <h2 class="font-orbitron font-bold text-3xl text-slate-900 dark:text-white tracking-wide leading-tight">
+                                        KAWALIGHT GAME STUDIO MAKER
+                                    </h2>
+                                    <p class="text-xs font-mono text-slate-600 dark:text-slate-300 leading-relaxed">
+                                        Turn your imagination into playable 2D games. Generate assets, build procedural worlds, and create complete games with integrated high-tech radial AI tools.
+                                    </p>
+                                    <div class="flex items-center space-x-4 pt-2">
+                                        <button onclick="switchTab('newgame')" class="px-6 py-3 rounded-2xl bg-sky-600 dark:bg-sky-500 hover:bg-sky-500 dark:hover:bg-sky-400 text-white dark:text-slate-950 font-orbitron font-bold text-xs transition shadow-md flex items-center space-x-2">
+                                            <i class="fa-solid fa-plus text-sm"></i>
+                                            <span>CREATE NEW GAME</span>
+                                        </button>
+                                        <button onclick="showModal('WATCH DEMO', 'Launching WebGL interactive showcase engine...')" class="px-6 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-orbitron font-bold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition flex items-center space-x-2 shadow-sm">
+                                            <i class="fa-solid fa-circle-play text-sm text-sky-600 dark:text-sky-400"></i>
+                                            <span>WATCH DEMO</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- RADIAL STATS HUD ORBIT -->
+                                <div class="relative z-10 mt-6 md:mt-0 flex items-center justify-center">
+                                    <div class="relative w-48 h-48 rounded-full border border-slate-200 dark:border-slate-800 flex items-center justify-center p-2 glass-panel shadow-sm">
+                                        <div class="absolute inset-0 rounded-full border border-sky-500/30 dark:border-sky-500/20 border-dashed animate-ring-cw"></div>
+                                        <div class="text-center font-mono space-y-1">
+                                            <div class="text-[10px] text-slate-400 uppercase tracking-widest">Active Studio</div>
+                                            <div class="font-orbitron font-bold text-2xl text-slate-900 dark:text-slate-100">12 PROJ</div>
+                                            <div class="text-[10px] text-sky-600 dark:text-sky-400 font-semibold">1,248 ASSETS</div>
+                                            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">28h TIME SAVED</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- CHOOSE GAME GENRE CARDS SECTION -->
+                            <div>
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="font-orbitron font-bold text-sm text-slate-800 dark:text-slate-200 tracking-wider flex items-center space-x-2">
+                                        <i class="fa-solid fa-gamepad text-sky-600 dark:text-sky-400"></i>
+                                        <span>CHOOSE GAME GENRE ARCHETYPE</span>
+                                    </h3>
+                                    <span class="text-xs font-mono text-slate-500 dark:text-slate-400">Select genre to start with AI-powered tools</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                                    <!-- Genre 1 -->
+                                    <div class="glass-panel p-4 flex flex-col justify-between hover:border-sky-500/50 dark:hover:border-sky-400/50 transition cursor-pointer group shadow-sm">
+                                        <div class="space-y-2">
+                                            <div class="h-28 rounded-xl bg-slate-100 dark:bg-slate-900/90 flex items-center justify-center overflow-hidden relative border border-slate-200 dark:border-slate-800 group-hover:border-sky-300 dark:group-hover:border-slate-700 transition">
+                                                <i class="fa-solid fa-dragon text-4xl text-sky-600 dark:text-sky-400 transition duration-300"></i>
+                                                <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[9px] font-mono text-slate-600 dark:text-slate-300 font-semibold">2D ACTION</span>
+                                            </div>
+                                            <h4 class="font-orbitron font-bold text-sm text-slate-900 dark:text-white">Battle 2D</h4>
+                                            <p class="text-[11px] font-mono text-slate-500 dark:text-slate-400 leading-tight">Turn-based or action battle with skills, monsters, and loot.</p>
+                                        </div>
+                                        <button onclick="switchTab('newgame')" class="mt-4 w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-orbitron font-bold text-xs hover:bg-sky-600 dark:hover:bg-sky-500 hover:text-white dark:hover:text-slate-950 transition">SELECT</button>
+                                    </div>
+
+                                    <!-- Genre 2 -->
+                                    <div class="glass-panel p-4 flex flex-col justify-between hover:border-sky-500/50 dark:hover:border-sky-400/50 transition cursor-pointer group shadow-sm">
+                                        <div class="space-y-2">
+                                            <div class="h-28 rounded-xl bg-slate-100 dark:bg-slate-900/90 flex items-center justify-center overflow-hidden relative border border-slate-200 dark:border-slate-800 group-hover:border-sky-300 dark:group-hover:border-slate-700 transition">
+                                                <i class="fa-solid fa-wheat-awn text-4xl text-sky-600 dark:text-sky-400 transition duration-300"></i>
+                                                <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[9px] font-mono text-slate-600 dark:text-slate-300 font-semibold">SIMULATION</span>
+                                            </div>
+                                            <h4 class="font-orbitron font-bold text-sm text-slate-900 dark:text-white">Farming Sim</h4>
+                                            <p class="text-[11px] font-mono text-slate-500 dark:text-slate-400 leading-tight">Plant, grow, harvest, and build your dream farm world.</p>
+                                        </div>
+                                        <button onclick="switchTab('newgame')" class="mt-4 w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-orbitron font-bold text-xs hover:bg-sky-600 dark:hover:bg-sky-500 hover:text-white dark:hover:text-slate-950 transition">SELECT</button>
+                                    </div>
+
+                                    <!-- Genre 3 -->
+                                    <div class="glass-panel p-4 flex flex-col justify-between hover:border-sky-500/50 dark:hover:border-sky-400/50 transition cursor-pointer group shadow-sm">
+                                        <div class="space-y-2">
+                                            <div class="h-28 rounded-xl bg-slate-100 dark:bg-slate-900/90 flex items-center justify-center overflow-hidden relative border border-slate-200 dark:border-slate-800 group-hover:border-sky-300 dark:group-hover:border-slate-700 transition">
+                                                <i class="fa-solid fa-shuttle-space text-4xl text-sky-600 dark:text-sky-400 transition duration-300"></i>
+                                                <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[9px] font-mono text-slate-600 dark:text-slate-300 font-semibold">ARCADE</span>
+                                            </div>
+                                            <h4 class="font-orbitron font-bold text-sm text-slate-900 dark:text-white">Space Shooter</h4>
+                                            <p class="text-[11px] font-mono text-slate-500 dark:text-slate-400 leading-tight">Classic 2D space shooter with enemy waves and epic bosses.</p>
+                                        </div>
+                                        <button onclick="switchTab('newgame')" class="mt-4 w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-orbitron font-bold text-xs hover:bg-sky-600 dark:hover:bg-sky-500 hover:text-white dark:hover:text-slate-950 transition">SELECT</button>
+                                    </div>
+
+                                    <!-- Genre 4 -->
+                                    <div class="glass-panel p-4 flex flex-col justify-between hover:border-sky-500/50 dark:hover:border-sky-400/50 transition cursor-pointer group shadow-sm">
+                                        <div class="space-y-2">
+                                            <div class="h-28 rounded-xl bg-slate-100 dark:bg-slate-900/90 flex items-center justify-center overflow-hidden relative border border-slate-200 dark:border-slate-800 group-hover:border-sky-300 dark:group-hover:border-slate-700 transition">
+                                                <i class="fa-solid fa-person-running text-4xl text-sky-600 dark:text-sky-400 transition duration-300"></i>
+                                                <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[9px] font-mono text-slate-600 dark:text-slate-300 font-semibold">PLATFORMER</span>
+                                            </div>
+                                            <h4 class="font-orbitron font-bold text-sm text-slate-900 dark:text-white">Side-Scroller</h4>
+                                            <p class="text-[11px] font-mono text-slate-500 dark:text-slate-400 leading-tight">Action platform adventure with levels and power-ups.</p>
+                                        </div>
+                                        <button onclick="switchTab('newgame')" class="mt-4 w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-orbitron font-bold text-xs hover:bg-sky-600 dark:hover:bg-sky-500 hover:text-white dark:hover:text-slate-950 transition">SELECT</button>
+                                    </div>
+
+                                    <!-- Genre 5 -->
+                                    <div class="glass-panel p-4 flex flex-col justify-between hover:border-sky-500/50 dark:hover:border-sky-400/50 transition cursor-pointer group shadow-sm">
+                                        <div class="space-y-2">
+                                            <div class="h-28 rounded-xl bg-slate-100 dark:bg-slate-900/90 flex items-center justify-center overflow-hidden relative border border-slate-200 dark:border-slate-800 group-hover:border-sky-300 dark:group-hover:border-slate-700 transition">
+                                                <i class="fa-solid fa-person-rays text-4xl text-sky-600 dark:text-sky-400 transition duration-300"></i>
+                                                <span class="absolute top-2 left-2 px-2 py-0.5 rounded bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[9px] font-mono text-slate-600 dark:text-slate-300 font-semibold">CASUAL</span>
+                                            </div>
+                                            <h4 class="font-orbitron font-bold text-sm text-slate-900 dark:text-white">Endless Runner</h4>
+                                            <p class="text-[11px] font-mono text-slate-500 dark:text-slate-400 leading-tight">Auto-run with obstacles, power-ups, and high scores.</p>
+                                        </div>
+                                        <button onclick="switchTab('newgame')" class="mt-4 w-full py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-orbitron font-bold text-xs hover:bg-sky-600 dark:hover:bg-sky-500 hover:text-white dark:hover:text-slate-950 transition">SELECT</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'newgame':
+                    main.innerHTML = `
+                        <div class="max-w-4xl mx-auto space-y-6">
+                            <div class="glass-panel p-6 border border-slate-200 dark:border-slate-800 space-y-6 shadow-sm">
+                                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+                                    <h3 class="font-orbitron font-bold text-base text-slate-900 dark:text-slate-200 flex items-center space-x-3">
+                                        <i class="fa-solid fa-gamepad text-sky-600 dark:text-sky-400 text-lg"></i>
+                                        <span>GAME SETUP WIZARD</span>
+                                    </h3>
+                                    <span class="text-xs font-mono text-sky-600 dark:text-sky-400 font-semibold">STEP 1 OF 4: BASIC CONFIG</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-mono">
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="text-slate-700 dark:text-slate-300 font-semibold block mb-1">Game Title</label>
+                                            <input type="text" value="Galaxy Strike" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="text-slate-700 dark:text-slate-300 font-semibold block mb-1">Theme & Concept</label>
+                                            <input type="text" value="Alien Invasion Sci-Fi Shooter" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 shadow-sm">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="text-slate-700 dark:text-slate-300 font-semibold block mb-1">Art Style</label>
+                                                <select class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm">
+                                                    <option>Pixel Art (Retro)</option>
+                                                    <option>2D Vector Graphic</option>
+                                                    <option>Hand-Drawn Anime</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="text-slate-700 dark:text-slate-300 font-semibold block mb-1">Resolution</label>
+                                                <select class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm">
+                                                    <option>1280 x 720 (HD)</option>
+                                                    <option>1920 x 1080 (FHD)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- PREVIEW RADIAL CORE CONTAINER -->
+                                    <div class="glass-panel p-4 flex flex-col items-center justify-center text-center space-y-3 relative overflow-hidden shadow-inner">
+                                        <div class="w-32 h-32 rounded-full border border-slate-300 dark:border-slate-700 flex items-center justify-center relative bg-white dark:bg-transparent">
+                                            <div class="absolute inset-0 rounded-full border border-sky-500/40 dark:border-sky-400/30 border-dashed animate-ring-cw"></div>
+                                            <i class="fa-solid fa-shuttle-space text-4xl text-sky-600 dark:text-sky-400"></i>
+                                        </div>
+                                        <div class="font-orbitron font-bold text-xs text-slate-900 dark:text-slate-200">SPACE SHOOTER ARCHETYPE</div>
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Retro space shooter with enemy waves, bosses, and customizable weapon grids.</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-between items-center border-t border-slate-200 dark:border-slate-800 pt-4">
+                                    <button onclick="switchTab('home')" class="px-5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-600 dark:text-slate-400 font-orbitron text-xs hover:text-slate-900 dark:hover:text-slate-200 shadow-sm">CANCEL</button>
+                                    <button onclick="switchTab('assetfactory')" class="px-6 py-2.5 rounded-xl bg-sky-600 dark:bg-sky-500 hover:bg-sky-500 dark:hover:bg-sky-400 text-white dark:text-slate-950 font-orbitron font-bold text-xs transition shadow-md">PROCEED TO ASSET FACTORY &rarr;</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'assetfactory':
+                    main.innerHTML = `
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- LEFT PROMPT PANEL -->
+                            <div class="glass-panel p-5 border border-slate-200 dark:border-slate-800 space-y-4 text-xs font-mono shadow-sm">
+                                <h3 class="font-orbitron font-bold text-sm text-slate-900 dark:text-slate-200 flex items-center space-x-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-sky-600 dark:text-sky-400"></i>
+                                    <span>AI ASSET GENERATOR</span>
+                                </h3>
+                                <div>
+                                    <label class="text-slate-700 dark:text-slate-300 font-semibold block mb-1">Prompt</label>
+                                    <textarea rows="4" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl p-3 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-sky-500 dark:focus:border-sky-400 shadow-sm">Pixel art space ship, top down view, 4 directions, shooting animation, explosion, 32x32 retro style</textarea>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="text-slate-700 dark:text-slate-300 font-semibold block mb-1">Style</label>
+                                        <select class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl p-2.5 text-slate-800 dark:text-slate-200 shadow-sm">
+                                            <option>Pixel Art (Retro)</option>
+                                            <option>Vector Cyberpunk</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-slate-700 dark:text-slate-300 font-semibold block mb-1">Size</label>
+                                        <select class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl p-2.5 text-slate-800 dark:text-slate-200 shadow-sm">
+                                            <option>32 x 32 px</option>
+                                            <option>64 x 64 px</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <button onclick="showModal('GENERATING SPRITE', 'Synthesizing 4 asset variations using Kawalight AI Engine...')" class="w-full py-3 rounded-xl bg-sky-600 dark:bg-sky-500 hover:bg-sky-500 dark:hover:bg-sky-400 text-white dark:text-slate-950 font-orbitron font-bold transition shadow-md">
+                                    GENERATE ASSETS (4 CREDITS)
+                                </button>
+                            </div>
+
+                            <!-- RIGHT SPRITE EDITOR PREVIEW -->
+                            <div class="lg:col-span-2 glass-panel p-5 border border-slate-200 dark:border-slate-800 flex flex-col justify-between shadow-sm">
+                                <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+                                    <h3 class="font-orbitron font-bold text-sm text-slate-900 dark:text-slate-200">SPRITE EDITOR & ANIMATION FRAMES</h3>
+                                    <span class="text-xs font-mono text-sky-600 dark:text-sky-400 font-semibold">FRAME RATE: 10 FPS</span>
+                                </div>
+
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 my-auto">
+                                    <div class="glass-panel p-3 border border-slate-200 dark:border-slate-800 text-center space-y-2 shadow-sm">
+                                        <div class="h-24 bg-slate-900 dark:bg-slate-950 rounded-xl flex items-center justify-center border border-slate-800">
+                                            <i class="fa-solid fa-shuttle-space text-3xl text-sky-400"></i>
+                                        </div>
+                                        <div class="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-semibold">Idle (4 frames)</div>
+                                    </div>
+                                    <div class="glass-panel p-3 border border-slate-200 dark:border-slate-800 text-center space-y-2 shadow-sm">
+                                        <div class="h-24 bg-slate-900 dark:bg-slate-950 rounded-xl flex items-center justify-center border border-slate-800">
+                                            <i class="fa-solid fa-shuttle-space text-3xl text-sky-400 transform -rotate-12"></i>
+                                        </div>
+                                        <div class="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-semibold">Move (4 frames)</div>
+                                    </div>
+                                    <div class="glass-panel p-3 border border-slate-200 dark:border-slate-800 text-center space-y-2 shadow-sm">
+                                        <div class="h-24 bg-slate-900 dark:bg-slate-950 rounded-xl flex items-center justify-center border border-slate-800">
+                                            <i class="fa-solid fa-bolt text-3xl text-amber-400"></i>
+                                        </div>
+                                        <div class="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-semibold">Shoot (6 frames)</div>
+                                    </div>
+                                    <div class="glass-panel p-3 border border-slate-200 dark:border-slate-800 text-center space-y-2 shadow-sm">
+                                        <div class="h-24 bg-slate-900 dark:bg-slate-950 rounded-xl flex items-center justify-center border border-slate-800">
+                                            <i class="fa-solid fa-burst text-3xl text-rose-500 dark:text-rose-400"></i>
+                                        </div>
+                                        <div class="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-semibold">Explode (6 frames)</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+                                    <button onclick="showModal('SPRITE EXPORT', 'Sprite sheet exported as PNG and saved to Asset Library.')" class="px-5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 font-orbitron text-xs hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm">EXPORT SPRITE SHEET</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'playtest':
+                    main.innerHTML = `
+                        <div class="max-w-4xl mx-auto glass-panel p-6 border border-slate-200 dark:border-slate-800 text-center space-y-4 shadow-sm">
+                            <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                                <h3 class="font-orbitron font-bold text-sm text-slate-900 dark:text-slate-200">WEBGL PLAYTEST SANDBOX</h3>
+                                <span class="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-semibold">144 FPS // ZERO LATENCY</span>
+                            </div>
+
+                            <div class="h-80 bg-slate-900 dark:bg-slate-950/90 rounded-2xl border border-slate-800 relative flex items-center justify-center overflow-hidden shadow-inner">
+                                <div class="relative z-10 space-y-3">
+                                    <i class="fa-solid fa-shuttle-space text-6xl text-sky-400"></i>
+                                    <div class="font-orbitron font-bold text-lg text-white">GALAXY STRIKE ACTIVE</div>
+                                    <div class="text-xs font-mono text-slate-400">Use Arrow Keys or Mouse to Control Spacecraft</div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-center space-x-4">
+                                <button onclick="showModal('GAME RESTARTED', 'Playtest state reset.')" class="px-6 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-orbitron text-xs hover:bg-slate-50 dark:hover:text-white shadow-sm">RESTART</button>
+                                <button onclick="switchTab('export')" class="px-6 py-2.5 rounded-xl bg-sky-600 dark:bg-sky-500 hover:bg-sky-500 dark:hover:bg-sky-400 text-white dark:text-slate-950 font-orbitron font-bold text-xs shadow-md">PROCEED TO BUILD &rarr;</button>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                case 'export':
+                    main.innerHTML = `
+                        <div class="max-w-3xl mx-auto glass-panel p-6 border border-slate-200 dark:border-slate-800 space-y-6 shadow-sm">
+                            <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                                <h3 class="font-orbitron font-bold text-base text-slate-900 dark:text-slate-200">EXPORT & MULTI-PLATFORM BUILD</h3>
+                                <span class="text-xs font-mono text-sky-600 dark:text-sky-400 font-semibold">TARGET: GALAXY STRIKE v1.0.0</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="glass-panel p-4 border border-slate-200 dark:border-slate-800 text-center space-y-3 cursor-pointer hover:border-sky-400 transition shadow-sm">
+                                    <i class="fa-solid fa-globe text-4xl text-sky-600 dark:text-sky-400"></i>
+                                    <div class="font-orbitron font-bold text-xs text-slate-900 dark:text-white">HTML5 Web App</div>
+                                    <button onclick="showModal('BUILDING HTML5', 'Packaging HTML5 WebGL standalone archive...')" class="w-full py-2 rounded-xl bg-sky-600 dark:bg-sky-500 text-white dark:text-slate-950 font-orbitron font-bold text-xs shadow-md">BUILD HTML5</button>
+                                </div>
+                                <div class="glass-panel p-4 border border-slate-200 dark:border-slate-800 text-center space-y-3 cursor-pointer hover:border-sky-400 transition shadow-sm">
+                                    <i class="fa-brands fa-windows text-4xl text-sky-600 dark:text-sky-400"></i>
+                                    <div class="font-orbitron font-bold text-xs text-slate-900 dark:text-white">Windows Desktop</div>
+                                    <button onclick="showModal('BUILDING EXE', 'Compiling 64-bit Windows executable binary...')" class="w-full py-2 rounded-xl bg-slate-800 text-white font-orbitron font-bold text-xs hover:bg-slate-700 shadow-md">BUILD EXE</button>
+                                </div>
+                                <div class="glass-panel p-4 border border-slate-200 dark:border-slate-800 text-center space-y-3 cursor-pointer hover:border-sky-400 transition shadow-sm">
+                                    <i class="fa-brands fa-android text-4xl text-sky-600 dark:text-sky-400"></i>
+                                    <div class="font-orbitron font-bold text-xs text-slate-900 dark:text-white">Android Package</div>
+                                    <button onclick="showModal('BUILDING APK', 'Generating signed APK release bundle...')" class="w-full py-2 rounded-xl bg-slate-800 text-white font-orbitron font-bold text-xs hover:bg-slate-700 shadow-md">BUILD APK</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+
+                default:
+                    main.innerHTML = `
+                        <div class="glass-panel p-8 border border-slate-200 dark:border-slate-800 text-center space-y-3 shadow-sm">
+                            <i class="fa-solid fa-sliders text-4xl text-sky-600 dark:text-sky-400"></i>
+                            <h3 class="font-orbitron font-bold text-base text-slate-900 dark:text-slate-200">${tabId.toUpperCase()} MODULE ACTIVE</h3>
+                            <p class="text-xs font-mono text-slate-600 dark:text-slate-400">Module integrated into Kawalight Game Studio Core Engine.</p>
+                        </div>
+                    `;
+                    break;
+            }
+        }
+
+        function showModal(title, msg) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('hud-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('hud-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

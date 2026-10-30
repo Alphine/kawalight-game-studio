@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "1.0.0",
+  "template": {
+    "id": "phaser.side-scroller",
+    "version": "1.0.0"
+  },
+  "seed": 7,
+  "world": {
+    "width": 960,
+    "height": 540,
+    "levelWidth": 3200,
+    "levelHeight": 540,
+    "gravity": 2600,
+    "maxFallSpeed": 1400,
+    "killPlaneY": 600
+  },
+  "player": {
+    "spawn": { "x": 80, "y": 426 },
+    "width": 32,
+    "height": 44,
+    "moveSpeed": 300,
+    "acceleration": 2600,
+    "airControl": 0.65,
+    "jumpVelocity": 850,
+    "coyoteMs": 100,
+    "jumpBufferMs": 120,
+    "maxJumps": 1,
+    "health": 3,
+    "invulnMs": 1200,
+    "knockback": 280,
+    "stompBounce": 560
+  },
+  "level": {
+    "platforms": [
+      { "x": 0, "y": 470, "w": 560, "h": 70 },
+      { "x": 670, "y": 470, "w": 630, "h": 70 },
+      { "x": 1410, "y": 470, "w": 690, "h": 70 },
+      { "x": 2220, "y": 470, "w": 980, "h": 70 },
+      { "x": 760, "y": 380, "w": 140, "h": 20, "oneWay": true },
+      { "x": 1520, "y": 380, "w": 140, "h": 20, "oneWay": true },
+      { "x": 2380, "y": 380, "w": 140, "h": 20, "oneWay": true }
+    ],
+    "hazards": [
+      { "id": "spikes-1", "sprite": "spikes", "x": 1150, "y": 446, "w": 32, "h": 24 },
+      { "id": "spikes-2", "sprite": "spikes", "x": 1950, "y": 446, "w": 32, "h": 24 },
+      { "id": "spikes-3", "sprite": "spikes", "x": 2800, "y": 446, "w": 32, "h": 24 }
+    ],
+    "enemies": [
+      {
+        "id": "walker-1", "kind": "walker", "sprite": "walker",
+        "x": 780, "y": 442, "w": 36, "h": 28, "speed": 80,
+        "patrolMinX": 780, "patrolMaxX": 1000
+      },
+      {
+        "id": "walker-2", "kind": "walker", "sprite": "walker",
+        "x": 1560, "y": 442, "w": 36, "h": 28, "speed": 90,
+        "patrolMinX": 1560, "patrolMaxX": 1800
+      },
+      {
+        "id": "walker-3", "kind": "walker", "sprite": "walker",
+        "x": 2400, "y": 442, "w": 36, "h": 28, "speed": 100,
+        "patrolMinX": 2400, "patrolMaxX": 2620
+      }
+    ],
+    "collectibles": [
+      { "id": "gap1-1", "x": 490, "y": 400 },
+      { "id": "gap1-2", "x": 530, "y": 350 },
+      { "id": "gap1-3", "x": 585, "y": 330 },
+      { "id": "gap1-4", "x": 640, "y": 350 },
+      { "id": "gap1-5", "x": 680, "y": 400 },
+      { "id": "gap2-1", "x": 1230, "y": 400 },
+      { "id": "gap2-2", "x": 1270, "y": 350 },
+      { "id": "gap2-3", "x": 1325, "y": 330 },
+      { "id": "gap2-4", "x": 1380, "y": 350 },
+      { "id": "gap2-5", "x": 1420, "y": 400 },
+      { "id": "gap3-1", "x": 2035, "y": 400 },
+      { "id": "gap3-2", "x": 2075, "y": 350 },
+      { "id": "gap3-3", "x": 2130, "y": 330 },
+      { "id": "gap3-4", "x": 2185, "y": 350 },
+      { "id": "gap3-5", "x": 2225, "y": 400 },
+      { "id": "plat1-1", "x": 800, "y": 350 },
+      { "id": "plat1-2", "x": 830, "y": 350 },
+      { "id": "plat1-3", "x": 860, "y": 350 },
+      { "id": "plat2-1", "x": 1560, "y": 350 },
+      { "id": "plat2-2", "x": 1590, "y": 350 },
+      { "id": "plat2-3", "x": 1620, "y": 350 },
+      { "id": "plat3-1", "x": 2420, "y": 350 },
+      { "id": "plat3-2", "x": 2450, "y": 350 },
+      { "id": "plat3-3", "x": 2480, "y": 350 }
+    ],
+    "checkpoints": [
+      { "id": "cp-1", "x": 1200, "y": 370, "w": 32, "h": 100 },
+      { "id": "cp-2", "x": 2300, "y": 370, "w": 32, "h": 100 }
+    ],
+    "exit": { "x": 3100, "y": 390, "w": 48, "h": 80, "sprite": "exit-door" }
+  },
+  "scoring": {
+    "coinScore": 10,
+    "stompScore": 25,
+    "timeBonusPerSec": 5,
+    "parTimeSec": 60
+  },
+  "difficulty": {
+    "preset": "normal"
+  },
+  "controls": {
+    "left": "LEFT",
+    "right": "RIGHT",
+    "jump": "SPACE",
+    "pause": "P"
+  },
+  "camera": {
+    "followLerp": 0.12,
+    "deadzoneX": 80,
+    "deadzoneY": 60
+  },
+  "assets": {
+    "sprites": {
+      "player": "assets/player.png",
+      "walker": "assets/walker.png",
+      "spikes": "assets/spikes.png",
+      "coin": "assets/coin.png",
+      "exit-door": "assets/exit-door.png",
+      "checkpoint": "assets/checkpoint.png"
+    }
+  }
+}

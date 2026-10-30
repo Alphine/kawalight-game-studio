@@ -1,0 +1,9 @@
+{
+  "id": "godot.farming",
+  "version": "1.0.0",
+  "genre": "farming",
+  "runtime": { "name": "godot", "version": "4.3" },
+  "configSchema": "farming.config.schema.json",
+  "entry": "project.godot",
+  "screens": ["title", "hud", "pause-overlay", "goal-complete"]
+}

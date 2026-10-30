@@ -39,3 +39,36 @@ def test_cli_validates_runner_demo_config(store):
     demo = (paths_mod.templates_dir() / "phaser" / "endless-runner"
             / "config.demo.json")
     assert main(["validate", "config", str(demo)]) == 0
+
+
+def test_cli_assembles_and_validates_new_genres(store, tmp_path):
+    from test_config_validator import (
+        make_battle_blueprint,
+        make_farm_blueprint,
+        make_side_blueprint,
+    )
+
+    for i, make in enumerate((make_side_blueprint, make_battle_blueprint,
+                              make_farm_blueprint)):
+        bp = tmp_path / f"bp{i}.json"
+        bp.write_text(json.dumps(make()), encoding="utf-8")
+        out = tmp_path / f"config{i}.json"
+        assert main(["assemble", str(bp), "-o", str(out)]) == 0
+        assert main(["validate", "config", str(out)]) == 0
+
+
+def test_cli_validates_new_genre_demo_configs(store):
+    from kgsm import paths as paths_mod
+
+    for genre in ("side-scroller", "battle-2d", "farming"):
+        demo = (paths_mod.templates_dir() / "phaser" / genre
+                / "config.demo.json")
+        assert main(["validate", "config", str(demo)]) == 0
+
+
+def test_cli_assemble_rejects_unknown_genre(store, tmp_path, capsys):
+    bp = tmp_path / "bp.json"
+    data = {"genre": "racing"}
+    bp.write_text(json.dumps(data), encoding="utf-8")
+    out = tmp_path / "config.json"
+    assert main(["assemble", str(bp), "-o", str(out)]) == 1

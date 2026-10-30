@@ -132,10 +132,6 @@
     });
     var asmBtn = body.querySelector('[data-a="assemble"]');
     if (asmBtn) asmBtn.addEventListener('click', function (e) {
-      if (p.genre !== 'space-shooter') {
-        UI().toast('Assembly supports space-shooter in wave 1; ' + p.genre + ' assembly is an M2 item.', 'error');
-        return;
-      }
       UI().busy(e.target, function () {
         return api().assembleBlueprint(p.id).then(function (res) {
           S().rememberReport('assemble', 'Assembly', res.report);

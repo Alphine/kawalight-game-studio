@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://kawalight.studio/schemas/blueprint.v1.json",
   "title": "KGSM game blueprint v1",
-  "description": "Structured game blueprint produced by the wizard (SDD FR-004/FR-005). Reviewed and edited by the user before assembly. Foe details are genre-conditional: space-shooter uses enemies, endless-runner uses obstacles.",
+  "description": "Structured game blueprint produced by the wizard (SDD FR-004/FR-005). Reviewed and edited by the user before assembly. Foe details are genre-conditional: space-shooter and battle-2d use enemies; endless-runner, side-scroller and farming use obstacles.",
   "type": "object",
   "required": [
     "schemaVersion", "projectName", "genre", "theme", "visualStyle",
@@ -33,7 +33,7 @@
       "type": "object",
       "required": ["scheme"],
       "properties": {
-        "scheme": { "type": "string", "enum": ["keyboard", "keyboard-gamepad"] },
+        "scheme": { "type": "string", "enum": ["keyboard", "keyboard-gamepad", "mouse-keyboard"] },
         "remappable": { "type": "boolean", "default": false },
         "actions": {
           "type": "array",
@@ -106,6 +106,18 @@
     },
     {
       "if": { "properties": { "genre": { "const": "endless-runner" } }, "required": ["genre"] },
+      "then": { "required": ["obstacles"] }
+    },
+    {
+      "if": { "properties": { "genre": { "const": "side-scroller" } }, "required": ["genre"] },
+      "then": { "required": ["obstacles"] }
+    },
+    {
+      "if": { "properties": { "genre": { "const": "battle-2d" } }, "required": ["genre"] },
+      "then": { "required": ["enemies"] }
+    },
+    {
+      "if": { "properties": { "genre": { "const": "farming" } }, "required": ["genre"] },
       "then": { "required": ["obstacles"] }
     }
   ],

@@ -106,3 +106,107 @@ describe('parseApiError / summarizeReport', () => {
     assert.equal(r.warnings.length, 1);
   });
 });
+
+describe('fmtDuration', () => {
+  it('renders m:ss or an em dash', () => {
+    assert.equal(U.fmtDuration(null), '—');
+    assert.equal(U.fmtDuration(undefined), '—');
+    assert.equal(U.fmtDuration(0), '0:00');
+    assert.equal(U.fmtDuration(5.9), '0:05');
+    assert.equal(U.fmtDuration(61.5), '1:01');
+    assert.equal(U.fmtDuration(600), '10:00');
+  });
+});
+
+describe('controlsKeysFor / gameSettingsSpec', () => {
+  const path = require('node:path');
+  const fs = require('node:fs');
+  const demoDir = path.join(__dirname, '..', '..', '..', '..',
+    'packages', 'templates', 'phaser');
+
+  it('covers all five genres with schema-required control keys', () => {
+    assert.deepEqual(U.controlsKeysFor('space-shooter'),
+      ['up', 'down', 'left', 'right', 'fire', 'pause']);
+    assert.deepEqual(U.controlsKeysFor('battle-2d'),
+      ['up', 'down', 'left', 'right', 'fire', 'melee', 'pause']);
+    assert.deepEqual(U.controlsKeysFor('endless-runner'), ['jump', 'slide', 'pause']);
+    assert.deepEqual(U.controlsKeysFor('side-scroller'), ['left', 'right', 'jump', 'pause']);
+    assert.deepEqual(U.controlsKeysFor('farming'),
+      ['toolPlant', 'toolWater', 'toolHarvest', 'nextDay', 'pause']);
+    assert.throws(() => U.controlsKeysFor('nope'), /unknown genre/);
+  });
+
+  it('every spec path resolves against the real demo config', () => {
+    for (const genre of U.GENRES) {
+      const cfg = JSON.parse(fs.readFileSync(
+        path.join(demoDir, genre, 'config.demo.json'), 'utf-8'));
+      const spec = U.gameSettingsSpec(genre);
+      assert.ok(spec.sections.length >= 2, genre + ' needs sections');
+      assert.deepEqual(spec.controls, U.controlsKeysFor(genre));
+      for (const section of spec.sections) {
+        assert.ok(section.fields.length > 0, genre + '/' + section.title);
+        for (const f of section.fields) {
+          const keys = f.path.split('.');
+          let node = cfg;
+          for (const k of keys) node = node == null ? node : node[k];
+          assert.notEqual(node, undefined,
+            genre + ': spec path missing from demo config: ' + f.path);
+        }
+      }
+      for (const key of spec.controls) {
+        assert.ok(key in cfg.controls, genre + ': control key missing: ' + key);
+      }
+      assert.ok('preset' in cfg.difficulty, genre + ': difficulty.preset missing');
+    }
+  });
+
+  it('rejects unknown genres', () => {
+    assert.throws(() => U.gameSettingsSpec('nope'), /unknown genre/);
+  });
+});
+
+describe('buildPreviewPage', () => {
+  const path = require('node:path');
+  const fs = require('node:fs');
+  const demoDir = path.join(__dirname, '..', '..', '..', '..',
+    'packages', 'templates', 'phaser');
+
+  it('builds a working page per genre from the real demo configs', () => {
+    for (const genre of U.GENRES) {
+      const cfg = JSON.parse(fs.readFileSync(
+        path.join(demoDir, genre, 'config.demo.json'), 'utf-8'));
+      assert.equal(U.genreOfConfig(cfg), genre);
+      const html = U.buildPreviewPage(cfg, 'Demo ' + genre);
+      assert.ok(html.includes('<!doctype html>'), genre);
+      assert.ok(html.includes('<canvas id="cv">'), genre);
+      assert.ok(html.includes('kgsm-game'), genre);
+      assert.ok(html.includes('kgsm-shell'), genre);
+      assert.ok(html.includes('run') && html.includes('pause') && html.includes('restart'), genre);
+      // Config values are embedded so the schematic draws real data.
+      assert.ok(html.includes('"' + cfg.world.width + '"') || html.includes(':' + cfg.world.width),
+        genre + ' world width embedded');
+      // Exactly one script close: no breakout possible.
+      assert.equal(html.split('</scr' + 'ipt>').length - 1, 1, genre);
+    }
+  });
+
+  it('escapes hostile config content and names', () => {
+    const evil = {
+      template: { id: 'phaser.space-shooter', version: '1.0.0' },
+      world: { width: 960, height: 540 },
+      note: '</scr' + 'ipt><img src=x onerror=alert(1)>',
+    };
+    const html = U.buildPreviewPage(evil, '<b>evil</b>');
+    assert.ok(!html.includes('</scr' + 'ipt><img'), 'script breakout blocked');
+    assert.ok(html.includes('\\u003c/script>'), 'angle brackets escaped in JSON');
+    assert.ok(html.includes('&lt;b&gt;evil&lt;/b&gt;'), 'name escaped in title');
+    assert.ok(!html.includes('<b>evil</b>'), 'raw name absent');
+  });
+
+  it('tolerates an empty config', () => {
+    assert.equal(U.genreOfConfig({}), 'unknown');
+    assert.equal(U.genreOfConfig(null), 'unknown');
+    const html = U.buildPreviewPage({}, '');
+    assert.ok(html.includes('schematic preview'));
+  });
+});

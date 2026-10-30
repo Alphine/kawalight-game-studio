@@ -24,7 +24,7 @@ contract revision (`/api/v2` or a new `contractVersion`).
 - Unknown JSON fields are ignored; missing/invalid fields → `400 bad-request`.
 - Error code → status map: `bad-request/bad-transition/body-too-large/path-escape
   400`; `*-not-found/unknown-* 404`; `cost-blocked/exceeds-limit 402`;
-  `needs-confirmation 409`; `godot-not-implemented/not-implemented 501`;
+  `needs-confirmation 409`; `not-implemented 501`;
   `provider-error/export-error 502`-ish → use `502`; `internal 500`.
   Validation failures are `200` with `{ok:false,...}` on validate endpoints
   (report, not error), but `422 validation-failed` when validation gates a write.
@@ -157,9 +157,16 @@ published.
   Uses inline `config` or stored `config.json`; invalid → `422` with report.
 - `GET /projects/{id}/exports` → `200 {"exports":[{"file","bytes","createdAt"}]}`
   listing `builds/*.zip`.
-- `POST /projects/{id}/exports/godot` → `501 {"error":{"code":
-  "godot-not-implemented","message":"Godot export is planned for M3 (FR-021)."}}`.
-  Frozen now so UI/export-center code can target it.
+- `POST /projects/{id}/exports/godot` `{"config"?}` → stages a Godot 4
+  project skeleton via the standalone `packages/templates/godot` exporter and
+  publishes one secret-scanned ZIP, returns `201 {"godot":
+  "builds/<slug>-godot4.zip","warnings":[],"manifest":{...}}` (manifest =
+  `kgsm-manifest.json` per `export-manifest.schema.json`, stamped
+  `godot.<genre>`). Uses inline `config` or stored `config.json` (a
+  `phaser.<genre>` config; worker re-stamps the id internally); invalid →
+  `422` with report. Config/blueprint genre must match the project genre
+  (`422` otherwise); a missing `blueprint.json` falls back to a minimal
+  blueprint synthesized from the project record.
 
 ## 8. Backup / restore (FR-027; `project.json` is the portable record)
 
@@ -223,8 +230,33 @@ health 1 · projects 8 · blueprints 4 · configs 3 · assets 6 · providers 1 �
 costs 5 · export 3 · backup/restore 3 · audio 2 · secrets 3.
 
 
-## Revision 1.1 (2026-10-29, additive � route count unchanged at 39)
+## Revision 1.1 (2026-10-29, additive — route count unchanged at 39)
 
 - assemble, configs/validate, PUT config, and POST exports now also serve `endless-runner` (validated by `endless-runner.config.schema.json`, assembled by `assemble_endless_runner`, exported via the `phaser.endless-runner` template). Other genres still return `501 unknown-genre`.
 - Blueprint schema is genre-conditional: `space-shooter` requires `enemies`, `endless-runner` requires `obstacles`; new optional `collectibles` (string) and `controls.actions` (string array).
 
+
+## Revision 1.2 (2026-10-30, additive - route count unchanged at 39)
+
+- assemble, configs/validate, PUT config, and POST exports now also serve
+  side-scroller, battle-2d, and farming (validated by
+  side-scroller.config.schema.json, battle-2d.config.schema.json, and
+  farming.config.schema.json; assembled by assemble_side_scroller,
+  assemble_battle_2d, and assemble_farming; exported via the
+  phaser.side-scroller, phaser.battle-2d, and phaser.farming templates).
+  All five project genres are now served; unknown-genre 501 remains for
+  genre/template ids outside the known set.
+- Blueprint schema is genre-conditional for all genres: space-shooter and
+  battle-2d require enemies; endless-runner, side-scroller, and farming
+  require obstacles. controls.scheme gains mouse-keyboard for farming.
+
+
+## Revision 1.3 (2026-10-30, additive - route count unchanged at 39)
+
+- `POST /projects/{id}/exports/godot` is implemented (was `501
+  godot-not-implemented`): validates the project's `phaser.<genre>` config,
+  re-stamps the template id to `godot.<genre>`, and returns `201 {"godot",
+  "warnings", "manifest"}` with a secret-scanned `*-godot4.zip` in `builds/`.
+  Config/blueprint genre must match the project genre (`422` otherwise);
+  missing `blueprint.json` falls back to a synthesized minimal blueprint.
+  Error code `godot-not-implemented` is retired.

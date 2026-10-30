@@ -1,0 +1,9 @@
+{
+  "id": "phaser.farming",
+  "version": "1.0.0",
+  "genre": "farming",
+  "runtime": { "name": "phaser", "version": "3.80.1" },
+  "configSchema": "farming.config.schema.json",
+  "entry": "demo/index.html",
+  "screens": ["title", "hud", "toolbar", "pause-overlay", "complete-overlay"]
+}

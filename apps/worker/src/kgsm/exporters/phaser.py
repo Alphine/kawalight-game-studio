@@ -16,7 +16,10 @@ from pathlib import Path
 
 from .. import paths
 from ..validation import (
+    validate_battle_2d_config,
     validate_endless_runner_config,
+    validate_farming_config,
+    validate_side_scroller_config,
     validate_space_shooter_config,
 )
 from .manifest import assert_no_secrets, build_manifest, sha256_hex
@@ -113,6 +116,15 @@ def stage_export(
     elif template_id == "phaser.endless-runner":
         validate = validate_endless_runner_config
         default_template = "endless-runner"
+    elif template_id == "phaser.side-scroller":
+        validate = validate_side_scroller_config
+        default_template = "side-scroller"
+    elif template_id == "phaser.battle-2d":
+        validate = validate_battle_2d_config
+        default_template = "battle-2d"
+    elif template_id == "phaser.farming":
+        validate = validate_farming_config
+        default_template = "farming"
     else:
         raise ExportError(f"unknown template id {template_id!r}")
     template_dir = Path(template_dir or

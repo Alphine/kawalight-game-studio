@@ -10,6 +10,7 @@
 
   // ---------- Playtest ----------
   var consoleLines = [];
+  var lastBlobUrl = null;
 
   function renderPlaytest(root) {
     var p = V().needProject(root);
@@ -17,21 +18,28 @@
     var savedUrl = S().get('playtestUrl') || '';
     root.innerHTML =
       '<div class="view-head"><div><h2>Playtest</h2>'
-      + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · run, pause, restart, console.</p></div></div>'
-      + '<section class="panel"><div class="row"><label class="fld grow"><span>Staged-game URL (serve an export or the template dev build, then paste its URL)</span>'
-      + '<input data-f="url" value="' + U().esc(savedUrl) + '" placeholder="http://127.0.0.1:1420/index.html"></label>'
-      + '<button type="button" class="btn primary" data-a="load">Load</button></div>'
+      + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · '
+      + U().esc(p.genre) + ' · auto-stage, run, pause, restart, console.</p></div></div>'
+      + '<section class="panel"><div class="view-head"><div><h3>Auto-stage</h3>'
+      + '<p class="muted small">Reads the stored config (assembling the blueprint first when needed), '
+      + 'validates it, then loads a live schematic preview drawn from your own level data.</p></div>'
+      + '<div><button type="button" class="btn primary" data-a="stage">Auto-stage &amp; preview</button></div></div>'
+      + '<div data-slot="steps"></div>'
       + '<div class="btn-row"><button type="button" class="btn ghost" data-a="run">Run</button> '
       + '<button type="button" class="btn ghost" data-a="pause">Pause</button> '
-      + '<button type="button" class="btn ghost" data-a="restart">Restart</button> '
-      + '<button type="button" class="btn ghost" data-a="stage">Auto-stage current build</button></div>'
-      + '<p class="muted small">Run/Pause/Restart send a postMessage command (<code>kgsm-command</code>) to the staged game; templates that ignore it are unaffected.</p></section>'
+      + '<button type="button" class="btn ghost" data-a="restart">Restart</button></div>'
+      + '<p class="muted small">Run/Pause/Restart send a postMessage command to the preview; '
+      + 'the schematic preview obeys them and reports back to the console.</p>'
+      + '<details class="advanced"><summary>Advanced: load an external staged build</summary>'
+      + '<div class="row"><label class="fld grow"><span>Staged-game URL (serve an export or the template dev build, then paste its URL)</span>'
+      + '<input data-f="url" value="' + U().esc(savedUrl) + '" placeholder="http://127.0.0.1:1420/index.html"></label>'
+      + '<button type="button" class="btn ghost" data-a="load">Load</button></div></details></section>'
       + '<div class="grid-2"><section class="panel"><h3>Preview</h3>'
-      + '<div data-slot="frame"><p class="muted">No preview loaded.</p></div></section>'
+      + '<div data-slot="frame"><p class="muted">No preview loaded — auto-stage to start.</p></div></section>'
       + '<section class="panel"><div class="panel-head"><h3>Console</h3>'
       + '<button type="button" class="btn ghost" data-a="clear">Clear</button></div>'
       + '<div data-slot="console" class="console"></div>'
-      + '<p class="muted small">Staged games can post <code>{source:"kgsm-game", level, text}</code> messages here.</p></section></div>';
+      + '<p class="muted small">Previews post <code>{source:"kgsm-game", level, text}</code> messages here.</p></section></div>';
     paintConsole(root);
     function frame() { return root.querySelector('[data-slot="frame"] iframe'); }
     function send(cmd) {
@@ -40,27 +48,32 @@
       try { f.contentWindow.postMessage({ source: 'kgsm-shell', command: cmd }, '*'); }
       catch (e) { UI().toast('Could not message the preview: ' + e.message, 'error'); }
     }
-    root.querySelector('[data-a="load"]').addEventListener('click', function () {
-      var url = root.querySelector('[data-f="url"]').value.trim();
-      if (!url) { UI().toast('Enter a staged-game URL first.', 'error'); return; }
-      S().set({ playtestUrl: url });
+    function loadFrame(url, label) {
       var slot = root.querySelector('[data-slot="frame"]');
       slot.innerHTML = '';
       var f = document.createElement('iframe');
-      f.setAttribute('title', 'Staged game preview');
+      f.setAttribute('title', label || 'Game preview');
       f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-pointer-lock');
       var t0 = Date.now();
       f.addEventListener('load', function () {
-        pushConsole('info', 'preview loaded in ' + (Date.now() - t0) + ' ms: ' + url);
+        pushConsole('info', 'preview loaded in ' + (Date.now() - t0) + ' ms');
         UI().toast('Preview loaded.', 'success');
         paintConsole(root);
       });
       f.addEventListener('error', function () {
-        pushConsole('error', 'preview failed to load: ' + url);
+        pushConsole('error', 'preview failed to load');
         paintConsole(root);
       });
       f.src = url;
       slot.appendChild(f);
+    }
+    root.querySelector('[data-a="load"]').addEventListener('click', function () {
+      var url = root.querySelector('[data-f="url"]').value.trim();
+      if (!url) { UI().toast('Enter a staged-game URL first.', 'error'); return; }
+      S().set({ playtestUrl: url });
+      pushConsole('info', 'loading external build: ' + url);
+      paintConsole(root);
+      loadFrame(url, 'Staged game preview');
     });
     root.querySelector('[data-a="run"]').addEventListener('click', function () { send('run'); });
     root.querySelector('[data-a="pause"]').addEventListener('click', function () { send('pause'); });
@@ -73,12 +86,76 @@
       } catch (e) { UI().toast('Could not message the preview.', 'error'); }
       paintConsole(root);
     });
-    root.querySelector('[data-a="stage"]').addEventListener('click', function () {
-      UI().toast('Auto-stage needs a worker staging endpoint — v1 has none, so this is an M2 item. Export Center builds the ZIPs instead.', 'error');
+    root.querySelector('[data-a="stage"]').addEventListener('click', function (e) {
+      UI().busy(e.target, function () { return autoStage(root, p, loadFrame); }, 'Staging…');
     });
     root.querySelector('[data-a="clear"]').addEventListener('click', function () {
       consoleLines = [];
       paintConsole(root);
+    });
+  }
+
+  // End-to-end from a project: config (assemble when missing) → validate →
+  // schematic preview in the iframe. Blob URLs are session-only, so the
+  // manual-URL field keeps the last external URL untouched.
+  function autoStage(root, p, loadFrame) {
+    var steps = root.querySelector('[data-slot="steps"]');
+    function step(text, cls) {
+      if (steps) {
+        steps.innerHTML += '<p class="step-line ' + (cls || '') + '">' + U().esc(text) + '</p>';
+      }
+      pushConsole(cls === 'err' ? 'error' : 'info', text);
+      paintConsole(root);
+    }
+    if (steps) steps.innerHTML = '';
+    if (!S().get('online')) {
+      step('Worker offline — reconnect before staging.', 'err');
+      UI().toast('Worker offline.', 'error');
+      return Promise.resolve();
+    }
+    step('1/3 reading config.json for "' + p.name + '"…');
+    return api().getConfig(p.id).then(function (res) {
+      step('config.json found.');
+      return res.config;
+    }, function (err) {
+      if (!err || err.code !== 'config-not-found') throw err;
+      step('no config.json — assembling the stored blueprint…');
+      return api().assembleBlueprint(p.id).then(function (res) {
+        S().rememberReport('assemble', 'Assembly', res.report);
+        step('assembled ' + p.genre + ' config.');
+        if (V().refreshProjects) V().refreshProjects();
+        return res.config;
+      }, function (aerr) {
+        if (aerr && aerr.code === 'blueprint-not-found') {
+          step('no blueprint stored — run the New Game wizard first.', 'err');
+          UI().toast('No blueprint stored. Create one with the New Game wizard.', 'error');
+          return null;
+        }
+        throw aerr;
+      });
+    }).then(function (config) {
+      if (!config) return;
+      step('2/3 validating ' + p.genre + ' config…');
+      return api().validateConfig(p.genre, config).then(function (res) {
+        var rep = U().summarizeReport(res.report);
+        if (rep.ok) {
+          step('config valid (' + rep.warnings.length + ' warning(s)).');
+        } else {
+          step('config has ' + rep.errors.length + ' error(s) — previewing anyway; fix in Level Studio.', 'err');
+        }
+        step('3/3 building schematic preview…');
+        var html = U().buildPreviewPage(config, p.name);
+        if (lastBlobUrl) {
+          try { URL.revokeObjectURL(lastBlobUrl); } catch (e) { /* ignore */ }
+        }
+        var url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+        lastBlobUrl = url;
+        loadFrame(url, 'Schematic preview');
+        step('preview staged — use Run / Pause / Restart above.');
+      });
+    }).catch(function (err) {
+      step('staging failed: ' + UI().errorText(err), 'err');
+      UI().toast(UI().errorText(err), 'error');
     });
   }
 
@@ -322,14 +399,25 @@
     });
     root.querySelector('[data-a="godot"]').addEventListener('click', function (e) {
       UI().busy(e.target, function () {
-        return api().godotExport(p.id).then(function () {
-          UI().toast('Godot export unexpectedly succeeded — please report this.', 'success');
+        return api().godotExport(p.id).then(function (res) {
+          root.querySelector('[data-slot="pkg"]').innerHTML =
+            '<p><span class="pill green">built</span></p><ul class="asset-list">'
+            + '<li><code>' + U().esc(res.godot) + '</code></li></ul>'
+            + ((res.warnings || []).length ? '<p class="muted">warnings: ' + U().esc(res.warnings.join('; ')) + '</p>' : '');
+          var m = root.querySelector('[data-slot="manifest"]');
+          m.innerHTML = '';
+          m.appendChild(UI().pre(JSON.stringify(res.manifest, null, 2)));
+          UI().toast('Godot 4 project exported.', 'success');
+          loadBuilds(root, p);
+          if (V().refreshProjects) V().refreshProjects();
         }, function (err) {
-          if (err && err.code === 'godot-not-implemented') {
-            UI().toast('Godot export is planned for M3 (FR-021) — v1 returns 501 by design.', 'error');
-          } else { UI().toast(UI().errorText(err), 'error'); }
+          if (err && err.report) {
+            root.querySelector('[data-slot="pkg"]').innerHTML = UI().reportHtml(err.report, 'Export blocked by validation');
+          }
+          UI().toast(UI().errorText(err), 'error');
+          throw err;
         });
-      }, 'Requesting…');
+      }, 'Building…');
     });
     root.querySelector('[data-a="refresh"]').addEventListener('click', function () { loadBuilds(root, p); });
     root.querySelector('[data-a="backup"]').addEventListener('click', function (e) {

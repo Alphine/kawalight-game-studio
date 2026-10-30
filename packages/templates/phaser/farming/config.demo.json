@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "1.0.0",
+  "template": {
+    "id": "phaser.farming",
+    "version": "1.0.0"
+  },
+  "seed": 7,
+  "world": {
+    "width": 960,
+    "height": 540
+  },
+  "farm": {
+    "cols": 6,
+    "rows": 4,
+    "plotSize": 96,
+    "originX": 192,
+    "originY": 92,
+    "dayLengthSec": 60
+  },
+  "crops": [
+    {
+      "id": "turnip",
+      "name": "Turnip",
+      "sprite": "crop-turnip",
+      "seedCost": 5,
+      "sellPrice": 12,
+      "stages": 3,
+      "stageTimeSec": 10
+    },
+    {
+      "id": "pumpkin",
+      "name": "Pumpkin",
+      "sprite": "crop-pumpkin",
+      "seedCost": 20,
+      "sellPrice": 55,
+      "stages": 4,
+      "stageTimeSec": 14
+    }
+  ],
+  "scoring": {
+    "startCoins": 50,
+    "targetCoins": 500
+  },
+  "difficulty": {
+    "preset": "normal"
+  },
+  "controls": {
+    "toolPlant": "ONE",
+    "toolWater": "TWO",
+    "toolHarvest": "THREE",
+    "nextDay": "N",
+    "pause": "P"
+  },
+  "assets": {
+    "sprites": {
+      "soil": "assets/soil.png",
+      "crop-turnip": "assets/crop-turnip.png",
+      "crop-pumpkin": "assets/crop-pumpkin.png",
+      "coin": "assets/coin.png",
+      "farmer": "assets/farmer.png"
+    }
+  }
+}

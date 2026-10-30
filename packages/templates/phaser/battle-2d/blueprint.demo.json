@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectName": "Arena Clash",
+  "genre": "battle-2d",
+  "theme": "Monster Arena",
+  "visualStyle": "pixel-art",
+  "targetRuntime": "phaser3-html5",
+  "resolution": { "width": 960, "height": 540 },
+  "controls": { "scheme": "keyboard", "actions": ["move", "fire", "melee"] },
+  "difficulty": { "preset": "normal", "ramp": "gradual" },
+  "gameLoop": "Survive the monster arena: kite enemy packs, snipe them with auto-aimed bolts, slash close attackers with a spin attack, grab hearts and loot, clear all 5 waves.",
+  "player": { "abilities": ["move", "shoot", "melee"], "health": 3, "lives": 3 },
+  "enemies": [
+    { "id": "grunt", "role": "tanky chaser that walks the player down" },
+    { "id": "skitter", "role": "fast weaver that strafes while closing in" },
+    { "id": "stinger", "role": "ranged shooter that holds range and fires bolts" }
+  ],
+  "progression": "Five waves with growing counts and speed; short breather between waves.",
+  "scoring": "100+ per kill scaled by enemy tier, 250 bonus per cleared wave.",
+  "winCondition": "Clear all 5 waves.",
+  "loseCondition": "Lose all 3 lives.",
+  "seed": 42,
+  "notes": "Demo blueprint for the battle-2d template."
+}

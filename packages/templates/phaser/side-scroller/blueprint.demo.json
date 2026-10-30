@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectName": "Pixel Pass",
+  "genre": "side-scroller",
+  "theme": "Mossy Cliffs",
+  "visualStyle": "pixel-art",
+  "targetRuntime": "phaser3-html5",
+  "resolution": { "width": 960, "height": 540 },
+  "controls": { "scheme": "keyboard", "actions": ["left", "right", "jump"] },
+  "difficulty": { "preset": "normal", "ramp": "flat" },
+  "gameLoop": "Run and jump across floating cliff segments: clear pits, stomp moss crawlers or dodge them, hop spike strips, grab coins, tag checkpoints, and reach the stone arch exit.",
+  "player": { "abilities": ["run", "jump", "stomp"], "health": 3, "lives": 1 },
+  "obstacles": [
+    { "id": "walker-1", "role": "patrolling crawler; stomp it or jump over" },
+    { "id": "walker-2", "role": "patrolling crawler; stomp it or jump over" },
+    { "id": "walker-3", "role": "patrolling crawler; stomp it or jump over" },
+    { "id": "spikes-1", "role": "static spike strip; jump over it" },
+    { "id": "spikes-2", "role": "static spike strip; jump over it" },
+    { "id": "spikes-3", "role": "static spike strip; jump over it" }
+  ],
+  "collectibles": "Coin arcs over each pit plus coin triplets on the floating timber platforms, 10 points each.",
+  "progression": "Single hand-tuned level (3200px): three pits, three crawlers, three spike strips, two checkpoints, one exit arch.",
+  "scoring": "10 points per coin, 25 per stomp, plus up to 5 points per second under the 60s par time; best score persists locally.",
+  "winCondition": "Touch the exit arch.",
+  "loseCondition": "Lose all 3 health to enemies, spikes, or pit falls.",
+  "seed": 7,
+  "notes": "Demo blueprint for the side-scroller template."
+}

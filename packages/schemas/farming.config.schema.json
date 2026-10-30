@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kawalight.studio/schemas/farming.config.v1.json",
+  "title": "KGSM farming template config v1",
+  "description": "Engine-ready config for template phaser.farming (SDD §3.5). Assembled from a validated blueprint; every field is consumed by the template or its assembler.",
+  "type": "object",
+  "required": [
+    "schemaVersion", "template", "world", "farm",
+    "crops", "scoring", "difficulty", "controls"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "template": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "const": "phaser.farming" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+      },
+      "additionalProperties": false
+    },
+    "seed": { "type": ["integer", "null"], "minimum": 0, "default": null },
+    "world": {
+      "type": "object",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 480, "maximum": 1920 },
+        "height": { "type": "integer", "minimum": 270, "maximum": 1080 }
+      },
+      "additionalProperties": false
+    },
+    "farm": {
+      "type": "object",
+      "required": ["cols", "rows", "plotSize", "originX", "originY", "dayLengthSec"],
+      "properties": {
+        "cols": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "rows": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "plotSize": { "type": "number", "minimum": 24, "maximum": 256 },
+        "originX": { "type": "number" },
+        "originY": { "type": "number" },
+        "dayLengthSec": { "type": "number", "minimum": 5, "maximum": 600 }
+      },
+      "additionalProperties": false
+    },
+    "crops": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "sprite", "seedCost", "sellPrice", "stages", "stageTimeSec"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]{1,40}$" },
+          "name": { "type": "string", "minLength": 1 },
+          "sprite": { "type": "string", "minLength": 1 },
+          "seedCost": { "type": "integer", "minimum": 0, "maximum": 100000 },
+          "sellPrice": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+          "stages": { "type": "integer", "minimum": 1, "maximum": 12 },
+          "stageTimeSec": { "type": "number", "minimum": 0.5, "maximum": 600 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "required": ["startCoins", "targetCoins"],
+      "properties": {
+        "startCoins": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "targetCoins": { "type": "integer", "minimum": 1, "maximum": 100000000 }
+      },
+      "additionalProperties": false
+    },
+    "difficulty": {
+      "type": "object",
+      "required": ["preset"],
+      "properties": {
+        "preset": { "type": "string", "enum": ["easy", "normal", "hard"] }
+      },
+      "additionalProperties": false
+    },
+    "controls": {
+      "type": "object",
+      "required": ["toolPlant", "toolWater", "toolHarvest", "nextDay", "pause"],
+      "properties": {
+        "toolPlant": { "type": "string", "minLength": 1 },
+        "toolWater": { "type": "string", "minLength": 1 },
+        "toolHarvest": { "type": "string", "minLength": 1 },
+        "nextDay": { "type": "string", "minLength": 1 },
+        "pause": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "assets": {
+      "type": "object",
+      "required": ["sprites"],
+      "properties": {
+        "sprites": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

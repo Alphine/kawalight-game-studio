@@ -8,9 +8,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ..exporters import ExportError, package_all
+from ..exporters.godot import GodotExportError, package_all as package_godot
 from ..exporters.manifest import ManifestError
 from ..validation import (
+    validate_battle_2d_config,
     validate_endless_runner_config,
+    validate_farming_config,
+    validate_side_scroller_config,
     validate_space_shooter_config,
 )
 from . import (
@@ -24,6 +28,9 @@ from . import (
 _VALIDATORS_BY_TEMPLATE = {
     "phaser.space-shooter": validate_space_shooter_config,
     "phaser.endless-runner": validate_endless_runner_config,
+    "phaser.side-scroller": validate_side_scroller_config,
+    "phaser.battle-2d": validate_battle_2d_config,
+    "phaser.farming": validate_farming_config,
 }
 
 
@@ -88,9 +95,68 @@ def list_exports(req: Request) -> tuple[int, dict]:
 
 
 def export_godot(req: Request) -> tuple[int, dict]:
-    require_project(req.group("id"))
-    raise ApiError("godot-not-implemented",
-                   "Godot export is planned for M3 (FR-021).", 501)
+    project = require_project(req.group("id"))
+    if "config" not in req.body:
+        config = read_project_json(project.dir, "config.json",
+                                   "config-not-found")
+    else:
+        config = req.body["config"]
+        if not isinstance(config, dict):
+            raise bad_request("config must be an object")
+    template_id = (config.get("template") or {}).get("id", "")
+    validate = _VALIDATORS_BY_TEMPLATE.get(template_id)
+    if validate is None:
+        raise ApiError("validation-failed",
+                       f"unknown template id {template_id!r}", 422)
+    if template_id != f"phaser.{project.genre}":
+        raise ApiError("validation-failed",
+                       f"config template {template_id!r} does not match"
+                       f" project genre {project.genre!r}", 422)
+    report = validate(config)
+    if not report.ok:
+        errors = report.errors()
+        message = errors[0].message if errors else "config invalid"
+        raise ApiError("validation-failed", message, 422,
+                       {"report": report.to_dict()})
+    bp_path = project.dir / "blueprint.json"
+    if bp_path.is_file():
+        blueprint = read_project_json(project.dir, "blueprint.json",
+                                      "blueprint-not-found")
+        if not isinstance(blueprint, dict):
+            raise bad_request("blueprint.json must be an object")
+        bp_genre = blueprint.get("genre") or project.genre
+        if bp_genre != project.genre:
+            raise ApiError("validation-failed",
+                           f"blueprint genre {bp_genre!r} does not match"
+                           f" project genre {project.genre!r}", 422)
+        blueprint = dict(blueprint)
+        blueprint["genre"] = project.genre
+        blueprint.setdefault("schemaVersion", "1.0.0")
+        blueprint.setdefault("projectName", project.name)
+    else:
+        blueprint = {"schemaVersion": "1.0.0", "genre": project.genre,
+                     "projectName": project.name}
+    try:
+        result = package_godot(
+            project_name=project.name, genre=project.genre, config=config,
+            blueprint=blueprint, project_dir=project.dir,
+            builds_dir=project.dir / "builds")
+    except (GodotExportError, ExportError, ManifestError) as exc:
+        raise ApiError("export-error", str(exc), 502) from None
+    gz = Path(result["godot"])
+    try:
+        with zipfile.ZipFile(gz) as zf:
+            manifest = json.loads(
+                zf.read("kgsm-manifest.json").decode("utf-8"))
+    except (OSError, KeyError, json.JSONDecodeError) as exc:
+        raise ApiError("internal",
+                       f"export succeeded but manifest is unreadable: {exc}",
+                       500) from None
+    return 201, {
+        "godot": gz.relative_to(project.dir).as_posix(),
+        "warnings": result["warnings"],
+        "manifest": manifest,
+    }
 
 
 ROUTES = [

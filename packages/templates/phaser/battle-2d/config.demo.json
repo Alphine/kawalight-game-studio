@@ -1,0 +1,239 @@
+{
+  "schemaVersion": "1.0.0",
+  "template": {
+    "id": "phaser.battle-2d",
+    "version": "1.0.0"
+  },
+  "seed": 42,
+  "world": {
+    "width": 960,
+    "height": 540
+  },
+  "player": {
+    "x": 480.0,
+    "y": 300.0,
+    "speed": 280,
+    "health": 3,
+    "lives": 3,
+    "invulnerableMs": 1200,
+    "radius": 12,
+    "bounds": {
+      "minX": 40,
+      "maxX": 920,
+      "minY": 70,
+      "maxY": 500
+    }
+  },
+  "melee": {
+    "cooldownMs": 350,
+    "damage": 2,
+    "range": 72
+  },
+  "ranged": {
+    "cooldownMs": 200,
+    "projectileSpeed": 560,
+    "damage": 1,
+    "poolSize": 48,
+    "aimRange": 520
+  },
+  "foeShots": {
+    "poolSize": 64
+  },
+  "enemies": [
+    {
+      "id": "grunt",
+      "sprite": "enemy-grunt",
+      "health": 2,
+      "speed": 95,
+      "damage": 1,
+      "score": 100,
+      "radius": 13,
+      "behavior": {
+        "type": "chaser",
+        "amplitude": 0,
+        "frequencyHz": 0
+      }
+    },
+    {
+      "id": "skitter",
+      "sprite": "enemy-skitter",
+      "health": 1,
+      "speed": 135,
+      "damage": 1,
+      "score": 150,
+      "radius": 11,
+      "behavior": {
+        "type": "weaver",
+        "amplitude": 0.9,
+        "frequencyHz": 2.2
+      }
+    },
+    {
+      "id": "stinger",
+      "sprite": "enemy-stinger",
+      "health": 2,
+      "speed": 80,
+      "damage": 1,
+      "score": 250,
+      "radius": 13,
+      "behavior": {
+        "type": "shooter",
+        "amplitude": 0,
+        "frequencyHz": 0,
+        "preferredRange": 260,
+        "fireRange": 430,
+        "fireIntervalMs": 1700,
+        "projectileSpeed": 250
+      }
+    }
+  ],
+  "waves": [
+    {
+      "id": "wave-1",
+      "delayAfterPrevMs": 1200,
+      "spawns": [
+        {
+          "enemyId": "grunt",
+          "count": 4,
+          "intervalMs": 900
+        },
+        {
+          "enemyId": "skitter",
+          "count": 2,
+          "intervalMs": 1200
+        }
+      ],
+      "boss": null
+    },
+    {
+      "id": "wave-2",
+      "delayAfterPrevMs": 2000,
+      "spawns": [
+        {
+          "enemyId": "grunt",
+          "count": 4,
+          "intervalMs": 820
+        },
+        {
+          "enemyId": "skitter",
+          "count": 4,
+          "intervalMs": 820
+        },
+        {
+          "enemyId": "stinger",
+          "count": 2,
+          "intervalMs": 1500
+        }
+      ],
+      "boss": null
+    },
+    {
+      "id": "wave-3",
+      "delayAfterPrevMs": 2000,
+      "spawns": [
+        {
+          "enemyId": "grunt",
+          "count": 6,
+          "intervalMs": 740
+        },
+        {
+          "enemyId": "skitter",
+          "count": 4,
+          "intervalMs": 740
+        },
+        {
+          "enemyId": "stinger",
+          "count": 3,
+          "intervalMs": 1300
+        }
+      ],
+      "boss": null
+    },
+    {
+      "id": "wave-4",
+      "delayAfterPrevMs": 2000,
+      "spawns": [
+        {
+          "enemyId": "grunt",
+          "count": 6,
+          "intervalMs": 660
+        },
+        {
+          "enemyId": "skitter",
+          "count": 6,
+          "intervalMs": 660
+        },
+        {
+          "enemyId": "stinger",
+          "count": 4,
+          "intervalMs": 1200
+        }
+      ],
+      "boss": null
+    },
+    {
+      "id": "wave-5",
+      "delayAfterPrevMs": 2000,
+      "spawns": [
+        {
+          "enemyId": "grunt",
+          "count": 8,
+          "intervalMs": 580
+        },
+        {
+          "enemyId": "skitter",
+          "count": 6,
+          "intervalMs": 580
+        },
+        {
+          "enemyId": "stinger",
+          "count": 5,
+          "intervalMs": 1100
+        }
+      ],
+      "boss": null
+    }
+  ],
+  "boss": null,
+  "spawning": {
+    "minDistFromPlayer": 240
+  },
+  "pickups": {
+    "dropChance": 0.12,
+    "healAmount": 1,
+    "bonusScore": 50,
+    "ttlMs": 12000
+  },
+  "scoring": {
+    "killMultiplier": 1.0,
+    "waveClearBonus": 250
+  },
+  "difficulty": {
+    "preset": "normal",
+    "enemyHealthScalePerWave": 0.05,
+    "enemySpeedScalePerWave": 0.05
+  },
+  "controls": {
+    "up": "W",
+    "down": "S",
+    "left": "A",
+    "right": "D",
+    "fire": "SPACE",
+    "melee": "J",
+    "pause": "P"
+  },
+  "victory": {
+    "afterWave": 5
+  },
+  "assets": {
+    "sprites": {
+      "player": "assets/player.png",
+      "shot": "assets/shot.png",
+      "foe-shot": "assets/foe-shot.png",
+      "pickup": "assets/pickup.png",
+      "enemy-grunt": "assets/enemy-grunt.png",
+      "enemy-skitter": "assets/enemy-skitter.png",
+      "enemy-stinger": "assets/enemy-stinger.png"
+    }
+  }
+}

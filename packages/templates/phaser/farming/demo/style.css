@@ -1,0 +1,38 @@
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #070b16;
+  color: #cfd6ea;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+#stage {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+#game {
+  display: flex;
+  justify-content: center;
+}
+
+#game canvas {
+  border: 1px solid #1e2a4a;
+  border-radius: 8px;
+  image-rendering: pixelated;
+}
+
+#hint {
+  text-align: center;
+  font-size: 13px;
+  color: #8b94b3;
+}
+
+#kgsm-autotest, #kgsm-errors {
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+#kgsm-errors { color: #ff8f8f; }
+#kgsm-autotest { color: #7fff9f; }
