@@ -9,6 +9,12 @@
   function UI() { return globalThis.KgsmUi; }
   function S() { return globalThis.KgsmStore; }
   function api() { return globalThis.KgsmApp.api; }
+  function I(name) {
+    try {
+      var K = globalThis.KgsmIcons;
+      return K && K.svg ? K.svg(name) : '';
+    } catch (e) { return ''; }
+  }
 
   var FORMAT_HINT = {
     wav: 'uncompressed · exact duration',
@@ -20,11 +26,11 @@
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><h2>Audio</h2>'
+      '<div class="view-head"><div><p class="hero-tag">' + I('audio') + ' ASSET LIBRARY</p><h2>' + I('audio') + ' Audio</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong>'
       + ' · import SFX and music loops for the exported game.</p></div>'
-      + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">Refresh library</button></div></div>'
-      + '<div class="grid-2"><section class="panel"><h3>Import local file</h3>'
+      + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh library</button></div></div>'
+      + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('plus') + ' Import local file</h3></div>'
       + '<label class="fld"><span>Absolute path on this machine</span>'
       + '<input data-f="src" placeholder="C:\\audio\\jump.wav (.wav / .mp3 / .ogg)"></label>'
       + '<div class="form-grid">'
@@ -36,7 +42,7 @@
       + '<p class="muted small">Accepted: .wav / .mp3 / .ogg · ≤ 32 MB · ≤ 10 min. '
       + 'Files land under <code>audio/</code> with a manifest-ready sidecar. '
       + 'Playback happens in the exported game — the worker stores files, it does not stream them.</p></section>'
-      + '<section class="panel"><h3>Library</h3><div data-slot="list">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('audio') + ' Library</h3></div><div data-slot="list">'
       + UI().loadingPanel('Loading audio…') + '</div></section></div>';
     root.querySelector('[data-a="refresh"]').addEventListener('click', function () { loadList(root, p); });
     root.querySelector('[data-a="import"]').addEventListener('click', function (e) {
@@ -83,7 +89,7 @@
     }, function (err) {
       if (!slot.isConnected) return;
       slot.innerHTML = UI().errorPanel('Could not load audio', err,
-        '<button type="button" class="btn ghost" data-a="retry">Retry</button>');
+        '<button type="button" class="btn ghost" data-a="retry">' + I('refresh') + 'Retry</button>');
       slot.querySelector('[data-a="retry"]').addEventListener('click', function () { loadList(root, p); });
     });
   }

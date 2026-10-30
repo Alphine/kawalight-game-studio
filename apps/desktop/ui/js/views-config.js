@@ -10,6 +10,10 @@
   function UI() { return globalThis.KgsmUi; }
   function S() { return globalThis.KgsmStore; }
   function api() { return globalThis.KgsmApp.api; }
+  function icon(name) {
+    var I = globalThis.KgsmIcons;
+    return I ? I.svg(name) : '';
+  }
 
   function getPath(obj, path) {
     return path.split('.').reduce(function (o, k) { return o == null ? o : o[k]; }, obj);
@@ -84,9 +88,10 @@
     + 'assemble a fresh config to reset the level layout.</p>';
 
   function shell(root, title, sub) {
+    var headIcon = title === 'Level Studio' ? icon('levels') : icon('sliders');
     root.innerHTML =
-      '<div class="view-head"><div><h2>' + title + '</h2><p class="muted">' + sub + '</p></div>'
-      + '<div class="row"><button type="button" class="btn ghost" data-a="reload">Reload</button></div></div>'
+      '<div class="view-head"><div><h2>' + headIcon + title + '</h2><p class="muted">' + sub + '</p></div>'
+      + '<div class="row"><button type="button" class="btn ghost" data-a="reload">' + icon('refresh') + 'Reload</button></div></div>'
       + '<div data-slot="body">' + UI().loadingPanel('Loading config…') + '</div>';
     root.querySelector('[data-a="reload"]').addEventListener('click', function () {
       (title === 'Level Studio' ? renderLevels : renderGameSettings)(root);
@@ -131,7 +136,7 @@
   }
 
   function footer() {
-    return '<section class="panel"><div class="btn-row">'
+    return '<section class="panel glass-panel"><div class="btn-row">'
       + '<button type="button" class="btn ghost" data-a="validate">Validate</button> '
       + '<button type="button" class="btn primary" data-a="save">Save config</button></div>'
       + '<div data-slot="report"></div></section>';
@@ -199,7 +204,7 @@
     var behaviors = battle ? ['chaser', 'weaver', 'shooter'] : ['drift', 'sine', 'dive'];
     var enemies = cfg.enemies || [];
     var waves = cfg.waves || [];
-    var html = '<section class="panel"><h3>Enemies (' + enemies.length + ')</h3>';
+    var html = '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('gamepad') + 'Enemies (' + enemies.length + ')</h3></div>';
     if (enemies.length) {
       html += table(['id', 'sprite', 'hp', 'speed', 'dmg', 'score', 'radius', 'behavior'],
         enemies.map(function (e, i) {
@@ -213,7 +218,7 @@
     } else {
       html += '<p class="muted">No enemies in config.</p>';
     }
-    html += '</section><section class="panel"><h3>Waves (' + waves.length + ')</h3>'
+    html += '</section><section class="panel glass-panel"><div class="panel-head"><h3>' + icon('levels') + 'Waves (' + waves.length + ')</h3></div>'
       + waves.map(function (wv, i) {
         return '<div class="wave"><div class="row"><strong>' + U().esc(wv.id) + '</strong>'
           + '<label class="fld inline"><span>delay after prev (ms)</span><input data-c="waves.' + i + '.delayAfterPrevMs" type="number" value="'
@@ -224,7 +229,7 @@
               + '<label class="fld inline"><span>interval (ms)</span><input data-c="waves.' + i + '.spawns.' + j + '.intervalMs" type="number" value="' + sp.intervalMs + '" style="width:6em"></label></li>';
           }).join('') + '</ul></div>';
       }).join('') + '</section>'
-      + '<section class="panel"><h3>Progression</h3><div class="form-grid">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('sliders') + 'Progression</h3></div><div class="form-grid">'
       + num('Victory after wave', 'victory.afterWave', cfg, 'min="1"')
       + num('Health scale / wave', 'difficulty.enemyHealthScalePerWave', cfg, 'step="0.05" min="0" max="2"')
       + num('Speed scale / wave', 'difficulty.enemySpeedScalePerWave', cfg, 'step="0.05" min="0" max="2"')
@@ -246,18 +251,18 @@
   function showRunnerLevels(body, p, cfg) {
     var obs = cfg.obstacles || [];
     body.innerHTML =
-      '<section class="panel"><h3>Pacing</h3><div class="form-grid">'
+      '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('sliders') + 'Pacing</h3></div><div class="form-grid">'
       + num('Base speed', 'world.baseSpeed', cfg, 'min="60" max="1200"')
       + num('Max speed', 'world.maxSpeed', cfg, 'min="60" max="1600"')
       + num('Speed ramp / sec', 'world.speedRampPerSec', cfg, 'step="0.5" min="0" max="100"')
       + '</div></section>'
-      + '<section class="panel"><h3>Spawning</h3><div class="form-grid">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('plus') + 'Spawning</h3></div><div class="form-grid">'
       + num('Grace (px)', 'spawning.gracePx', cfg, 'min="0" max="5000"')
       + num('Start gap (px)', 'spawning.startGapPx', cfg, 'min="100" max="3000"')
       + num('Min gap (px)', 'spawning.minGapPx', cfg, 'min="100" max="3000"')
       + num('Spawn ahead (px)', 'spawning.spawnAheadPx', cfg, 'min="0" max="500"')
       + '</div></section>'
-      + '<section class="panel"><h3>Obstacles (' + obs.length + ')</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('warn') + 'Obstacles (' + obs.length + ')</h3></div>'
       + (obs.length ? table(['id', 'sprite', 'w', 'h', 'kind', 'hover h'],
         obs.map(function (o, i) {
           var pre = 'obstacles.' + i + '.';
@@ -278,19 +283,19 @@
       return (list || []).map(fn).join('');
     }
     body.innerHTML =
-      '<section class="panel"><h3>Level size</h3><div class="form-grid">'
+      '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('levels') + 'Level size</h3></div><div class="form-grid">'
       + num('Level width', 'world.levelWidth', cfg, 'min="960" max="12000"')
       + num('Level height', 'world.levelHeight', cfg, 'min="270" max="2160"')
       + num('Kill plane Y', 'world.killPlaneY', cfg, '')
       + '</div></section>'
-      + '<section class="panel"><h3>Platforms (' + (lvl.platforms || []).length + ')</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('levels') + 'Platforms (' + (lvl.platforms || []).length + ')</h3></div>'
       + table(['x', 'y', 'w', 'h', 'one-way'], rows(lvl.platforms, function (a, i) {
         var pre = 'level.platforms.' + i + '.';
         return '<tr>' + ncell(pre + 'x', a.x) + ncell(pre + 'y', a.y)
           + ncell(pre + 'w', a.w) + ncell(pre + 'h', a.h)
           + checkCell(pre + 'oneWay', a.oneWay) + '</tr>';
       })) + ROW_NOTE + '</section>'
-      + '<section class="panel"><h3>Hazards (' + (lvl.hazards || []).length + ')</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('warn') + 'Hazards (' + (lvl.hazards || []).length + ')</h3></div>'
       + ((lvl.hazards || []).length ? table(['id', 'sprite', 'x', 'y', 'w', 'h', 'dmg'],
         rows(lvl.hazards, function (a, i) {
           var pre = 'level.hazards.' + i + '.';
@@ -299,7 +304,7 @@
             + ncell(pre + 'w', a.w) + ncell(pre + 'h', a.h)
             + ncell(pre + 'damage', a.damage == null ? 1 : a.damage) + '</tr>';
         })) + ROW_NOTE : '<p class="muted">No hazards in config.</p>') + '</section>'
-      + '<section class="panel"><h3>Enemies (' + (lvl.enemies || []).length + ')</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('gamepad') + 'Enemies (' + (lvl.enemies || []).length + ')</h3></div>'
       + ((lvl.enemies || []).length ? table(['id', 'sprite', 'x', 'y', 'w', 'h', 'speed', 'patrol min', 'patrol max', 'dmg'],
         rows(lvl.enemies, function (a, i) {
           var pre = 'level.enemies.' + i + '.';
@@ -311,7 +316,7 @@
             + ncell(pre + 'patrolMaxX', a.patrolMaxX, '5.5em')
             + ncell(pre + 'damage', a.damage == null ? 1 : a.damage) + '</tr>';
         })) + ROW_NOTE : '<p class="muted">No enemies in config.</p>') + '</section>'
-      + '<section class="panel"><h3>Collectibles (' + (lvl.collectibles || []).length + ')</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('dot') + 'Collectibles (' + (lvl.collectibles || []).length + ')</h3></div>'
       + ((lvl.collectibles || []).length ? table(['id', 'x', 'y', 'radius', 'score'],
         rows(lvl.collectibles, function (a, i) {
           var pre = 'level.collectibles.' + i + '.';
@@ -320,7 +325,7 @@
             + ncell(pre + 'r', a.r == null ? 10 : a.r)
             + ncell(pre + 'score', a.score) + '</tr>';
         })) + ROW_NOTE : '<p class="muted">No collectibles in config.</p>') + '</section>'
-      + '<section class="panel"><h3>Checkpoints (' + (lvl.checkpoints || []).length + ')</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('check') + 'Checkpoints (' + (lvl.checkpoints || []).length + ')</h3></div>'
       + ((lvl.checkpoints || []).length ? table(['id', 'x', 'y', 'w', 'h'],
         rows(lvl.checkpoints, function (a, i) {
           var pre = 'level.checkpoints.' + i + '.';
@@ -328,7 +333,7 @@
             + ncell(pre + 'x', a.x) + ncell(pre + 'y', a.y)
             + ncell(pre + 'w', a.w) + ncell(pre + 'h', a.h) + '</tr>';
         })) + ROW_NOTE : '<p class="muted">No checkpoints in config.</p>') + '</section>'
-      + '<section class="panel"><h3>Exit</h3><div class="form-grid">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('play') + 'Exit</h3></div><div class="form-grid">'
       + num('X', 'level.exit.x', cfg, '')
       + num('Y', 'level.exit.y', cfg, '')
       + num('Width', 'level.exit.w', cfg, 'min="8" max="512"')
@@ -343,7 +348,7 @@
   function showFarmLevels(body, p, cfg) {
     var crops = cfg.crops || [];
     body.innerHTML =
-      '<section class="panel"><h3>Field</h3><div class="form-grid">'
+      '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('levels') + 'Field</h3></div><div class="form-grid">'
       + num('Columns', 'farm.cols', cfg, 'min="1" max="12"')
       + num('Rows', 'farm.rows', cfg, 'min="1" max="12"')
       + num('Plot size', 'farm.plotSize', cfg, 'min="24" max="256"')
@@ -351,7 +356,7 @@
       + num('Origin Y', 'farm.originY', cfg, '')
       + num('Day length (sec)', 'farm.dayLengthSec', cfg, 'min="5" max="600"')
       + '</div></section>'
-      + '<section class="panel"><h3>Crops (' + crops.length + ')</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('dot') + 'Crops (' + crops.length + ')</h3></div>'
       + (crops.length ? table(['id', 'name', 'sprite', 'seed cost', 'sell price', 'stages', 'stage time (s)'],
         crops.map(function (c, i) {
           var pre = 'crops.' + i + '.';
@@ -389,10 +394,10 @@
             return '<option' + (cfg.difficulty.preset === s ? ' selected' : '') + '>' + s + '</option>';
           }).join('') + '</select></label>';
       }
-      return '<section class="panel"><h3>' + U().esc(sec.title) + '</h3>'
+      return '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('sliders') + U().esc(sec.title) + '</h3></div>'
         + '<div class="form-grid">' + fields + '</div></section>';
     }).join('')
-      + '<section class="panel"><h3>Controls</h3><div class="form-grid">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('gamepad') + 'Controls</h3></div><div class="form-grid">'
       + spec.controls.map(function (k) { return txt(k, 'controls.' + k, cfg); }).join('')
       + '</div><p class="muted small">Keyboard remapping UI is P2 (FR-028) — values are stored verbatim.</p></section>'
       + footer();

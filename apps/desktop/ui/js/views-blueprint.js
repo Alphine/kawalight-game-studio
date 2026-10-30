@@ -7,13 +7,17 @@
   function UI() { return globalThis.KgsmUi; }
   function S() { return globalThis.KgsmStore; }
   function api() { return globalThis.KgsmApp.api; }
+  function icon(name) {
+    var I = globalThis.KgsmIcons;
+    return I ? I.svg(name) : '';
+  }
 
   function needProject(root) {
     var p = S().current();
     if (!p || p.state === '?') {
       root.innerHTML = UI().emptyPanel('No project selected',
         'Select a project on Home first — the blueprint belongs to a project.',
-        '<button type="button" class="btn primary" data-a="go-home">Go to Home</button>');
+        '<button type="button" class="btn primary" data-a="go-home">' + icon('home') + 'Go to Home</button>');
       root.querySelector('[data-a="go-home"]').addEventListener('click', function () {
         globalThis.KgsmApp.go('home');
       });
@@ -26,10 +30,10 @@
     var p = needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><h2>Game Blueprint</h2>'
+      '<div class="view-head"><div><h2>' + icon('blueprint') + 'Game Blueprint</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · '
       + U().esc(p.genre) + ' · inspect and edit before assembly (FR-005).</p></div>'
-      + '<div class="row"><button type="button" class="btn ghost" data-a="reload">Reload</button></div></div>'
+      + '<div class="row"><button type="button" class="btn ghost" data-a="reload">' + icon('refresh') + 'Reload</button></div></div>'
       + '<div data-slot="body">' + UI().loadingPanel('Loading blueprint…') + '</div>';
     root.querySelector('[data-a="reload"]').addEventListener('click', function () { render(root); });
     load(root, p);
@@ -46,7 +50,7 @@
       if (err && err.code === 'blueprint-not-found') {
         body.innerHTML = UI().emptyPanel('No blueprint stored yet',
           'Create one with the New Game wizard, or paste JSON below and save it.')
-          + '<section class="panel"><h3>New blueprint JSON</h3>'
+          + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('plus') + 'New blueprint JSON</h3></div>'
           + '<textarea data-f="json" rows="16" class="json" placeholder="{ … }"></textarea>'
           + '<div class="btn-row"><button type="button" class="btn ghost" data-a="validate">Validate</button> '
           + '<button type="button" class="btn primary" data-a="save">Save blueprint</button></div>'
@@ -55,7 +59,7 @@
         return;
       }
       body.innerHTML = UI().errorPanel('Could not load blueprint', err,
-        '<button type="button" class="btn ghost" data-a="retry">Retry</button>');
+        '<button type="button" class="btn ghost" data-a="retry">' + icon('refresh') + 'Retry</button>');
       body.querySelector('[data-a="retry"]').addEventListener('click', function () { load(root, p); });
     });
   }
@@ -69,19 +73,19 @@
       ['Enemies', (bp.enemies || []).length], ['Seed', bp.seed == null ? 'random' : bp.seed],
     ];
     return '<div class="cards">' + cards.map(function (c) {
-      return '<div class="card"><span>' + U().esc(c[0]) + '</span><strong>' + U().esc(String(c[1])) + '</strong></div>';
+      return '<div class="card glass-panel"><span>' + U().esc(c[0]) + '</span><strong>' + U().esc(String(c[1])) + '</strong></div>';
     }).join('') + '</div>';
   }
 
   function showEditor(body, p, bp) {
     body.innerHTML = summaryCards(bp)
-      + '<section class="panel"><h3>Design text</h3><table class="kv"><tbody>' + UI().kvRows({
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('info') + 'Design text</h3></div><table class="kv"><tbody>' + UI().kvRows({
         'Game loop': bp.gameLoop, Progression: bp.progression, Scoring: bp.scoring,
         'Win': bp.winCondition, 'Lose': bp.loseCondition,
         'Abilities': (bp.player && bp.player.abilities || []).join(', '),
         'Enemies': (bp.enemies || []).map(function (e) { return e.id + ' — ' + e.role + ' ×' + (e.count || 1); }).join('; '),
       }) + '</tbody></table></section>'
-      + '<section class="panel"><h3>Edit blueprint JSON</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('blueprint') + 'Edit blueprint JSON</h3></div>'
       + '<textarea data-f="json" rows="18" class="json"></textarea>'
       + '<div class="btn-row"><button type="button" class="btn ghost" data-a="validate">Validate</button> '
       + '<button type="button" class="btn primary" data-a="save">Save blueprint</button> '

@@ -7,6 +7,12 @@
   function UI() { return globalThis.KgsmUi; }
   function S() { return globalThis.KgsmStore; }
   function api() { return globalThis.KgsmApp.api; }
+  function I(name) {
+    try {
+      var K = globalThis.KgsmIcons;
+      return K && K.svg ? K.svg(name) : '';
+    } catch (e) { return ''; }
+  }
 
   // ---------- Playtest ----------
   var consoleLines = [];
@@ -17,27 +23,27 @@
     if (!p) return;
     var savedUrl = S().get('playtestUrl') || '';
     root.innerHTML =
-      '<div class="view-head"><div><h2>Playtest</h2>'
+      '<div class="view-head"><div><p class="hero-tag">' + I('play') + ' WEBGL SANDBOX</p><h2>' + I('play') + ' Playtest</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · '
       + U().esc(p.genre) + ' · auto-stage, run, pause, restart, console.</p></div></div>'
-      + '<section class="panel"><div class="view-head"><div><h3>Auto-stage</h3>'
+      + '<section class="panel glass-panel glass-panel-glow"><div class="view-head"><div><h3>' + I('chip') + ' Auto-stage</h3>'
       + '<p class="muted small">Reads the stored config (assembling the blueprint first when needed), '
       + 'validates it, then loads a live schematic preview drawn from your own level data.</p></div>'
       + '<div><button type="button" class="btn primary" data-a="stage">Auto-stage &amp; preview</button></div></div>'
       + '<div data-slot="steps"></div>'
-      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="run">Run</button> '
-      + '<button type="button" class="btn ghost" data-a="pause">Pause</button> '
-      + '<button type="button" class="btn ghost" data-a="restart">Restart</button></div>'
+      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="run">' + I('play') + 'Run</button> '
+      + '<button type="button" class="btn ghost" data-a="pause">' + I('dot') + 'Pause</button> '
+      + '<button type="button" class="btn ghost" data-a="restart">' + I('refresh') + 'Restart</button></div>'
       + '<p class="muted small">Run/Pause/Restart send a postMessage command to the preview; '
       + 'the schematic preview obeys them and reports back to the console.</p>'
       + '<details class="advanced"><summary>Advanced: load an external staged build</summary>'
       + '<div class="row"><label class="fld grow"><span>Staged-game URL (serve an export or the template dev build, then paste its URL)</span>'
       + '<input data-f="url" value="' + U().esc(savedUrl) + '" placeholder="http://127.0.0.1:1420/index.html"></label>'
-      + '<button type="button" class="btn ghost" data-a="load">Load</button></div></details></section>'
-      + '<div class="grid-2"><section class="panel"><h3>Preview</h3>'
+      + '<button type="button" class="btn ghost" data-a="load">' + I('folder') + 'Load</button></div></details></section>'
+      + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('gamepad') + ' Preview</h3></div>'
       + '<div data-slot="frame"><p class="muted">No preview loaded — auto-stage to start.</p></div></section>'
-      + '<section class="panel"><div class="panel-head"><h3>Console</h3>'
-      + '<button type="button" class="btn ghost" data-a="clear">Clear</button></div>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('info') + ' Console</h3>'
+      + '<button type="button" class="btn ghost" data-a="clear">' + I('close') + 'Clear</button></div>'
       + '<div data-slot="console" class="console"></div>'
       + '<p class="muted small">Previews post <code>{source:"kgsm-game", level, text}</code> messages here.</p></section></div>';
     paintConsole(root);
@@ -194,10 +200,10 @@
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><h2>Validation Center</h2>'
+      '<div class="view-head"><div><p class="hero-tag">' + I('shield') + ' STUDIO &amp; SYSTEM</p><h2>' + I('shield') + ' Validation Center</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · asset, config, runtime, export, security reports.</p></div>'
       + '<div class="row"><button type="button" class="btn primary" data-a="run-all">Run all checks</button></div></div>'
-      + '<div class="grid-2"><section class="panel"><h3>Checks</h3>'
+      + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('check') + ' Checks</h3></div>'
       + '<div class="btn-col">'
       + '<button type="button" class="btn ghost" data-a="c-blueprint">Validate stored blueprint</button>'
       + '<button type="button" class="btn ghost" data-a="c-config">Validate stored config</button>'
@@ -205,7 +211,7 @@
       + '<button type="button" class="btn ghost" data-a="c-exports">List exports (export health)</button>'
       + '</div>'
       + '<p class="muted small">Runtime smoke tests run inside the Playtest preview; automated template smoke tests are pytest/JS-side (FR-020).</p></section>'
-      + '<section class="panel"><h3>Security notes</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('shield') + ' Security notes</h3></div>'
       + '<ul class="notes"><li>Secrets never enter builds, ZIPs, manifests, or logs (NFR-002) — exports are secret-scanned and fail closed.</li>'
       + '<li>Billable operations always pass quote → authorize (NFR-011).</li>'
       + '<li>Generation/export failures never corrupt the project or last good build (NFR-003).</li></ul></section></div>'
@@ -356,23 +362,23 @@
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><h2>Export Center</h2>'
+      '<div class="view-head"><div><p class="hero-tag">' + I('export') + ' MULTI-PLATFORM BUILD</p><h2>' + I('export') + ' Export Center</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · HTML5 package, Phaser source, manifest.</p></div></div>'
-      + '<div class="grid-2"><section class="panel"><h3>Packages</h3>'
+      + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('export') + ' Packages</h3></div>'
       + '<div class="btn-col"><button type="button" class="btn primary" data-a="package">Build playable + source ZIPs</button> '
       + '<button type="button" class="btn ghost" data-a="godot">Export Godot 4 project</button></div>'
       + '<p class="muted small">Builds land in <code>builds/</code> atomically; failures never touch the last good build (NFR-003).</p>'
       + '<div data-slot="pkg"></div></section>'
-      + '<section class="panel"><div class="panel-head"><h3>Builds on disk</h3>'
-      + '<button type="button" class="btn ghost" data-a="refresh">Refresh</button></div>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('folder') + ' Builds on disk</h3>'
+      + '<button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh</button></div>'
       + '<div data-slot="builds">' + UI().loadingPanel('Loading builds…') + '</div></section></div>'
-      + '<section class="panel"><h3>Manifest</h3><div data-slot="manifest">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('blueprint') + ' Manifest</h3></div><div data-slot="manifest">'
       + UI().emptyPanel('No manifest viewed yet', 'Build a package to see its kgsm-manifest.json here.') + '</div></section>'
-      + '<div class="grid-2"><section class="panel"><h3>Backup</h3>'
+      + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('plus') + ' Backup</h3></div>'
       + '<div class="btn-col"><button type="button" class="btn ghost" data-a="backup">Back up this project</button></div>'
       + '<div data-slot="backup"></div></section>'
-      + '<section class="panel"><div class="panel-head"><h3>Restore</h3>'
-      + '<button type="button" class="btn ghost" data-a="refresh-b">Refresh</button></div>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('refresh') + ' Restore</h3></div>'
+      + '<button type="button" class="btn ghost" data-a="refresh-b">' + I('refresh') + 'Refresh</button></div>'
       + '<div data-slot="backups">' + UI().loadingPanel('Loading backups…') + '</div></section></div>';
     root.querySelector('[data-a="package"]').addEventListener('click', function (e) {
       UI().busy(e.target, function () {
@@ -473,7 +479,7 @@
       slot.innerHTML = '<ul class="asset-list">' + bs.map(function (b) {
         return '<li><code>' + U().esc(b.backupId) + '</code> <span class="muted">'
           + U().esc(U().fmtBytes(b.bytes)) + ' · ' + U().esc(U().fmtDate(b.createdAt)) + '</span> '
-          + '<button type="button" class="btn ghost" data-b="' + U().esc(b.backupId) + '">Restore</button></li>';
+          + '<button type="button" class="btn ghost" data-b="' + U().esc(b.backupId) + '">' + I('refresh') + 'Restore</button></li>';
       }).join('') + '</ul>';
       slot.querySelectorAll('[data-b]').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -498,31 +504,31 @@
   // ---------- Settings ----------
   function renderSettings(root) {
     root.innerHTML =
-      '<div class="view-head"><div><h2>Settings</h2>'
+      '<div class="view-head"><div><p class="hero-tag">' + I('gear') + ' STUDIO &amp; SYSTEM</p><h2>' + I('gear') + ' Settings</h2>'
       + '<p class="muted">Worker connection, providers, secret names, spend limits.</p></div></div>'
-      + '<div class="grid-2"><section class="panel"><h3>Worker connection</h3>'
+      + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('chip') + ' Worker connection</h3></div>'
       + '<label class="fld"><span>Worker base URL</span><input data-f="url" value="' + U().esc(S().get('workerUrl')) + '"></label>'
       + '<div class="btn-row"><button type="button" class="btn primary" data-a="save-url">Save + reconnect</button> '
       + '<button type="button" class="btn ghost" data-a="ping">Ping now</button></div>'
       + '<div data-slot="health"></div></section>'
-      + '<section class="panel"><h3>Providers</h3><div data-slot="providers">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('folder') + ' Providers</h3></div><div data-slot="providers">'
       + UI().loadingPanel('Loading providers…') + '</div></section></div>'
-      + '<div class="grid-2"><section class="panel"><h3>Secrets (names only — values are write-only)</h3>'
+      + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('shield') + ' Secrets (names only — values are write-only)</h3></div>'
       + '<div data-slot="secrets">' + UI().loadingPanel('Loading secret names…') + '</div>'
       + '<div class="row"><input data-f="s-name" placeholder="SECRET_NAME" size="18"> '
       + '<input data-f="s-value" type="password" placeholder="value (never displayed)" size="22"> '
       + '<button type="button" class="btn primary" data-a="s-save">Store</button></div>'
       + '<p class="muted small">Keys live in .kgsm/secrets.json; no endpoint ever returns a value (FR-008).</p></section>'
-      + '<section class="panel"><h3>Spend limits</h3><div data-slot="limits">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('sliders') + ' Spend limits</h3></div><div data-slot="limits">'
       + UI().loadingPanel('Loading limits…') + '</div>'
       + '<div class="form-grid"><label class="fld"><span>Global limit (cents, empty = clear)</span><input data-f="lim-global" type="number" min="0" placeholder="empty"></label>'
       + '<label class="fld"><span>Project limit (cents, empty = clear)</span><input data-f="lim-project" type="number" min="0" placeholder="empty"></label></div>'
       + '<div class="btn-row"><button type="button" class="btn primary" data-a="lim-save">Save limits</button> '
       + '<button type="button" class="btn ghost" data-a="ledger">This month\'s ledger</button></div>'
       + '<div data-slot="ledger"></div></section></div>'
-      + '<section class="panel"><h3>Environment</h3><div data-slot="env"></div>'
-      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="storage">Change storage path</button> '
-      + '<button type="button" class="btn ghost" data-a="runtimes">Runtime versions</button></div></section>';
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('info') + ' Environment</h3></div><div data-slot="env"></div>'
+      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="storage">' + I('folder') + 'Change storage path</button> '
+      + '<button type="button" class="btn ghost" data-a="runtimes">' + I('chip') + 'Runtime versions</button></div></section>';
     paintHealth(root);
     loadProvidersSettings(root);
     loadSecrets(root);

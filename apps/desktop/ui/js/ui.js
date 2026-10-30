@@ -5,6 +5,13 @@
 
   function esc(s) { return globalThis.KgsmUtil.esc(s); }
 
+  function icon(name) {
+    var I = globalThis.KgsmIcons;
+    return I ? I.svg(name, 'k-toast-icon') : '';
+  }
+
+  var KIND_ICON = { success: 'check', error: 'error', warn: 'warn', warning: 'warn', info: 'info' };
+
   function toast(message, kind) {
     kind = kind || 'info';
     var wrap = document.getElementById('toasts');
@@ -12,8 +19,10 @@
     var el = document.createElement('div');
     el.className = 'toast toast-' + kind;
     el.setAttribute('role', 'status');
-    el.innerHTML = '<span></span><button type="button" aria-label="Dismiss">×</button>';
-    el.firstChild.textContent = message;
+    el.innerHTML = '<span class="toast-icon" aria-hidden="true"></span>'
+      + '<span class="toast-msg"></span><button type="button" aria-label="Dismiss">×</button>';
+    el.querySelector('.toast-icon').innerHTML = icon(KIND_ICON[kind] || 'info');
+    el.querySelector('.toast-msg').textContent = message;
     el.querySelector('button').addEventListener('click', function () { el.remove(); });
     wrap.appendChild(el);
     setTimeout(function () {
@@ -63,9 +72,11 @@
       var overlay = document.createElement('div');
       overlay.className = 'modal-overlay';
       overlay.innerHTML =
-        '<div class="modal" role="dialog" aria-modal="true">'
-        + '<h3></h3><p class="modal-body"></p>'
-        + '<div class="modal-actions"><button type="button" class="btn ghost" data-x="no">Cancel</button>'
+        '<div class="modal glass-panel glass-panel-glow" role="dialog" aria-modal="true">'
+        + '<div class="modal-head"><h3></h3>'
+        + '<button type="button" class="icon-btn" data-x="no" aria-label="Cancel">✕</button></div>'
+        + '<p class="modal-body"></p>'
+        + '<div class="modal-actions"><button type="button" class="btn ghost" data-x="no2">Cancel</button>'
         + '<button type="button" class="btn primary" data-x="yes"></button></div></div>';
       overlay.querySelector('h3').textContent = title;
       overlay.querySelector('.modal-body').textContent = bodyText;
@@ -74,6 +85,7 @@
       if (danger) yes.classList.add('danger');
       function done(v) { overlay.remove(); resolve(v); }
       overlay.querySelector('[data-x="no"]').addEventListener('click', function () { done(false); });
+      overlay.querySelector('[data-x="no2"]').addEventListener('click', function () { done(false); });
       yes.addEventListener('click', function () { done(true); });
       overlay.addEventListener('click', function (e) { if (e.target === overlay) done(false); });
       document.body.appendChild(overlay);
@@ -86,8 +98,14 @@
       + '<p>' + esc(text || 'Loading…') + '</p></div>';
   }
 
+  function art(name, fallback) {
+    var I = globalThis.KgsmIcons;
+    var inner = I ? I.svg(name, 'k-art-icon') : esc(fallback);
+    return '<div class="empty-art" aria-hidden="true">' + inner + '</div>';
+  }
+
   function emptyPanel(title, hint, actionHtml) {
-    return '<div class="state empty-state"><div class="empty-art" aria-hidden="true">◇</div>'
+    return '<div class="state empty-state">' + art('folder', '◇')
       + '<h3>' + esc(title) + '</h3>'
       + (hint ? '<p class="muted">' + esc(hint) + '</p>' : '')
       + (actionHtml || '') + '</div>';
@@ -95,13 +113,13 @@
 
   function errorPanel(title, err, retryHtml) {
     var msg = errorText(err);
-    return '<div class="state error-state"><div class="empty-art" aria-hidden="true">⚠</div>'
+    return '<div class="state error-state">' + art('warn', '⚠')
       + '<h3>' + esc(title) + '</h3><p class="err-msg">' + esc(msg) + '</p>'
       + (retryHtml || '') + '</div>';
   }
 
   function offlinePanel() {
-    return '<div class="state error-state"><div class="empty-art" aria-hidden="true">⌁</div>'
+    return '<div class="state error-state">' + art('error', '⌁')
       + '<h3>Worker offline</h3>'
       + '<p class="muted">Start the local worker (default http://127.0.0.1:4317) or fix the '
       + 'Worker URL in Settings. This view needs a live connection.</p></div>';

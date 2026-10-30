@@ -1,26 +1,44 @@
-// KGSM desktop UI (M1): shell boot — hash router, health polling, right rail.
+// KGSM desktop UI shell boot — hash router, health polling, right rail, HUD nav.
 // Loads AFTER js/*.js. Exposes globalThis.KgsmApp = {api, go, checkHealth, renderRail}.
 (function () {
   'use strict';
 
-  var NAV = [
-    ['home', 'Home'],
-    ['new', 'New Game'],
-    ['blueprint', 'Game Blueprint'],
-    ['forge', 'Asset Forge'],
-    ['lab', 'Asset Lab'],
-    ['audio', 'Audio'],
-    ['levels', 'Level Studio'],
-    ['settings-game', 'Game Settings'],
-    ['playtest', 'Playtest'],
-    ['validation', 'Validation Center'],
-    ['export', 'Export Center'],
-    ['settings', 'Settings'],
+  // Every registered view, grouped like the HUD design. [route, label, icon]
+  var NAV_GROUPS = [
+    {
+      title: 'CREATE & BUILD', icon: 'chip', items: [
+        ['home', 'Home', 'home'],
+        ['new', 'New Game', 'plus'],
+        ['blueprint', 'Game Blueprint', 'blueprint'],
+        ['forge', 'Asset Forge', 'forge'],
+        ['lab', 'Asset Lab', 'lab'],
+        ['audio', 'Audio', 'audio'],
+      ],
+    },
+    {
+      title: 'WORLD & PLAY', icon: 'gamepad', items: [
+        ['levels', 'Level Studio', 'levels'],
+        ['settings-game', 'Game Settings', 'sliders'],
+        ['playtest', 'Playtest', 'play'],
+        ['export', 'Export Center', 'export'],
+      ],
+    },
+    {
+      title: 'STUDIO & SYSTEM', icon: 'gear', items: [
+        ['validation', 'Validation Center', 'shield'],
+        ['settings', 'Settings', 'gear'],
+      ],
+    },
   ];
 
   var store = globalThis.KgsmStore;
   var api = globalThis.KgsmApi.createApi(function () { return store.get('workerUrl'); });
   var currentView = null;
+
+  function icon(name) {
+    var I = globalThis.KgsmIcons;
+    return I ? I.svg(name) : '';
+  }
 
   function go(name) {
     if (!globalThis.KgsmViews.get(name)) name = 'home';
@@ -36,8 +54,11 @@
 
   function render() {
     currentView = fromHash();
-    document.querySelectorAll('#nav button').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.view === currentView);
+    document.querySelectorAll('#nav button[data-view]').forEach(function (b) {
+      var on = b.dataset.view === currentView;
+      b.classList.toggle('active', on);
+      if (on) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
     });
     var root = document.getElementById('viewRoot');
     root.innerHTML = '';
@@ -68,10 +89,15 @@
     });
   }
 
+  function now() {
+    return (globalThis.performance && performance.now()) || Date.now();
+  }
+
   function checkHealth() {
+    var t0 = now();
     return api.health().then(function (h) {
       var wasOnline = store.get('online');
-      store.set({ online: true, health: h });
+      store.set({ online: true, health: h, latencyMs: Math.round(now() - t0) });
       paintBanner();
       renderRail();
       if (!wasOnline && globalThis.KgsmViews.refreshProjects) {
@@ -81,7 +107,7 @@
       return h;
     }, function () {
       var wasOnline = store.get('online');
-      store.set({ online: false, health: null });
+      store.set({ online: false, health: null, latencyMs: null });
       paintBanner();
       renderRail();
       if (wasOnline && currentView) render();
@@ -147,13 +173,28 @@
   function buildNav() {
     var nav = document.getElementById('nav');
     nav.innerHTML = '';
-    NAV.forEach(function (n) {
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.dataset.view = n[0];
-      b.textContent = n[1];
-      b.addEventListener('click', function () { go(n[0]); });
-      nav.appendChild(b);
+    NAV_GROUPS.forEach(function (g) {
+      var group = document.createElement('div');
+      group.className = 'nav-group';
+      var head = document.createElement('div');
+      head.className = 'nav-title';
+      head.innerHTML = '<span></span>';
+      head.firstChild.textContent = g.title;
+      head.insertAdjacentHTML('beforeend', icon(g.icon));
+      group.appendChild(head);
+      g.items.forEach(function (n) {
+        if (!globalThis.KgsmViews.get(n[0])) return; // never link an unregistered view
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.dataset.view = n[0];
+        b.className = 'glass-nav-item';
+        b.innerHTML = '<span class="nav-icon"></span><span class="nav-label"></span>';
+        b.querySelector('.nav-icon').innerHTML = icon(n[2]);
+        b.querySelector('.nav-label').textContent = n[1];
+        b.addEventListener('click', function () { go(n[0]); });
+        group.appendChild(b);
+      });
+      nav.appendChild(group);
     });
   }
 

@@ -7,20 +7,26 @@
   function UI() { return globalThis.KgsmUi; }
   function S() { return globalThis.KgsmStore; }
   function api() { return globalThis.KgsmApp.api; }
+  function I(name) {
+    try {
+      var K = globalThis.KgsmIcons;
+      return K && K.svg ? K.svg(name) : '';
+    } catch (e) { return ''; }
+  }
 
   // ---------- Asset Forge ----------
   function renderForge(root) {
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><h2>Asset Forge</h2>'
+      '<div class="view-head"><div><p class="hero-tag">' + I('forge') + ' ASSET FACTORY</p><h2>' + I('forge') + ' Asset Forge</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · prompt → quote → confirm → generate (FR-009).</p></div></div>'
-      + '<div class="grid-2"><section class="panel"><h3>Generate</h3><div data-slot="form">'
+      + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('forge') + ' AI Asset Generator</h3></div><div data-slot="form">'
       + UI().loadingPanel('Loading providers…') + '</div></section>'
-      + '<section class="panel"><h3>Result</h3><div data-slot="result">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('check') + ' Result</h3></div><div data-slot="result">'
       + UI().emptyPanel('Nothing generated yet', 'Fill the prompt form and confirm the quote.') + '</div></section></div>'
-      + '<section class="panel"><div class="panel-head"><h3>Asset history</h3>'
-      + '<button type="button" class="btn ghost" data-a="refresh">Refresh</button></div>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('folder') + ' Asset history</h3>'
+      + '<button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh</button></div>'
       + '<div data-slot="history">' + UI().loadingPanel('Loading assets…') + '</div></section>';
     root.querySelector('[data-a="refresh"]').addEventListener('click', function () { loadHistory(root, p); });
     loadProviders(root, p);
@@ -62,7 +68,7 @@
     }, function (err) {
       if (!slot.isConnected) return;
       slot.innerHTML = UI().errorPanel('Could not load providers', err,
-        '<button type="button" class="btn ghost" data-a="retry">Retry</button>');
+        '<button type="button" class="btn ghost" data-a="retry">' + I('refresh') + 'Retry</button>');
       slot.querySelector('[data-a="retry"]').addEventListener('click', function () { loadProviders(root, p); });
     });
   }
@@ -150,7 +156,7 @@
     }, function (err) {
       if (!slot.isConnected) return;
       slot.innerHTML = UI().errorPanel('Could not load assets', err,
-        '<button type="button" class="btn ghost" data-a="retry">Retry</button>');
+        '<button type="button" class="btn ghost" data-a="retry">' + I('refresh') + 'Retry</button>');
       slot.querySelector('[data-a="retry"]').addEventListener('click', function () { loadHistory(root, p); });
     });
   }
@@ -160,10 +166,10 @@
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><h2>Asset Lab</h2>'
+      '<div class="view-head"><div><p class="hero-tag">' + I('lab') + ' ASSET FACTORY</p><h2>' + I('lab') + ' Asset Lab</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · import, inspect, slice, diagnose.</p></div>'
-      + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">Refresh assets</button></div></div>'
-      + '<div class="grid-2"><section class="panel"><h3>Import local file</h3>'
+      + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh assets</button></div></div>'
+      + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('plus') + ' Import local file</h3></div>'
       + '<label class="fld"><span>Absolute path on this machine</span>'
       + '<input data-f="src" placeholder="C:\\art\\ship.png (.png/.jpg/.jpeg/.webp)"></label>'
       + '<div class="form-grid"><label class="fld"><span>Entity</span><input data-f="entity" value="player"></label>'
@@ -171,14 +177,14 @@
       + '<label class="fld"><span>Animation (optional)</span><input data-f="animation" placeholder="fly"></label></div>'
       + '<div class="btn-row"><button type="button" class="btn primary" data-a="import">Import</button></div>'
       + '<p class="muted small">Wave 1 imports local paths only — no remote URLs (contract §4).</p></section>'
-      + '<section class="panel"><h3>Project assets</h3><div data-slot="assets">'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('folder') + ' Project assets</h3></div><div data-slot="assets">'
       + UI().loadingPanel('Loading assets…') + '</div></section></div>'
-      + '<div class="grid-2"><section class="panel"><h3>Inspect</h3>'
+      + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('info') + ' Inspect</h3></div>'
       + '<label class="fld"><span>Asset path</span><input data-f="inspect-path" placeholder="assets/player/ship.png"></label>'
       + '<div class="btn-row"><button type="button" class="btn ghost" data-a="inspect">Inspect</button> '
       + '<button type="button" class="btn ghost" data-a="palette">Palette (16)</button></div>'
       + '<div data-slot="inspect"></div></section>'
-      + '<section class="panel"><h3>Slice sprite sheet</h3>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('lab') + ' Slice sprite sheet</h3></div>'
       + '<label class="fld"><span>Sheet path</span><input data-f="sheet" placeholder="assets/player/sheet.png"></label>'
       + '<div class="form-grid">'
       + '<label class="fld"><span>Entity</span><input data-f="s-entity" value="player"></label>'

@@ -8,6 +8,10 @@
   function S() { return globalThis.KgsmStore; }
   function api() { return globalThis.KgsmApp.api; }
   function go(name) { globalThis.KgsmApp.go(name); }
+  function icon(name) {
+    var I = globalThis.KgsmIcons;
+    return I ? I.svg(name) : '';
+  }
 
   var GENRE_META = {
     'space-shooter': { name: 'Space Shooter', color: '#3b82f6', icon: 'ship',
@@ -36,31 +40,31 @@
   function renderHome(root) {
     var store = S();
     root.innerHTML =
-      '<header class="hero"><div><h1>KAWALIGHT<br>GAME STUDIO MAKER</h1>'
+      '<header class="hero glass-panel glass-panel-glow"><div><h1>KAWALIGHT<br>GAME STUDIO MAKER</h1>'
       + '<p>Turn your imagination into playable 2D games</p>'
       + '<p class="sub">Generate assets, build worlds, and create complete games with AI.</p>'
-      + '<div class="hero-actions"><button type="button" class="btn primary" data-a="hero-new">Create New Game</button> '
-      + '<button type="button" class="btn ghost" data-a="hero-demo">Watch Demo</button></div></div>'
+      + '<div class="hero-actions"><button type="button" class="btn primary" data-a="hero-new">' + icon('plus') + 'Create New Game</button> '
+      + '<button type="button" class="btn ghost" data-a="hero-demo">' + icon('play') + 'Watch Demo</button></div></div>'
       + '<div class="hero-tag">Where Ideas<br>Become Games</div></header>'
-      + '<section><h2>Choose Game Genre</h2>'
+      + '<section><h2>' + icon('gamepad') + 'Choose Game Genre</h2>'
       + '<p class="muted">Select a genre to prefill the New Game wizard.</p>'
       + '<div class="genre-grid">' + U().GENRES.map(function (g) {
         var m = GENRE_META[g];
-        return '<div class="genre-card"><div class="genre-art">'
+        return '<div class="genre-card glass-panel"><div class="genre-art">'
           + ICONS[m.icon].split('COLOR').join(m.color) + '</div>'
           + '<h3>' + U().esc(m.name) + '</h3>'
           + '<p>' + U().esc(m.blurb) + '</p>'
           + '<div class="tags">' + m.tags.map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</div>'
-          + '<button type="button" class="btn" data-genre="' + g + '" style="background:' + m.color + ';border-color:' + m.color + ';color:#fff">Select</button></div>';
+          + '<button type="button" class="btn" data-genre="' + g + '" style="background:' + m.color + ';border-color:' + m.color + ';color:#fff">' + icon('check') + 'Select</button></div>';
       }).join('') + '</div></section>'
-      + '<div class="view-head"><div><h2>Projects</h2>'
+      + '<div class="view-head"><div><h2>' + icon('folder') + 'Projects</h2>'
       + '<p class="muted">Status, state machine, and quick actions.</p></div>'
       + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">Refresh</button> '
-      + '<button type="button" class="btn primary" data-a="new">+ New Game</button></div></div>'
-      + '<div class="grid-2"><section class="panel"><div class="panel-head"><h3>Projects</h3>'
+      + '<button type="button" class="btn primary" data-a="new">' + icon('plus') + 'New Game</button></div></div>'
+      + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + icon('folder') + 'Projects</h3>'
       + '<label class="check"><input type="checkbox" data-a="arch"> Show archived</label></div>'
       + '<div data-slot="list">' + UI().loadingPanel('Loading projects…') + '</div></section>'
-      + '<section class="panel"><h3>Selected project</h3><div data-slot="detail"></div></section></div>';
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('info') + 'Selected project</h3></div><div data-slot="detail"></div></section></div>';
 
     root.querySelector('[data-a="new"]').addEventListener('click', function () { go('new'); });
     root.querySelector('[data-a="hero-new"]').addEventListener('click', function () { go('new'); });
@@ -110,7 +114,7 @@
       if (!projects.length) {
         slot.innerHTML = UI().emptyPanel('No projects yet',
           'Create your first game to see it here.',
-          '<button type="button" class="btn primary" data-a="empty-new">Create New Game</button>');
+          '<button type="button" class="btn primary" data-a="empty-new">' + icon('plus') + 'Create New Game</button>');
         var b = slot.querySelector('[data-a="empty-new"]');
         if (b) b.addEventListener('click', function () { go('new'); });
         return;
@@ -138,7 +142,7 @@
     }, function (err) {
       if (!slot.isConnected) return;
       slot.innerHTML = UI().errorPanel('Could not load projects', err,
-        '<button type="button" class="btn ghost" data-a="retry">Retry</button>');
+        '<button type="button" class="btn ghost" data-a="retry">' + icon('refresh') + 'Retry</button>');
       slot.querySelector('[data-a="retry"]').addEventListener('click', function () { loadList(root); });
     });
   }
@@ -171,10 +175,10 @@
       + '<input data-f="stale-reason" placeholder="reason (required)" size="22">'
       + '<button type="button" class="btn ghost" data-a="stale">Mark stale</button></div></label></div>'
       + '<div class="btn-row">'
-      + '<button type="button" class="btn ghost" data-a="rename">Rename</button>'
-      + '<button type="button" class="btn ghost" data-a="dup">Duplicate</button>'
+      + '<button type="button" class="btn ghost" data-a="rename">' + icon('sliders') + 'Rename</button>'
+      + '<button type="button" class="btn ghost" data-a="dup">' + icon('plus') + 'Duplicate</button>'
       + '<button type="button" class="btn ghost" data-a="arch1">' + (p.archived ? 'Unarchive' : 'Archive') + '</button>'
-      + '<button type="button" class="btn ghost danger" data-a="del">Delete</button></div>'
+      + '<button type="button" class="btn ghost danger" data-a="del">' + icon('close') + 'Delete</button></div>'
       + '<p class="muted small">State machine: forward exactly one step; backward any distance with a reason (contract §1).</p>';
 
     function reload() { refreshProjects().then(function () { renderHome(root); }); }
@@ -256,12 +260,12 @@
     if (!wiz) wiz = { step: 0, data: U().defaultWizard(), preview: null };
     var w = wiz.data;
     root.innerHTML =
-      '<div class="view-head"><div><h2>New Game Wizard</h2>'
+      '<div class="view-head"><div><h2>' + icon('plus') + 'New Game Wizard</h2>'
       + '<p class="muted">Genre, theme, style, runtime → blueprint preview. Nothing is stored until you create the project.</p></div></div>'
       + '<ol class="steps">' + STEPS.map(function (s, i) {
         return '<li class="' + (i === wiz.step ? 'cur' : i < wiz.step ? 'done' : '') + '">' + (i + 1) + '. ' + s + '</li>';
       }).join('') + '</ol>'
-      + '<section class="panel"><div data-slot="body"></div>'
+      + '<section class="panel glass-panel"><div data-slot="body"></div>'
       + '<div class="btn-row wizard-nav"><button type="button" class="btn ghost" data-a="prev">← Back</button>'
       + '<button type="button" class="btn primary" data-a="next">Next →</button></div></section>';
     renderStep(root.querySelector('[data-slot="body"]'));
@@ -333,8 +337,8 @@
         + field('Health (1..99)', '<input data-f="health" type="number" min="1" max="99" value="' + w.health + '">')
         + field('Lives (1..9)', '<input data-f="lives" type="number" min="1" max="9" value="' + w.lives + '">')
         + '</div>'
-        + '<h4>Enemies</h4><div data-slot="enemies"></div>'
-        + '<button type="button" class="btn ghost" data-a="add-enemy">+ Add enemy</button>'
+        + '<h4>' + icon('gamepad') + 'Enemies</h4><div data-slot="enemies"></div>'
+        + '<button type="button" class="btn ghost" data-a="add-enemy">' + icon('plus') + 'Add enemy</button>'
         + field('Progression', '<textarea data-f="progression" rows="2">' + U().esc(w.progression) + '</textarea>')
         + field('Scoring', '<textarea data-f="scoring" rows="2">' + U().esc(w.scoring) + '</textarea>')
         + '<div class="form-grid">'
@@ -351,7 +355,7 @@
       });
     } else {
       wiz.preview = U().buildWizardBlueprint(wiz.data);
-      body.innerHTML = '<div data-slot="report"></div><h4>Blueprint preview</h4><div data-slot="json"></div>'
+      body.innerHTML = '<div data-slot="report"></div><h4>' + icon('blueprint') + 'Blueprint preview</h4><div data-slot="json"></div>'
         + '<div class="btn-row"><button type="button" class="btn ghost" data-a="validate">Validate (stateless)</button> '
         + '<button type="button" class="btn primary" data-a="create">Create project + save blueprint</button></div>'
         + '<p class="muted small">Create → POST /projects, then PUT /projects/{id}/blueprint. Assemble runs from the Blueprint view.</p>';
@@ -396,7 +400,7 @@
       return '<div class="row enemy-row"><input data-e="id" data-i="' + i + '" value="' + U().esc(e.id) + '" placeholder="id" size="14">'
         + '<input data-e="role" data-i="' + i + '" value="' + U().esc(e.role) + '" placeholder="role" size="34">'
         + '<input data-e="count" data-i="' + i + '" type="number" min="1" max="512" value="' + e.count + '" title="count" style="width:5em">'
-        + '<button type="button" class="btn ghost danger" data-a="rm" data-i="' + i + '">Remove</button></div>';
+        + '<button type="button" class="btn ghost danger" data-a="rm" data-i="' + i + '">' + icon('close') + 'Remove</button></div>';
     }).join('') || '<p class="muted">No enemies — add at least one.</p>';
     list.querySelectorAll('[data-a="rm"]').forEach(function (b) {
       b.addEventListener('click', function () {

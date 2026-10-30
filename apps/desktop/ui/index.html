@@ -1,20 +1,60 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
 <title>Kawalight Game Studio Maker</title>
+<script src="js/theme.js"></script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="bg-fx" aria-hidden="true"></div>
+
+<header class="hud-header">
+  <div class="hud-brand">
+    <div class="core-logo" aria-hidden="true">
+      <span class="ring ring-a"></span>
+      <span class="ring ring-b"></span>
+      <span class="core-k">K</span>
+    </div>
+    <div class="hud-title">
+      <div class="hud-title-row">
+        <h1>KAWALIGHT GAME STUDIO</h1>
+        <span class="ver-badge">MAKER <span id="appVersion">v1.0.0</span></span>
+      </div>
+      <div class="hud-sub"><span class="live-dot" id="headDot" aria-hidden="true"></span><span>AI-POWERED HYBRID CREATION DECK</span></div>
+    </div>
+  </div>
+
+  <div class="hud-top-right">
+    <div class="hud-metrics" id="hudMetrics" role="status" aria-label="Worker status">
+      <span class="metric">LATENCY <strong id="hudLatency">—</strong></span>
+      <span class="metric-sep" aria-hidden="true">|</span>
+      <span class="metric">PROJECT <strong id="hudProject">—</strong></span>
+      <span class="metric-sep" aria-hidden="true">|</span>
+      <span class="metric">WORKER <strong id="hudWorker">—</strong></span>
+    </div>
+    <button type="button" id="themeToggle" class="btn ghost theme-toggle" aria-pressed="true" title="Toggle light/dark mode">
+      <span id="themeIcon" class="k-toggle-icon-wrap" aria-hidden="true"></span><span id="themeText">DARK</span>
+    </button>
+    <div class="hud-profile">
+      <span class="avatar" aria-hidden="true">KS</span>
+      <span class="hud-profile-text"><strong>Kawalight Studio</strong><small>LOCAL-FIRST · NO CLOUD ACCOUNT</small></span>
+    </div>
+  </div>
+</header>
+
 <div id="app">
   <aside class="sidebar">
-    <div class="brand">
-      <span class="brand-mark">K</span>
-      <span class="brand-text"><strong>KAWALIGHT</strong><small>Game Studio Maker <span id="appVersion">v1.0.0</span></small></span>
-    </div>
     <nav id="nav" aria-label="Studio views"></nav>
-    <div class="user-card"><span class="avatar">KS</span><span>Kawalight Studio<small>Local-first · no cloud account</small></span></div>
+    <div class="engine-core glass-panel" id="engineCore">
+      <span class="core-ring" aria-hidden="true"></span>
+      <div class="core-label">RADIAL ENGINE CORE</div>
+      <div class="core-status" id="coreStatus">STATUS: —</div>
+      <div class="core-track"><div class="core-bar" id="coreBar" style="width:12%"></div></div>
+      <div class="core-sub" id="coreSub">START THE LOCAL WORKER</div>
+    </div>
   </aside>
 
   <main>
@@ -22,17 +62,17 @@
     <div id="viewRoot"></div>
   </main>
 
-  <aside class="rail">
-    <section class="panel">
+  <aside class="rail" aria-label="Session sidebar">
+    <section class="panel glass-panel">
       <h3>Selected project</h3>
       <div id="railProject"><span class="muted">None selected.</span></div>
     </section>
-    <section class="panel">
+    <section class="panel glass-panel">
       <div class="panel-head"><h3>Recent Projects</h3></div>
       <div id="recentEmpty" class="empty">No projects yet. Create your first game to see it here.</div>
       <ul id="recentList" class="recent"></ul>
     </section>
-    <section class="panel">
+    <section class="panel glass-panel">
       <h3>Session</h3>
       <div class="stats">
         <div class="stat"><strong id="statProjects">0</strong><span>Projects</span></div>
@@ -40,17 +80,45 @@
         <div class="stat wide"><strong id="statState">—</strong><span>Project state</span></div>
       </div>
     </section>
-    <section class="panel">
+    <section class="panel glass-panel">
       <h3>Worker</h3>
       <p id="workerStatus" class="pill red">offline</p>
     </section>
   </aside>
 </div>
+
+<footer class="hud-footer">
+  <div class="foot-left">
+    <span class="foot-core"><span class="foot-dot" id="footDot" aria-hidden="true"></span><span id="footCore">KAWALIGHT HYBRID CORE OFFLINE</span></span>
+    <span class="foot-sep" aria-hidden="true">|</span>
+    <span class="foot-project" id="footProject">ACTIVE PROJECT: —</span>
+  </div>
+  <div class="foot-right">
+    <span>LATENCY: <strong id="footLatency">—</strong></span>
+    <span id="footVersion" class="muted">worker unreachable</span>
+  </div>
+</footer>
+
+<div id="hud-modal" class="hud-modal hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="modal-title">
+  <div class="glass-panel modal-card">
+    <div class="modal-head">
+      <h3 id="modal-title">KAWALIGHT STUDIO NOTIFICATION</h3>
+      <button type="button" class="icon-btn" data-x="close" aria-label="Close dialog">✕</button>
+    </div>
+    <p id="modal-msg" class="modal-msg">Action completed successfully.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn primary" data-x="ok">CONFIRM</button>
+    </div>
+  </div>
+</div>
+
 <div id="toasts" class="toasts" aria-live="polite"></div>
 <script src="js/util.js"></script>
 <script src="js/api.js"></script>
+<script src="js/icons.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/state.js"></script>
+<script src="js/hud.js"></script>
 <script src="js/views.js"></script>
 <script src="js/views-projects.js"></script>
 <script src="js/views-blueprint.js"></script>
