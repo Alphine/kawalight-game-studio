@@ -1,0 +1,3 @@
+# Build-only dependencies (binary packaging, not runtime).
+# Runtime deps live in pyproject.toml.
+pyinstaller==6.22.3

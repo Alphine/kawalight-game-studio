@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kawalight.studio/schemas/blueprint.v1.json",
+  "title": "KGSM game blueprint v1",
+  "description": "Structured game blueprint produced by the wizard (SDD FR-004/FR-005). Reviewed and edited by the user before assembly. Foe details are genre-conditional: space-shooter uses enemies, endless-runner uses obstacles.",
+  "type": "object",
+  "required": [
+    "schemaVersion", "projectName", "genre", "theme", "visualStyle",
+    "targetRuntime", "resolution", "controls", "difficulty",
+    "gameLoop", "player", "progression", "scoring",
+    "winCondition", "loseCondition"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "projectName": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "genre": {
+      "type": "string",
+      "enum": ["space-shooter", "endless-runner", "side-scroller", "battle-2d", "farming"]
+    },
+    "theme": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "visualStyle": { "type": "string", "enum": ["pixel-art", "illustrated-2d"] },
+    "targetRuntime": { "type": "string", "enum": ["phaser3-html5", "godot4"] },
+    "resolution": {
+      "type": "object",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 480, "maximum": 1920 },
+        "height": { "type": "integer", "minimum": 270, "maximum": 1080 }
+      },
+      "additionalProperties": false
+    },
+    "controls": {
+      "type": "object",
+      "required": ["scheme"],
+      "properties": {
+        "scheme": { "type": "string", "enum": ["keyboard", "keyboard-gamepad"] },
+        "remappable": { "type": "boolean", "default": false },
+        "actions": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "default": []
+        }
+      },
+      "additionalProperties": false
+    },
+    "difficulty": {
+      "type": "object",
+      "required": ["preset"],
+      "properties": {
+        "preset": { "type": "string", "enum": ["easy", "normal", "hard"] },
+        "ramp": { "type": "string", "enum": ["flat", "gradual", "steep"], "default": "gradual" }
+      },
+      "additionalProperties": false
+    },
+    "gameLoop": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "player": {
+      "type": "object",
+      "required": ["abilities"],
+      "properties": {
+        "abilities": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "health": { "type": "integer", "minimum": 1, "maximum": 99, "default": 3 },
+        "lives": { "type": "integer", "minimum": 1, "maximum": 9, "default": 3 }
+      },
+      "additionalProperties": false
+    },
+    "enemies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "role"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]{1,40}$" },
+          "role": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "count": { "type": "integer", "minimum": 1, "maximum": 512, "default": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "obstacles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "role"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]{1,40}$" },
+          "role": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "count": { "type": "integer", "minimum": 1, "maximum": 512, "default": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "collectibles": { "type": "string", "maxLength": 1000, "default": "" },
+    "progression": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "scoring": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "winCondition": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "loseCondition": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "seed": { "type": ["integer", "null"], "minimum": 0, "default": null },
+    "notes": { "type": "string", "maxLength": 4000, "default": "" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "genre": { "const": "space-shooter" } }, "required": ["genre"] },
+      "then": { "required": ["enemies"] }
+    },
+    {
+      "if": { "properties": { "genre": { "const": "endless-runner" } }, "required": ["genre"] },
+      "then": { "required": ["obstacles"] }
+    }
+  ],
+  "additionalProperties": false
+}

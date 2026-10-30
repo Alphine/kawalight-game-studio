@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.tauri.app/config/2/capability",
+  "identifier": "default",
+  "description": "Window + worker sidecar process management.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [{ "name": "kgsm-worker", "cmd": "kgsm-worker", "sidecar": true }]
+    },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [{ "name": "kgsm-worker", "cmd": "kgsm-worker", "sidecar": true }]
+    },
+    {
+      "identifier": "shell:allow-kill",
+      "allow": [{ "name": "kgsm-worker", "cmd": "kgsm-worker", "sidecar": true }]
+    }
+  ]
+}

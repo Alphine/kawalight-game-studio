@@ -1,0 +1,24 @@
+{
+  "name": "kgsm-phaser-templates",
+  "private": true,
+  "version": "1.0.0",
+  "description": "KGSM Phaser runtime + genre templates (SDD §5.1)",
+  "type": "module",
+  "scripts": {
+    "vendor": "node tools/vendor.mjs",
+    "stage": "node tools/stage-demo.mjs",
+    "stage:shooter": "node tools/stage-demo.mjs space-shooter",
+    "stage:runner": "node tools/stage-demo.mjs endless-runner",
+    "test": "node --test space-shooter/test/logic.test.js endless-runner/test/logic.test.js",
+    "test:shooter": "node --test space-shooter/test/logic.test.js",
+    "test:runner": "node --test endless-runner/test/logic.test.js",
+    "smoke": "node tools/smoke.mjs",
+    "smoke:shooter": "node tools/smoke.mjs space-shooter",
+    "smoke:runner": "node tools/smoke.mjs endless-runner",
+    "gen-assets": "node tools/gen-starter-assets.mjs",
+    "gen-assets:runner": "node tools/gen-runner-assets.mjs"
+  },
+  "devDependencies": {
+    "phaser": "3.80.1"
+  }
+}

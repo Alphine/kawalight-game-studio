@@ -1,0 +1,6 @@
+# Pinned because the stable toolchain's rustc is broken on this machine
+# (rustup reports the component "up to date" but rustc.exe refuses to run).
+# Revisit: `rustup toolchain install stable --force` (needs admin rights),
+# then switch this file back to channel = "stable".
+[toolchain]
+channel = "nightly"

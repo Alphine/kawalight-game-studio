@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kawalight Game Studio Maker</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">K</span>
+      <span class="brand-text"><strong>KAWALIGHT</strong><small>Game Studio Maker <span id="appVersion">v1.0.0</span></small></span>
+    </div>
+    <nav id="nav" aria-label="Studio views"></nav>
+    <div class="user-card"><span class="avatar">KS</span><span>Kawalight Studio<small>Local-first · no cloud account</small></span></div>
+  </aside>
+
+  <main>
+    <div id="offlineBanner" class="banner" hidden></div>
+    <div id="viewRoot"></div>
+  </main>
+
+  <aside class="rail">
+    <section class="panel">
+      <h3>Selected project</h3>
+      <div id="railProject"><span class="muted">None selected.</span></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>Recent Projects</h3></div>
+      <div id="recentEmpty" class="empty">No projects yet. Create your first game to see it here.</div>
+      <ul id="recentList" class="recent"></ul>
+    </section>
+    <section class="panel">
+      <h3>Session</h3>
+      <div class="stats">
+        <div class="stat"><strong id="statProjects">0</strong><span>Projects</span></div>
+        <div class="stat"><strong id="statReports">0</strong><span>Reports</span></div>
+        <div class="stat wide"><strong id="statState">—</strong><span>Project state</span></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h3>Worker</h3>
+      <p id="workerStatus" class="pill red">offline</p>
+    </section>
+  </aside>
+</div>
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<script src="js/util.js"></script>
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/state.js"></script>
+<script src="js/views.js"></script>
+<script src="js/views-projects.js"></script>
+<script src="js/views-blueprint.js"></script>
+<script src="js/views-assets.js"></script>
+<script src="js/views-config.js"></script>
+<script src="js/views-ops.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

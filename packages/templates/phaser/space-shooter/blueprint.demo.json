@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectName": "Galaxy Strike",
+  "genre": "space-shooter",
+  "theme": "Alien Invasion",
+  "visualStyle": "pixel-art",
+  "targetRuntime": "phaser3-html5",
+  "resolution": { "width": 960, "height": 540 },
+  "controls": { "scheme": "keyboard" },
+  "difficulty": { "preset": "normal", "ramp": "gradual" },
+  "gameLoop": "Pilot the last starfighter: dodge and destroy alien waves, grab power-ups, survive every wave to clear the sector.",
+  "player": { "abilities": ["move", "shoot"], "health": 3, "lives": 3 },
+  "enemies": [
+    { "id": "drone", "role": "basic drifter that flies straight at the player" },
+    { "id": "weaver", "role": "sine-wave mover that is harder to hit" },
+    { "id": "diver", "role": "fast diver that breaks formation" }
+  ],
+  "progression": "Five waves with growing counts and speed; short breather between waves.",
+  "scoring": "100+ per kill scaled by enemy tier, 250 bonus per cleared wave.",
+  "winCondition": "Clear all 5 waves.",
+  "loseCondition": "Lose all 3 lives.",
+  "seed": 42,
+  "notes": "Demo blueprint for the M0 vertical slice."
+}

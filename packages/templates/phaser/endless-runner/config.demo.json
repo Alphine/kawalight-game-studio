@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0.0",
+  "template": {
+    "id": "phaser.endless-runner",
+    "version": "1.0.0"
+  },
+  "seed": 7,
+  "world": {
+    "width": 960,
+    "height": 540,
+    "groundY": 470,
+    "gravity": 3000,
+    "baseSpeed": 280,
+    "maxSpeed": 560,
+    "speedRampPerSec": 6,
+    "pxPerMeter": 50
+  },
+  "player": {
+    "x": 180,
+    "width": 36,
+    "height": 48,
+    "slideHeight": 24,
+    "jumpVelocity": 880
+  },
+  "spawning": {
+    "gracePx": 1400,
+    "startGapPx": 600,
+    "minGapPx": 480,
+    "spawnAheadPx": 80
+  },
+  "obstacles": [
+    {
+      "id": "spike",
+      "sprite": "obstacle-spike",
+      "w": 30,
+      "h": 40,
+      "kind": "ground"
+    },
+    {
+      "id": "block",
+      "sprite": "obstacle-block",
+      "w": 36,
+      "h": 56,
+      "kind": "ground"
+    },
+    {
+      "id": "drone",
+      "sprite": "obstacle-drone",
+      "w": 40,
+      "h": 26,
+      "kind": "high",
+      "hoverH": 30
+    }
+  ],
+  "scoring": {
+    "coinScore": 10,
+    "milestoneEveryM": 100
+  },
+  "difficulty": {
+    "preset": "normal"
+  },
+  "controls": {
+    "jump": "SPACE",
+    "slide": "S",
+    "pause": "P"
+  },
+  "assets": {
+    "sprites": {
+      "player": "assets/player.png",
+      "obstacle-spike": "assets/obstacle-spike.png",
+      "obstacle-block": "assets/obstacle-block.png",
+      "obstacle-drone": "assets/obstacle-drone.png",
+      "coin": "assets/coin.png"
+    }
+  }
+}

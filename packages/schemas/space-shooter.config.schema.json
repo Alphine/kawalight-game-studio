@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kawalight.studio/schemas/space-shooter.config.v1.json",
+  "title": "KGSM space-shooter template config v1",
+  "description": "Engine-ready config for template phaser.space-shooter (SDD §3.1). Assembled from a validated blueprint; every field is consumed by the template.",
+  "type": "object",
+  "required": [
+    "schemaVersion", "template", "world", "player", "weapon",
+    "enemies", "waves", "scoring", "difficulty", "controls", "victory"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "template": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "const": "phaser.space-shooter" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+      },
+      "additionalProperties": false
+    },
+    "seed": { "type": ["integer", "null"], "minimum": 0, "default": null },
+    "world": {
+      "type": "object",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 480, "maximum": 1920 },
+        "height": { "type": "integer", "minimum": 270, "maximum": 1080 }
+      },
+      "additionalProperties": false
+    },
+    "player": {
+      "type": "object",
+      "required": ["x", "y", "speed", "health", "lives", "invulnerableMs", "radius", "bounds"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "speed": { "type": "number", "minimum": 60, "maximum": 1200 },
+        "health": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "lives": { "type": "integer", "minimum": 1, "maximum": 9 },
+        "invulnerableMs": { "type": "integer", "minimum": 0, "maximum": 5000 },
+        "radius": { "type": "number", "minimum": 4, "maximum": 64 },
+        "bounds": {
+          "type": "object",
+          "required": ["minX", "maxX", "minY", "maxY"],
+          "properties": {
+            "minX": { "type": "number" },
+            "maxX": { "type": "number" },
+            "minY": { "type": "number" },
+            "maxY": { "type": "number" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "weapon": {
+      "type": "object",
+      "required": ["cooldownMs", "projectileSpeed", "damage", "poolSize", "powerupLevels"],
+      "properties": {
+        "cooldownMs": { "type": "integer", "minimum": 40, "maximum": 2000 },
+        "projectileSpeed": { "type": "number", "minimum": 100, "maximum": 2000 },
+        "damage": { "type": "integer", "minimum": 1, "maximum": 99 },
+        "poolSize": { "type": "integer", "minimum": 8, "maximum": 256 },
+        "powerupLevels": { "type": "integer", "minimum": 1, "maximum": 5 }
+      },
+      "additionalProperties": false
+    },
+    "enemies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "sprite", "health", "speed", "damage", "score", "radius", "behavior"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]{1,40}$" },
+          "sprite": { "type": "string", "minLength": 1 },
+          "health": { "type": "integer", "minimum": 1, "maximum": 500 },
+          "speed": { "type": "number", "minimum": 20, "maximum": 800 },
+          "damage": { "type": "integer", "minimum": 1, "maximum": 99 },
+          "score": { "type": "integer", "minimum": 0, "maximum": 10000 },
+          "radius": { "type": "number", "minimum": 4, "maximum": 128 },
+          "behavior": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": { "type": "string", "enum": ["drift", "sine", "dive"] },
+              "amplitude": { "type": "number", "minimum": 0, "maximum": 600, "default": 0 },
+              "frequencyHz": { "type": "number", "minimum": 0, "maximum": 10, "default": 0 }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "waves": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "spawns"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]{1,40}$" },
+          "delayAfterPrevMs": { "type": "integer", "minimum": 0, "maximum": 60000, "default": 1500 },
+          "spawns": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["enemyId", "count", "intervalMs"],
+              "properties": {
+                "enemyId": { "type": "string", "minLength": 1 },
+                "count": { "type": "integer", "minimum": 1, "maximum": 64 },
+                "intervalMs": { "type": "integer", "minimum": 50, "maximum": 10000 }
+              },
+              "additionalProperties": false
+            }
+          },
+          "boss": { "type": ["object", "null"], "default": null }
+        },
+        "additionalProperties": false
+      }
+    },
+    "boss": {
+      "type": ["object", "null"],
+      "default": null,
+      "properties": {
+        "enemyId": { "type": "string", "minLength": 1 },
+        "waveId": { "type": "string", "minLength": 1 },
+        "healthMultiplier": { "type": "number", "minimum": 1, "maximum": 100 }
+      },
+      "additionalProperties": false
+    },
+    "pickups": {
+      "type": "object",
+      "required": ["dropChance"],
+      "properties": {
+        "dropChance": { "type": "number", "minimum": 0, "maximum": 1 },
+        "powerupBonus": { "type": "integer", "minimum": 0, "maximum": 5000, "default": 50 }
+      },
+      "additionalProperties": false
+    },
+    "scoring": {
+      "type": "object",
+      "required": ["killMultiplier", "waveClearBonus"],
+      "properties": {
+        "killMultiplier": { "type": "number", "minimum": 0, "maximum": 100 },
+        "waveClearBonus": { "type": "integer", "minimum": 0, "maximum": 100000 }
+      },
+      "additionalProperties": false
+    },
+    "difficulty": {
+      "type": "object",
+      "required": ["preset"],
+      "properties": {
+        "preset": { "type": "string", "enum": ["easy", "normal", "hard"] },
+        "enemyHealthScalePerWave": { "type": "number", "minimum": 0, "maximum": 2, "default": 0 },
+        "enemySpeedScalePerWave": { "type": "number", "minimum": 0, "maximum": 2, "default": 0 }
+      },
+      "additionalProperties": false
+    },
+    "controls": {
+      "type": "object",
+      "required": ["up", "down", "left", "right", "fire", "pause"],
+      "properties": {
+        "up": { "type": "string", "minLength": 1 },
+        "down": { "type": "string", "minLength": 1 },
+        "left": { "type": "string", "minLength": 1 },
+        "right": { "type": "string", "minLength": 1 },
+        "fire": { "type": "string", "minLength": 1 },
+        "pause": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "victory": {
+      "type": "object",
+      "required": ["afterWave"],
+      "properties": {
+        "afterWave": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "assets": {
+      "type": "object",
+      "required": ["sprites"],
+      "properties": {
+        "sprites": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

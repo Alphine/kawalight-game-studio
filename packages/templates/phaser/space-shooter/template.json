@@ -1,0 +1,9 @@
+{
+  "id": "phaser.space-shooter",
+  "version": "1.0.0",
+  "genre": "space-shooter",
+  "runtime": { "name": "phaser", "version": "3.80.1" },
+  "configSchema": "space-shooter.config.schema.json",
+  "entry": "demo/index.html",
+  "screens": ["title", "hud", "pause-overlay", "game-over", "stage-clear"]
+}

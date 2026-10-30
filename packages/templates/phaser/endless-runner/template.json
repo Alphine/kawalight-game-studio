@@ -1,0 +1,9 @@
+{
+  "id": "phaser.endless-runner",
+  "version": "1.0.0",
+  "genre": "endless-runner",
+  "runtime": { "name": "phaser", "version": "3.80.1" },
+  "configSchema": "endless-runner.config.schema.json",
+  "entry": "demo/index.html",
+  "screens": ["title", "hud", "pause-overlay", "game-over"]
+}
