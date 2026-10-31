@@ -12,11 +12,11 @@ regenerable) — copy it anywhere and run:
 No installer: one folder is the whole distribution (v0.1.0's NSIS
 installer is retired).
 
-Launch-verified 2026-10-31 (v0.2.0): app window appears (title
-"Kawalight Game Studio Maker"), empty stderr, stable 21 s+, clean kill;
-sidecar standalone health 200 with `version: 0.2.0` on a scratch port.
-App-to-sidecar spawn path is unchanged since v0.1.0, where the pair was
-verified end-to-end (window + sidecar health 200 on 4317).
+Launch-verified 2026-10-31 (v0.2.0, exact shipped bytes by SHA-256):
+app window appears (title "Kawalight Game Studio Maker"), sidecar spawns
+from the exe folder, health 200 with `version: 0.2.0` on 127.0.0.1:4317
+(first boot ~30 s while the onefile bundle extracts, then instant),
+empty stderr, stable 32 s+, clean kill with zero orphan workers.
 
 ## First run
 
@@ -62,7 +62,10 @@ cd apps/desktop; npm install; cd ../..
 # 1. Freeze the worker sidecar (writes src-tauri/binaries/)
 $env:LOCALAPPDATA='<repo>\.local-appdata'
 robocopy packages\templates .pyinstaller-work\stage\templates /E `
-  /XD node_modules .npm-cache .smoke dist-*
+  /XD node_modules .npm-cache .smoke dist-* pytest-of-* __pycache__ .pytest_cache
+# NOTE: pytest scratch MUST stay out of the bundle — deep pytest-of-*
+# paths break PyInstaller extraction at boot (MAX_PATH) and the sidecar
+# exits before serving (seen 2026-10-31).
 .\.venv\Scripts\pyinstaller.exe --noconfirm --clean --onefile --console `
   --name kgsm-worker --paths apps/worker/src `
   --hidden-import=kgsm.api.routes_providers `
