@@ -14,6 +14,12 @@
     } catch (e) { return ''; }
   }
 
+  // Known single-modality provider ids (docs/providers.md). The worker is the
+  // source of truth and fails cleanly either way; these only drive hints so
+  // users do not burn a quote round-trip on the wrong tab.
+  var TEXT_ONLY_PROVIDERS = ['llama-text'];
+  var IMAGE_ONLY_PROVIDERS = ['openai-compat', 'llama-image'];
+
   // ---------- Asset Forge ----------
   function renderForge(root) {
     var p = V().needProject(root);
@@ -21,14 +27,38 @@
     root.innerHTML =
       '<div class="view-head"><div><p class="hero-tag">' + I('forge') + ' ASSET FACTORY</p><h2>' + I('forge') + ' Asset Forge</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · prompt → quote → confirm → generate (FR-009).</p></div></div>'
+      + '<div class="btn-row" role="tablist" aria-label="Forge modes">'
+      + '<button type="button" class="btn primary" data-a="tab-images" role="tab" aria-selected="true">' + I('forge') + 'Images</button> '
+      + '<button type="button" class="btn ghost" data-a="tab-story" role="tab" aria-selected="false">' + I('blueprint') + 'Story</button></div>'
+      + '<div data-pane="images" role="tabpanel">'
       + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('forge') + ' AI Asset Generator</h3></div><div data-slot="form">'
       + UI().loadingPanel('Loading providers…') + '</div></section>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('check') + ' Result</h3></div><div data-slot="result">'
       + UI().emptyPanel('Nothing generated yet', 'Fill the prompt form and confirm the quote.') + '</div></section></div>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('folder') + ' Asset history</h3>'
       + '<button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh</button></div>'
-      + '<div data-slot="history">' + UI().loadingPanel('Loading assets…') + '</div></section>';
+      + '<div data-slot="history">' + UI().loadingPanel('Loading assets…') + '</div></section></div>'
+      + '<div data-pane="story" role="tabpanel" class="hidden">'
+      + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('blueprint') + ' AI Story Generator</h3></div><div data-slot="story-form">'
+      + UI().loadingPanel('Loading providers…') + '</div></section>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('check') + ' Story</h3></div><div data-slot="story-result">'
+      + UI().emptyPanel('No story yet', 'Write a prompt and generate.') + '</div></section></div></div>';
     root.querySelector('[data-a="refresh"]').addEventListener('click', function () { loadHistory(root, p); });
+    var storyLoaded = false;
+    function selectTab(which) {
+      var images = which === 'images';
+      root.querySelector('[data-pane="images"]').classList.toggle('hidden', !images);
+      root.querySelector('[data-pane="story"]').classList.toggle('hidden', images);
+      var ti = root.querySelector('[data-a="tab-images"]');
+      var ts = root.querySelector('[data-a="tab-story"]');
+      ti.className = 'btn ' + (images ? 'primary' : 'ghost');
+      ts.className = 'btn ' + (images ? 'ghost' : 'primary');
+      ti.setAttribute('aria-selected', images ? 'true' : 'false');
+      ts.setAttribute('aria-selected', images ? 'false' : 'true');
+      if (!images && !storyLoaded) { storyLoaded = true; loadStoryProviders(root, p); }
+    }
+    root.querySelector('[data-a="tab-images"]').addEventListener('click', function () { selectTab('images'); });
+    root.querySelector('[data-a="tab-story"]').addEventListener('click', function () { selectTab('story'); });
     loadProviders(root, p);
     loadHistory(root, p);
   }
@@ -102,6 +132,10 @@
     }
     slot.querySelector('[data-a="quote"]').addEventListener('click', function (e) {
       var b = forgeBody(slot);
+      if (TEXT_ONLY_PROVIDERS.indexOf(b.providerId) >= 0) {
+        UI().toast(b.providerId + ' is text-only — use the Story tab or pick an image provider.', 'error');
+        return;
+      }
       if (!b.prompt) { UI().toast('Prompt is required.', 'error'); return; }
       if (!(b.nImages >= 1 && b.nImages <= 16)) { UI().toast('nImages must be 1..16.', 'error'); return; }
       if (!b.entity || !b.role) { UI().toast('Entity and role are required.', 'error'); return; }
@@ -146,6 +180,198 @@
           throw err;
         });
       }, 'Generating…');
+    });
+  }
+
+  // ---------- Forge: Story tab ----------
+  // POST /api/v1/stories/generate (contract §13). The shared api.js client is
+  // frozen, so this tab posts directly and normalizes errors with
+  // KgsmUtil.parseApiError, mirroring api.js semantics.
+  function postStory(body) {
+    var base = String(S().get('workerUrl') || 'http://127.0.0.1:4317').replace(/\/+$/, '');
+    var url = base + '/api/v1/stories/generate';
+    var init = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(body),
+    };
+    var ctrl = null;
+    var timer = null;
+    if (typeof AbortController !== 'undefined') {
+      ctrl = new AbortController();
+      init.signal = ctrl.signal;
+      timer = setTimeout(function () { ctrl.abort(); }, 120000);
+    }
+    return fetch(url, init).then(function (res) {
+      if (timer) clearTimeout(timer);
+      return res.text().then(function (text) {
+        var payload = null;
+        try { payload = text ? JSON.parse(text) : null; } catch (e) { payload = null; }
+        if (res.ok) return payload == null ? {} : payload;
+        var parsed = U().parseApiError(payload, res.status, 'Request failed');
+        var err = new Error(parsed.message);
+        err.code = parsed.code;
+        err.status = parsed.status;
+        if (parsed.quote) err.quote = parsed.quote;
+        throw err;
+      });
+    }).catch(function (err) {
+      if (timer) clearTimeout(timer);
+      if (err && err.code) throw err;
+      var msg = (err && err.name === 'AbortError')
+        ? 'Worker timed out after 120s'
+        : 'Worker unreachable at ' + base + ' (is it running?)';
+      var off = new Error(msg);
+      off.code = 'worker-offline';
+      off.status = 0;
+      throw off;
+    });
+  }
+
+  function loadStoryProviders(root, p) {
+    var slot = root.querySelector('[data-slot="story-form"]');
+    if (!slot) return;
+    if (!S().get('online')) { slot.innerHTML = UI().offlinePanel(); return; }
+    api().listProviders().then(function (res) {
+      if (!slot.isConnected) return;
+      var providers = res.providers || [];
+      if (!providers.length) {
+        slot.innerHTML = UI().emptyPanel('No providers registered', 'The worker reports zero providers.');
+        return;
+      }
+      function isPreferred(pr) {
+        return pr.id === 'llama-text' || (pr.id === 'mock' && !providers.some(function (q) { return q.id === 'llama-text'; }));
+      }
+      slot.innerHTML =
+        '<label class="fld"><span>Provider</span><select data-f="story-provider">'
+        + providers.map(function (pr) {
+          return '<option value="' + U().esc(pr.id) + '"' + (isPreferred(pr) ? ' selected' : '') + '>'
+            + U().esc(pr.displayName || pr.id) + ' (' + U().esc(pr.model || '?') + ')</option>';
+        }).join('') + '</select></label>'
+        + '<label class="fld"><span>Prompt</span><textarea data-f="story-prompt" rows="4" placeholder="A drifting scavenger crew finds a singing wreck…"></textarea></label>'
+        + '<label class="fld"><span>Genre voice (optional, ≤ 64 chars)</span><input data-f="story-genre" value="' + U().esc(p.genre || '') + '" maxlength="64"></label>'
+        + '<div data-slot="story-quote"></div>'
+        + '<div class="btn-row"><button type="button" class="btn ghost" data-a="story-gen">Generate</button> '
+        + '<button type="button" class="btn primary" data-a="story-confirm" disabled>Confirm + generate</button></div>'
+        + '<p class="muted small">One story = one billable unit: paid or unknown-cost providers quote first, nothing is spent until you confirm (NFR-011). mock is free and offline.</p>';
+      wireStory(slot, root, p);
+    }, function (err) {
+      if (!slot.isConnected) return;
+      slot.innerHTML = UI().errorPanel('Could not load providers', err,
+        '<button type="button" class="btn ghost" data-a="retry">' + I('refresh') + 'Retry</button>');
+      slot.querySelector('[data-a="retry"]').addEventListener('click', function () { loadStoryProviders(root, p); });
+    });
+  }
+
+  function storyBody(slot, p) {
+    var genre = slot.querySelector('[data-f="story-genre"]').value.trim();
+    var b = {
+      providerId: slot.querySelector('[data-f="story-provider"]').value,
+      prompt: slot.querySelector('[data-f="story-prompt"]').value.trim(),
+      projectId: p.id,
+    };
+    if (genre) b.genre = genre;
+    return b;
+  }
+
+  function wireStory(slot, root, p) {
+    var quoteSlot = slot.querySelector('[data-slot="story-quote"]');
+    var confirmBtn = slot.querySelector('[data-a="story-confirm"]');
+    var lastQuote = null;
+    slot.querySelectorAll('[data-f]').forEach(function (inp) {
+      inp.addEventListener('input', invalidateQuote);
+      inp.addEventListener('change', invalidateQuote);
+    });
+    function invalidateQuote() {
+      if (!lastQuote && confirmBtn.disabled) return;
+      lastQuote = null;
+      confirmBtn.disabled = true;
+      quoteSlot.innerHTML = '<p class="muted small">Form changed — generate again for a fresh quote.</p>';
+    }
+    function paintQuote(q, blocked) {
+      quoteSlot.innerHTML = '<table class="kv"><tbody>' + UI().kvRows({
+        Cost: U().fmtCents(q.cents), 'Needs confirmation': q.needsConfirmation ? 'yes' : 'no',
+        Reason: q.reason || '—',
+      }) + '</tbody></table>'
+        + (blocked ? '<p class="err-msg">Blocked by a spend limit — raise it in Settings.</p>' : '');
+    }
+    function attempt(confirmed, btn, label) {
+      var b = storyBody(slot, p);
+      if (IMAGE_ONLY_PROVIDERS.indexOf(b.providerId) >= 0) {
+        UI().toast(b.providerId + ' is image-only — pick a text provider (mock, llama-text).', 'error');
+        return Promise.resolve();
+      }
+      if (!b.prompt) { UI().toast('Prompt is required.', 'error'); return Promise.resolve(); }
+      b.confirmed = confirmed;
+      return UI().busy(btn, function () {
+        return postStory(b).then(function (res) {
+          lastQuote = res.quote || null;
+          confirmBtn.disabled = true;
+          showStory(root, p, res);
+          UI().toast('Story generated (' + (res.provider || b.providerId) + ').', 'success');
+        }, function (err) {
+          if (err && (err.code === 'needs-confirmation' || err.code === 'cost-blocked') && err.quote) {
+            lastQuote = err.quote;
+            paintQuote(err.quote, err.code === 'cost-blocked');
+            confirmBtn.disabled = err.code === 'cost-blocked';
+            UI().toast(err.code === 'cost-blocked'
+              ? 'Blocked by a spend limit — see quote.'
+              : 'Quote ready — review and confirm.', err.code === 'cost-blocked' ? 'error' : 'info');
+            return;
+          }
+          UI().toast(UI().errorText(err), 'error');
+        });
+      }, label);
+    }
+    slot.querySelector('[data-a="story-gen"]').addEventListener('click', function (e) {
+      attempt(false, e.target, 'Generating…');
+    });
+    confirmBtn.addEventListener('click', function (e) {
+      attempt(true, e.target, 'Generating…');
+    });
+  }
+
+  function showStory(root, p, res) {
+    var rslot = root.querySelector('[data-slot="story-result"]');
+    if (!rslot) return;
+    var usage = res.usage || {};
+    var usageLine = Object.keys(usage).map(function (k) {
+      return k + ': ' + usage[k];
+    }).join(' · ');
+    rslot.innerHTML = '<p><span class="pill green">generated</span> '
+      + '<span class="muted">' + U().esc(res.provider || '?') + ' / ' + U().esc(res.model || '?')
+      + ' · spent ' + U().esc(U().fmtCents(res.spentCents))
+      + (usageLine ? ' · ' + U().esc(usageLine) : '') + '</span></p>'
+      + '<div data-slot="story-text"></div>'
+      + '<div class="btn-row"><button type="button" class="btn primary" data-a="insert-story">Insert into project blueprint</button></div>'
+      + '<div data-slot="story-insert"></div>'
+      + '<p class="muted small">Insert appends this story to the stored blueprint\'s notes field (nothing else changes).</p>';
+    rslot.querySelector('[data-slot="story-text"]').appendChild(UI().pre(res.text || ''));
+    rslot.querySelector('[data-a="insert-story"]').addEventListener('click', function (e) {
+      UI().busy(e.target, function () {
+        return api().getBlueprint(p.id).then(function (stored) {
+          var next = U().appendStoryToNotes(stored.blueprint, res.text || '');
+          return api().putBlueprint(p.id, next).then(function (saved) {
+            S().rememberReport('blueprint', 'Blueprint save (story insert)', saved.report);
+            rslot.querySelector('[data-slot="story-insert"]').innerHTML =
+              '<p><span class="pill green">inserted</span> <span class="muted">Story appended to blueprint notes.</span></p>';
+            UI().toast('Story inserted into the project blueprint.', 'success');
+          }, function (err) {
+            if (err && err.report) {
+              S().rememberReport('blueprint', 'Blueprint save (story insert)', err.report);
+              rslot.querySelector('[data-slot="story-insert"]').innerHTML =
+                UI().reportHtml(err.report, 'Blueprint save failed');
+            }
+            UI().toast(UI().errorText(err), 'error');
+          });
+        }, function (err) {
+          if (err && err.code === 'blueprint-not-found') {
+            UI().toast('No blueprint stored — run the New Game wizard first.', 'error');
+            return;
+          }
+          UI().toast(UI().errorText(err), 'error');
+        });
+      }, 'Inserting…');
     });
   }
 

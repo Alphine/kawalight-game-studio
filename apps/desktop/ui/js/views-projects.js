@@ -322,6 +322,8 @@
   // ---------- New Game wizard ----------
   var STEPS = ['Basics', 'Setup', 'Gameplay', 'Preview'];
   var wiz = null;
+  var themeCache = null; // parsed data/themes.json, fetched once
+  var themeLoadFailed = false;
 
   function renderWizard(root) {
     if (!wiz) wiz = { step: 0, data: U().defaultWizard(), preview: null };
@@ -378,7 +380,9 @@
           + ['phaser3-html5', 'godot4'].map(function (s) {
             return '<option' + (w.targetRuntime === s ? ' selected' : '') + '>' + s + '</option>';
           }).join('') + '</select>')
-        + '</div><p class="muted small">All five genres assemble into engine-ready configs with per-genre Level Studio editors.</p>';
+        + '</div><p class="muted small">All five genres assemble into engine-ready configs with per-genre Level Studio editors.</p>'
+        + '<h4>' + icon('forge') + 'Theme presets</h4><div data-slot="themes"><p class="muted">Loading theme presets…</p></div>';
+      wireThemePicker(body);
     } else if (wiz.step === 1) {
       body.innerHTML = '<div class="form-grid">'
         + field('Width (480..1920)', '<input data-f="width" type="number" min="480" max="1920" value="' + w.width + '">')
@@ -485,6 +489,66 @@
       if (!wiz.data.enemies[i]) return;
       if (inp.dataset.e === 'count') wiz.data.enemies[i].count = Number(inp.value);
       else wiz.data.enemies[i][inp.dataset.e] = inp.value;
+    });
+  }
+
+  // Theme picker: genre -> theme cards -> wizard prefill. Picking a theme
+  // only prefills; every field stays manually editable afterwards.
+  function wireThemePicker(body) {
+    var genreSel = body.querySelector('[data-f="genre"]');
+    if (genreSel) genreSel.addEventListener('change', function () {
+      wiz.data.genre = genreSel.value;
+      paintThemeCards(body);
+    });
+    paintThemeCards(body);
+  }
+
+  function paintThemeCards(body) {
+    var slot = body.querySelector('[data-slot="themes"]');
+    if (!slot) return;
+    var sel = body.querySelector('[data-f="genre"]');
+    var genre = sel ? sel.value : wiz.data.genre;
+    if (themeCache) {
+      var list = themeCache[genre] || [];
+      if (!list.length) {
+        slot.innerHTML = '<p class="muted">No presets for this genre — fill the fields manually.</p>';
+        return;
+      }
+      slot.innerHTML = '<div class="genre-grid">' + list.map(function (t) {
+        return '<div class="genre-card glass-panel"><h3>' + U().esc(t.name || t.id) + '</h3>'
+          + '<p>' + U().esc(t.gameLoop || t.theme || '') + '</p>'
+          + '<div class="tags"><span>' + U().esc(t.visualStyle || '') + '</span>'
+          + '<span>' + U().esc((t.difficulty || {}).preset || '') + '</span></div>'
+          + '<button type="button" class="btn" data-theme="' + U().esc(t.id) + '">Use this theme</button></div>';
+      }).join('') + '</div>'
+        + '<p class="muted small">Picking a theme prefills the wizard — every field stays editable.</p>';
+      slot.querySelectorAll('[data-theme]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var picked = null;
+          list.forEach(function (t) { if (t.id === b.dataset.theme) picked = t; });
+          if (!picked) return;
+          collectStep(body); // keep any typed values the theme does not cover
+          wiz.data = U().applyThemeToWizard(wiz.data, picked);
+          renderStep(body);
+          wireThemePicker(body);
+          UI().toast('Theme "' + (picked.name || picked.id) + '" applied — review and edit freely.', 'success');
+        });
+      });
+      return;
+    }
+    if (themeLoadFailed) {
+      slot.innerHTML = '<p class="muted small">Theme presets unavailable — fill the fields manually.</p>';
+      return;
+    }
+    fetch('data/themes.json').then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function (data) {
+      themeCache = data;
+      if (slot.isConnected) paintThemeCards(body);
+    }, function () {
+      themeLoadFailed = true;
+      if (slot.isConnected) paintThemeCards(body);
     });
   }
 

@@ -280,6 +280,60 @@
     return errs;
   }
 
+  // Theme presets (apps/desktop/ui/data/themes.json): normalize the foe list.
+  // space-shooter/battle-2d themes use `enemies`, the other genres use
+  // `obstacles`; both are [{id, role}].
+  function themeFoes(theme) {
+    var list = (theme && theme.enemies) || (theme && theme.obstacles) || [];
+    return list.map(function (f) {
+      return { id: String((f && f.id) || ''), role: String((f && f.role) || '') };
+    });
+  }
+
+  // Apply a theme preset onto New-Game wizard data. Pure: returns a new
+  // object, the input is untouched. Only blueprint-shaped fields are copied;
+  // name, resolution, seed, and notes are preserved for manual editing.
+  function applyThemeToWizard(w, theme) {
+    var next = {};
+    Object.keys(w || {}).forEach(function (k) { next[k] = w[k]; });
+    if (!theme) return next;
+    if (theme.theme != null) next.theme = theme.theme;
+    if (theme.visualStyle != null) next.visualStyle = theme.visualStyle;
+    if (theme.gameLoop != null) next.gameLoop = theme.gameLoop;
+    var p = theme.player || {};
+    if (p.abilities) next.abilities = p.abilities.slice();
+    if (p.health != null) next.health = p.health;
+    if (p.lives != null) next.lives = p.lives;
+    var foes = themeFoes(theme);
+    if (foes.length) {
+      next.enemies = foes.map(function (f) {
+        return { id: f.id, role: f.role, count: 4 };
+      });
+    }
+    if (theme.progression != null) next.progression = theme.progression;
+    if (theme.scoring != null) next.scoring = theme.scoring;
+    if (theme.winCondition != null) next.winCondition = theme.winCondition;
+    if (theme.loseCondition != null) next.loseCondition = theme.loseCondition;
+    if (theme.controls && theme.controls.scheme != null) next.scheme = theme.controls.scheme;
+    if (theme.difficulty) {
+      if (theme.difficulty.preset != null) next.difficulty = theme.difficulty.preset;
+      if (theme.difficulty.ramp != null) next.ramp = theme.difficulty.ramp;
+    }
+    return next;
+  }
+
+  // Append generated story text to a blueprint's notes field. Pure: returns
+  // a new blueprint, the input is untouched. Blank stories are a no-op.
+  function appendStoryToNotes(bp, storyText) {
+    var next = {};
+    Object.keys(bp || {}).forEach(function (k) { next[k] = bp[k]; });
+    var story = String(storyText || '').trim();
+    if (!story) return next;
+    var prev = String(next.notes || '').trim();
+    next.notes = prev ? prev + '\n\n--- Story ---\n' + story : story;
+    return next;
+  }
+
   // Normalize a worker error payload into {code, message, quote?, report?}.
   function parseApiError(payload, status, fallback) {
     var err = payload && payload.error ? payload.error : null;
@@ -499,7 +553,9 @@
       fmtDate: fmtDate, fmtDuration: fmtDuration, stateLabel: stateLabel,
       allowedTransitions: allowedTransitions, isValidProjectName: isValidProjectName,
       defaultWizard: defaultWizard, buildWizardBlueprint: buildWizardBlueprint,
-      validateWizardLocal: validateWizardLocal, parseApiError: parseApiError,
+      validateWizardLocal: validateWizardLocal, themeFoes: themeFoes,
+      applyThemeToWizard: applyThemeToWizard, appendStoryToNotes: appendStoryToNotes,
+      parseApiError: parseApiError,
       summarizeReport: summarizeReport, controlsKeysFor: controlsKeysFor,
       gameSettingsSpec: gameSettingsSpec, genreOfConfig: genreOfConfig,
       buildPreviewPage: buildPreviewPage,

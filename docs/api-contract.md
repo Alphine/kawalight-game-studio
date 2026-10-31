@@ -224,10 +224,31 @@ projects/<id>/project.json blueprint.json config.json
 .kgsm/kgsm.db secrets.json backups/<id>-<ts>.zip(+sha256 sidecar)
 ```
 
-## Endpoint index (39)
+## 13. Story generation (NEW; `story.py`)
+
+Produces lore/story/dialogue text via a text-capable provider.
+`providerId` defaults to `mock` (deterministic offline placeholder, zero
+cost); any registered provider exposing `generate_text` works as a real
+backend, while image-only providers fail with `502 provider-error`.
+Cost-guarded exactly like asset generation (§4): the handler re-quotes
+(one story = one billable unit), enforces `authorize`, then generates and
+`record_spend`s actuals. `projectId`, when given, must reference an
+existing project (else `404 project-not-found`) and scopes the spend.
+
+- `POST /stories/generate`
+  `{"prompt":"non-empty, ≤8000 chars","genre"?:"≤64 chars",
+  "projectId"?,"providerId"?:="mock","confirmed":false}` →
+  `201 {"text","provider","model","usage":{"promptChars","textChars",...},
+  "quote":{...},"spentCents":n}`.
+  Unconfirmed paid/unknown cost → `409 needs-confirmation` or
+  `402 cost-blocked` with the quote attached. Errors: `unknown-provider`
+  (`404`), `project-not-found` (`404`), `provider-error` (`502`; nothing
+  spent, NFR-003).
+
+## Endpoint index (40)
 
 health 1 · projects 8 · blueprints 4 · configs 3 · assets 6 · providers 1 ·
-costs 5 · export 3 · backup/restore 3 · audio 2 · secrets 3.
+costs 5 · export 3 · backup/restore 3 · audio 2 · secrets 3 · stories 1.
 
 
 ## Revision 1.1 (2026-10-29, additive — route count unchanged at 39)
@@ -260,3 +281,15 @@ costs 5 · export 3 · backup/restore 3 · audio 2 · secrets 3.
   Config/blueprint genre must match the project genre (`422` otherwise);
   missing `blueprint.json` falls back to a synthesized minimal blueprint.
   Error code `godot-not-implemented` is retired.
+
+
+## Revision 1.4 (2026-10-31, additive - route count 39 -> 40)
+
+- New `POST /stories/generate` (§13): lore/story/dialogue text via a
+  text-capable provider (`story.py` + `routes_story.py`). `providerId`
+  defaults to `mock` (deterministic offline placeholder, zero cost); real
+  backends plug in duck-typed via `generate_text` with no `providers/`
+  changes. Cost-guarded exactly like asset generation (quote → authorize →
+  `409`/`402` with quote attached → `record_spend`); failures spend
+  nothing (NFR-003). Wire-up: mount `routes_story.ROUTES` in
+  `server._collect_routes` (one line).

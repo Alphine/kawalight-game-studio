@@ -33,7 +33,8 @@ from . import (
     quote_to_dict,
 )
 from . import (routes_assets, routes_config, routes_export, routes_ops,
-                 routes_projects, routes_providers, routes_secrets)
+                 routes_projects, routes_providers, routes_secrets,
+                 routes_story)
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 4317
@@ -167,7 +168,7 @@ def _collect_routes() -> list:
     tables = [CORE_ROUTES, routes_projects.ROUTES, routes_config.ROUTES,
               routes_assets.ROUTES, routes_export.ROUTES,
               routes_secrets.ROUTES, routes_providers.ROUTES,
-              routes_ops.ROUTES]
+              routes_ops.ROUTES, routes_story.ROUTES]
     compiled = []
     for table in tables:
         for method, pattern, handler in table:

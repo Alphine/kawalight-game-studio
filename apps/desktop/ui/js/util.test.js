@@ -210,3 +210,72 @@ describe('buildPreviewPage', () => {
     assert.ok(html.includes('schematic preview'));
   });
 });
+
+describe('themeFoes', () => {
+  it('normalizes enemies and obstacles to id/role pairs', () => {
+    assert.deepEqual(U.themeFoes({ enemies: [{ id: 'a', role: 'x' }] }), [{ id: 'a', role: 'x' }]);
+    assert.deepEqual(U.themeFoes({ obstacles: [{ id: 'b', role: 'y' }] }), [{ id: 'b', role: 'y' }]);
+    assert.deepEqual(U.themeFoes({}), []);
+    assert.deepEqual(U.themeFoes(null), []);
+  });
+});
+
+describe('applyThemeToWizard', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const themes = JSON.parse(fs.readFileSync(
+    path.join(__dirname, '..', 'data', 'themes.json'), 'utf-8'));
+
+  it('prefills an enemies-genre theme and preserves manual fields', () => {
+    const w = U.defaultWizard();
+    w.name = 'My Game'; w.seed = 7; w.notes = 'keep me';
+    const before = JSON.parse(JSON.stringify(w));
+    const next = U.applyThemeToWizard(w, themes['space-shooter'][0]);
+    assert.deepEqual(w, before, 'input untouched');
+    assert.equal(next.name, 'My Game');
+    assert.equal(next.seed, 7);
+    assert.equal(next.notes, 'keep me');
+    assert.equal(next.theme, 'Neon Swarm over Vega Prime');
+    assert.equal(next.visualStyle, 'pixel-art');
+    assert.ok(next.gameLoop.includes('Vega Prime'));
+    assert.deepEqual(next.abilities, ['move', 'shoot', 'dash']);
+    assert.equal(next.enemies.length, 3);
+    assert.deepEqual(next.enemies[0], { id: 'ember-drone', role: 'basic drifter that flies straight at the player', count: 4 });
+    assert.equal(next.scheme, 'keyboard');
+    assert.equal(next.difficulty, 'normal');
+    assert.equal(next.ramp, 'gradual');
+    assert.deepEqual(U.validateWizardLocal(next), []);
+  });
+
+  it('maps obstacle-genre foes onto the wizard enemy list', () => {
+    const w = U.defaultWizard();
+    w.name = 'G'; w.genre = 'endless-runner';
+    const next = U.applyThemeToWizard(w, themes['endless-runner'][0]);
+    assert.equal(next.theme, 'Neon Rooftops sprint');
+    assert.deepEqual(next.enemies.map((e) => e.id),
+      ['vent-spike', 'billboard-crate', 'patrol-drone']);
+    assert.deepEqual(U.validateWizardLocal(next), []);
+    const farm = U.applyThemeToWizard(w, themes.farming[0]);
+    assert.equal(farm.scheme, 'mouse-keyboard');
+    assert.equal(farm.enemies.length, 2);
+  });
+
+  it('null theme returns an equal copy', () => {
+    const w = U.defaultWizard();
+    const next = U.applyThemeToWizard(w, null);
+    assert.deepEqual(next, w);
+    assert.notEqual(next, w);
+  });
+});
+
+describe('appendStoryToNotes', () => {
+  it('sets or appends notes without touching the input', () => {
+    assert.deepEqual(U.appendStoryToNotes({ notes: '' }, '  Once upon…  '), { notes: 'Once upon…' });
+    const bp = { genre: 'farming', notes: 'plan' };
+    const next = U.appendStoryToNotes(bp, 'A tale.');
+    assert.equal(bp.notes, 'plan', 'input untouched');
+    assert.equal(next.genre, 'farming');
+    assert.equal(next.notes, 'plan\n\n--- Story ---\nA tale.');
+    assert.deepEqual(U.appendStoryToNotes({ notes: 'x' }, '   '), { notes: 'x' });
+  });
+});

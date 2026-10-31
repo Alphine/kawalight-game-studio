@@ -77,7 +77,8 @@ node packages\templates\phaser\tools\smoke.mjs farming
 | M1 | Worker HTTP API (39 endpoints, contract v1 frozen), full dashboard UI (11 views: Home, New Game wizard, Blueprint, Asset Forge/Lab, Level Studio, Game Settings, Playtest, Validation, Export, Settings), openai-compat provider | done |
 | M2 | Endless-runner template (playable, tested, smoke-green) + full worker support (schema, validate, assemble, export, CLI), backup/restore (worker + CLI + UI), audio import (worker + CLI + UI view), auto-stage/preview Playtest wiring, multi-genre Level Studio | done |
 | M3 | Side-scroller + battle-2D templates (playable, tested, smoke-green, full worker support), Godot 4 exporter (standalone + worker/UI wiring, secret-scanned ZIP) | done — Godot output not yet opened in a real Godot editor (acceptance pass open) |
-| M4 | Farming template (playable, tested, smoke-green, full worker support), UI polish pass, binary/installer v0.1.0 packaging | done |
+| M4 | Farming template (playable, tested, smoke-green, full worker support), UI polish pass, portable binary v0.2.0 | done |
+| AI expansion | Meta/Llama BYOK provider (Together/Groq/OpenRouter/HF presets) for images + story text, POST /stories/generate (40 endpoints), 15 starter themes (3/genre) with wizard picker | done |
 
 ## Working agreements
 

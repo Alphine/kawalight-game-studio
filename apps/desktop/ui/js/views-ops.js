@@ -623,6 +623,35 @@
   }
 
   // ---------- Settings ----------
+  // Meta/Llama host presets (docs/providers.md §"Host presets"). Values only
+  // prefill the form below; saving stores them as llama_* secrets.
+  var LLAMA_PRESETS = {
+    together: {
+      label: 'Together AI (text + images, the defaults)', base: 'https://api.together.xyz/v1',
+      text: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', image: 'black-forest-labs/FLUX.1-schnell',
+      keyUrl: 'https://api.together.xyz/settings/api-keys',
+      note: 'One key covers text + images. Only the key is required — the rest are already the defaults.',
+    },
+    groq: {
+      label: 'Groq (text only)', base: 'https://api.groq.com/openai/v1',
+      text: 'llama-3.3-70b-versatile', image: '',
+      keyUrl: 'https://console.groq.com/keys',
+      note: 'Text only: Groq has no images endpoint, so llama-image calls fail here. Free tier friendly.',
+    },
+    openrouter: {
+      label: 'OpenRouter (text only)', base: 'https://openrouter.ai/api/v1',
+      text: 'meta-llama/llama-3.3-70b-instruct', image: '',
+      keyUrl: 'https://openrouter.ai/keys',
+      note: 'Text via chat completions. Use Together for images.',
+    },
+    huggingface: {
+      label: 'Hugging Face (text only)', base: 'https://router.huggingface.co/v1',
+      text: 'meta-llama/Llama-3.3-70B-Instruct', image: '',
+      keyUrl: 'https://huggingface.co/settings/tokens',
+      note: 'Token needs Inference permission; gated Llama models need license acceptance.',
+    },
+  };
+
   function renderSettings(root) {
     root.innerHTML =
       '<div class="view-head"><div><p class="hero-tag">' + I('gear') + ' STUDIO &amp; SYSTEM</p><h2>' + I('gear') + ' Settings</h2>'
@@ -634,6 +663,24 @@
       + '<div data-slot="health"></div></section>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('folder') + ' Providers</h3></div><div data-slot="providers">'
       + UI().loadingPanel('Loading providers…') + '</div></section></div>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('forge') + ' Meta / Llama provider (BYOK)</h3></div>'
+      + '<p class="muted small">Powers <strong>llama-text</strong> (Forge → Story tab) and <strong>llama-image</strong> (Forge images). '
+      + 'Values are stored as <code>llama_*</code> secrets and never displayed back.</p>'
+      + '<div class="form-grid">'
+      + '<label class="fld"><span>Host preset</span><select data-f="ll-preset">'
+      + Object.keys(LLAMA_PRESETS).map(function (k) {
+        return '<option value="' + k + '">' + U().esc(LLAMA_PRESETS[k].label) + '</option>';
+      }).join('') + '</select></label>'
+      + '<label class="fld"><span>API key</span><input data-f="ll-key" type="password" placeholder="stored, never shown" autocomplete="off"></label>'
+      + '<label class="fld"><span>Base URL</span><input data-f="ll-base" placeholder="https://api.together.xyz/v1"></label>'
+      + '<label class="fld"><span>Text model (llama-text)</span><input data-f="ll-text" placeholder="meta-llama/Llama-3.3-70B-Instruct-Turbo"></label>'
+      + '<label class="fld"><span>Image model (llama-image)</span><input data-f="ll-image" placeholder="black-forest-labs/FLUX.1-schnell"></label>'
+      + '<label class="fld"><span>Price (cents/image, empty = unknown)</span><input data-f="ll-price" type="number" min="0" placeholder="empty"></label>'
+      + '</div>'
+      + '<p class="muted small" data-slot="ll-preset-note"></p>'
+      + '<div class="btn-row"><button type="button" class="btn primary" data-a="ll-save">Save Llama settings</button> '
+      + '<button type="button" class="btn ghost" data-a="ll-test">Test connection</button></div>'
+      + '<div data-slot="ll-status"></div></section>'
       + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('shield') + ' Secrets (names only — values are write-only)</h3></div>'
       + '<div data-slot="secrets">' + UI().loadingPanel('Loading secret names…') + '</div>'
       + '<div class="row"><input data-f="s-name" placeholder="SECRET_NAME" size="18"> '
@@ -679,6 +726,61 @@
           loadSecrets(root);
         });
       }, 'Storing…');
+    });
+    function paintLlamaPreset(fill) {
+      var key = root.querySelector('[data-f="ll-preset"]').value;
+      var pr = LLAMA_PRESETS[key] || LLAMA_PRESETS.together;
+      if (fill) {
+        root.querySelector('[data-f="ll-base"]').value = pr.base;
+        root.querySelector('[data-f="ll-text"]').value = pr.text;
+        root.querySelector('[data-f="ll-image"]').value = pr.image;
+      }
+      root.querySelector('[data-slot="ll-preset-note"]').textContent =
+        'Get a key at ' + pr.keyUrl + ' — ' + pr.note;
+    }
+    root.querySelector('[data-f="ll-preset"]').addEventListener('change', function () { paintLlamaPreset(true); });
+    paintLlamaPreset(true);
+    root.querySelector('[data-a="ll-save"]').addEventListener('click', function (e) {
+      var vals = {
+        llama_api_key: root.querySelector('[data-f="ll-key"]').value.trim(),
+        llama_base_url: root.querySelector('[data-f="ll-base"]').value.trim(),
+        llama_text_model: root.querySelector('[data-f="ll-text"]').value.trim(),
+        llama_image_model: root.querySelector('[data-f="ll-image"]').value.trim(),
+        llama_price_cents_per_image: root.querySelector('[data-f="ll-price"]').value.trim(),
+      };
+      var jobs = Object.keys(vals).filter(function (k) { return vals[k] !== ''; })
+        .map(function (k) { return api().putSecret(k, vals[k]); });
+      if (!jobs.length) { UI().toast('Fill at least the API key before saving.', 'error'); return; }
+      UI().busy(e.target, function () {
+        return Promise.all(jobs).then(function () {
+          root.querySelector('[data-f="ll-key"]').value = '';
+          UI().toast('Llama settings stored (empty fields left unchanged).', 'success');
+          loadSecrets(root);
+        });
+      }, 'Storing…');
+    });
+    root.querySelector('[data-a="ll-test"]').addEventListener('click', function (e) {
+      UI().busy(e.target, function () {
+        return Promise.all([api().listProviders(), api().listSecrets()]).then(function (res) {
+          var ids = (res[0].providers || []).map(function (pr) { return pr.id; });
+          var names = res[1].names || [];
+          var checks = [
+            ['llama-text adapter registered', ids.indexOf('llama-text') >= 0],
+            ['llama-image adapter registered', ids.indexOf('llama-image') >= 0],
+            ['llama_api_key stored', names.indexOf('llama_api_key') >= 0],
+          ];
+          var ok = checks.every(function (c) { return c[1]; });
+          var slot = root.querySelector('[data-slot="ll-status"]');
+          slot.innerHTML = '<ul class="asset-list">' + checks.map(function (c) {
+            return '<li><span class="pill ' + (c[1] ? 'green' : 'red') + '">'
+              + (c[1] ? 'PASS' : 'FAIL') + '</span> ' + U().esc(c[0]) + '</li>';
+          }).join('') + '</ul>'
+            + '<p class="muted small">Secret values are write-only, so only presence is checked. '
+            + 'Unset base URL / models fall back to the Together defaults.</p>';
+          UI().toast(ok ? 'Llama is ready — try the Forge Story tab.'
+            : 'Llama is not fully configured — see checks above.', ok ? 'success' : 'error');
+        });
+      }, 'Testing…');
     });
     root.querySelector('[data-a="lim-save"]').addEventListener('click', function (e) {
       var g = root.querySelector('[data-f="lim-global"]').value;
