@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sqlite3
 import uuid
 import zipfile
@@ -97,8 +98,11 @@ def create_backup(project_id: str) -> dict:
         dest = backups_dir() / f"{base}-{suffix:02d}.zip"
     with zipfile.ZipFile(dest, "w", zipfile.ZIP_DEFLATED) as zf:
         for path in sorted(project.dir.rglob("*")):
-            if path.is_file():
-                zf.write(path, path.relative_to(project.dir).as_posix())
+            # Never follow a planted symlink: its target bytes would leak
+            # into the snapshot.
+            if path.is_symlink() or not path.is_file():
+                continue
+            zf.write(path, path.relative_to(project.dir).as_posix())
     sha256 = _sha256_file(dest)
     dest.with_suffix(dest.suffix + ".sha256").write_text(sha256, encoding="utf-8")
     return {
@@ -184,7 +188,28 @@ def _validate_record(record: dict, backup_id: str) -> dict:
     }
 
 
-def _extract_safe(zf: zipfile.ZipFile, dest: Path, backup_id: str) -> None:
+_RESTORE_ID_RE = re.compile(r"^[0-9a-f]{12}$")
+
+
+def _verify_sidecar(path: Path, backup_id: str) -> None:
+    """Fail closed when the .sha256 sidecar exists but does not match.
+
+    A missing/unreadable sidecar is tolerated (hand-made and legacy ZIPs);
+    every snapshot written by create_backup carries one.
+    """
+    sidecar = path.with_suffix(path.suffix + ".sha256")
+    try:
+        expected = sidecar.read_text(encoding="utf-8").strip().split()[0]
+    except (OSError, IndexError):
+        return
+    if _sha256_file(path) != expected:
+        raise BackupError(
+            f"backup {backup_id!r} is corrupt: sha256 mismatch "
+            f"(snapshot may have been tampered with)")
+
+
+def _check_entries_safe(zf: zipfile.ZipFile, dest: Path,
+                        backup_id: str) -> None:
     for info in zf.infolist():
         name = info.filename
         candidate = Path(name)
@@ -195,6 +220,10 @@ def _extract_safe(zf: zipfile.ZipFile, dest: Path, backup_id: str) -> None:
         if target != dest.resolve() and dest.resolve() not in target.parents:
             raise BackupError(f"backup {backup_id!r} is corrupt: entry "
                               f"escapes project dir: {name!r}")
+
+
+def _extract_safe(zf: zipfile.ZipFile, dest: Path, backup_id: str) -> None:
+    _check_entries_safe(zf, dest, backup_id)
     zf.extractall(dest)
 
 
@@ -216,6 +245,7 @@ def restore_backup(backup_id: str,
     if not path.is_file():
         raise BackupError(f"backup {backup_id!r} not found",
                           code="backup-not-found")
+    _verify_sidecar(path, backup_id)
     try:
         zf = zipfile.ZipFile(path)
     except zipfile.BadZipFile:
@@ -231,8 +261,13 @@ def restore_backup(backup_id: str,
         own = conn is None
         conn = conn or dbmod.connect()
         try:
-            wanted = record.get("id") if isinstance(record.get("id"),
-                                                    str) else ""
+            raw_wanted = record.get("id")
+            wanted = raw_wanted if isinstance(raw_wanted, str) else ""
+            # The ZIP's id is untrusted: anything that is not a plain
+            # 12-hex project id (e.g. '../../x') is treated as a
+            # collision so a fresh safe id is minted below.
+            if not _RESTORE_ID_RE.match(wanted):
+                wanted = ""
             collision = (not wanted or _row_exists(conn, wanted)
                          or (paths.projects_dir() / wanted).exists())
             if collision:
@@ -245,8 +280,11 @@ def restore_backup(backup_id: str,
                 final_id = wanted
                 reassigned = False
             dest = paths.projects_dir() / final_id
+            # Validate every entry BEFORE creating the destination so an
+            # unsafe/corrupt ZIP leaves no orphan project dir behind.
+            _check_entries_safe(zf, dest, backup_id)
             dest.mkdir(parents=True, exist_ok=True)
-            _extract_safe(zf, dest, backup_id)
+            zf.extractall(dest)
             project = projects_mod.Project(
                 id=final_id, name=fields["name"], genre=fields["genre"],
                 state=fields["state"], state_reason=fields["state_reason"],

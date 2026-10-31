@@ -57,7 +57,12 @@
     return { id: state.currentId, name: '(not in list — refresh)', state: '?' };
   }
   function rememberReport(key, title, report) {
-    state.lastReports[key] = { title: title, report: report, at: new Date().toISOString() };
+    // Stamp the owning project so views can filter out stale reports from
+    // other projects (project-agnostic reports keep pid null).
+    state.lastReports[key] = {
+      title: title, report: report, at: new Date().toISOString(),
+      pid: state.currentId || null,
+    };
   }
 
   globalThis.KgsmStore = {

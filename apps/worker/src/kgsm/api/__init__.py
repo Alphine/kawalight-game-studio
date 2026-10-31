@@ -2,8 +2,7 @@
 
 Shared request/response plumbing for the route plugins
 (``routes_projects``, ``routes_config``, ``routes_assets``, ``routes_export``,
-``routes_secrets``, plus optional ``routes_providers`` / ``routes_ops`` owned
-by other builders and loaded defensively by ``server.py``).
+``routes_secrets``, ``routes_providers``, ``routes_ops``).
 """
 
 from __future__ import annotations
@@ -162,13 +161,25 @@ def resolve_inside(base: Path, rel: str) -> Path:
     return full
 
 
+_SEGMENT_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
+
+
 def check_segment(value: Any, field_name: str) -> str:
-    """Validate a single path-segment field (entity/role/animation names)."""
+    """Validate a single path-segment field (entity/role/animation names).
+
+    Segments flow into filenames and an rglob pattern, so shell/glob
+    metachars, dots, and separators are rejected, not just ".." and "/".
+    """
     if not isinstance(value, str) or not value:
         raise bad_request(f"{field_name} must be a non-empty string")
     if value in (".", "..") or "/" in value or "\\" in value or "\x00" in value:
         raise ApiError("path-escape", f"{field_name} must be a plain name",
                        400)
+    if not _SEGMENT_RE.match(value):
+        raise ApiError(
+            "path-escape",
+            f"{field_name} must match ^[A-Za-z0-9][A-Za-z0-9_-]{{0,63}}$",
+            400)
     return value
 
 

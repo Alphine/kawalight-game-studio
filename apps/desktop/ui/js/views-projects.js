@@ -27,14 +27,25 @@
   };
 
   var ICONS = {
-    ship: '<svg width="44" height="44" viewBox="0 0 44 44"><path d="M30 6 L12 22 L12 16 L6 12 L12 10 L12 4 Z M12 24 L12 34 L18 30 L26 30 Z" fill="COLOR"/></svg>',
-    barn: '<svg width="44" height="44" viewBox="0 0 44 44"><path d="M6 20 L22 6 L38 20 V38 H6 Z M18 38 V26 H26 V38" fill="COLOR"/></svg>',
-    swords: '<svg width="44" height="44" viewBox="0 0 44 44"><path d="M10 34 L30 8 L34 12 L14 38 Z M34 34 L14 8 L10 12 L30 38 Z" fill="COLOR"/></svg>',
-    steps: '<svg width="44" height="44" viewBox="0 0 44 44"><path d="M6 36 H18 V28 H26 V20 H34 V12 H38 V36 Z" fill="COLOR"/></svg>',
-    bolt: '<svg width="44" height="44" viewBox="0 0 44 44"><path d="M24 4 L10 26 H20 L18 40 L34 16 H24 Z" fill="COLOR"/></svg>',
+    ship: '<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M30 6 L12 22 L12 16 L6 12 L12 10 L12 4 Z M12 24 L12 34 L18 30 L26 30 Z" fill="COLOR"/></svg>',
+    barn: '<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M6 20 L22 6 L38 20 V38 H6 Z M18 38 V26 H26 V38" fill="COLOR"/></svg>',
+    swords: '<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M10 34 L30 8 L34 12 L14 38 Z M34 34 L14 8 L10 12 L30 38 Z" fill="COLOR"/></svg>',
+    steps: '<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M6 36 H18 V28 H26 V20 H34 V12 H38 V36 Z" fill="COLOR"/></svg>',
+    bolt: '<svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M24 4 L10 26 H20 L18 40 L34 16 H24 Z" fill="COLOR"/></svg>',
   };
 
   function genreName(g) { return (GENRE_META[g] || {}).name || g; }
+
+  // Pick dark vs white foreground per background luminance (WCAG AA for the
+  // genre Select buttons; e.g. amber #f59e0b fails with white text).
+  function fgFor(hex) {
+    var m = /^#([0-9a-f]{6})$/i.exec(hex || '');
+    if (!m) return '#fff';
+    var n = parseInt(m[1], 16);
+    var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    var lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    return lum > 0.45 ? '#1a1206' : '#fff';
+  }
 
   // ---------- Home / Projects ----------
   function renderHome(root) {
@@ -55,7 +66,7 @@
           + '<h3>' + U().esc(m.name) + '</h3>'
           + '<p>' + U().esc(m.blurb) + '</p>'
           + '<div class="tags">' + m.tags.map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</div>'
-          + '<button type="button" class="btn" data-genre="' + g + '" style="background:' + m.color + ';border-color:' + m.color + ';color:#fff">' + icon('check') + 'Select</button></div>';
+          + '<button type="button" class="btn" data-genre="' + g + '" style="background:' + m.color + ';border-color:' + m.color + ';color:' + fgFor(m.color) + '">' + icon('check') + 'Select</button></div>';
       }).join('') + '</div></section>'
       + '<div class="view-head"><div><h2>' + icon('folder') + 'Projects</h2>'
       + '<p class="muted">Status, state machine, and quick actions.</p></div>'
@@ -64,12 +75,23 @@
       + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + icon('folder') + 'Projects</h3>'
       + '<label class="check"><input type="checkbox" data-a="arch"> Show archived</label></div>'
       + '<div data-slot="list">' + UI().loadingPanel('Loading projects…') + '</div></section>'
-      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('info') + 'Selected project</h3></div><div data-slot="detail"></div></section></div>';
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('info') + 'Selected project</h3></div><div data-slot="detail"></div></section></div>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('export') + 'Recent builds</h3></div>'
+      + '<div data-slot="builds"></div>'
+      + '<p class="muted small">Storage usage is not exposed by the worker API yet — full build history lives in Export Center.</p></section>';
 
     root.querySelector('[data-a="new"]').addEventListener('click', function () { go('new'); });
     root.querySelector('[data-a="hero-new"]').addEventListener('click', function () { go('new'); });
     root.querySelector('[data-a="hero-demo"]').addEventListener('click', function () {
-      UI().toast('Demo video is not bundled — this is an M2 media item.', 'error');
+      // No bundled video in wave 1: show an info modal like the HUD mockup
+      // instead of a dead-end error toast.
+      if (globalThis.KgsmHud && globalThis.KgsmHud.notify) {
+        globalThis.KgsmHud.notify('KAWALIGHT STUDIO DEMO',
+          'Demo video is not bundled in this build (M2 media item). '
+          + 'Try it live: create a game, assemble its blueprint, then Playtest the schematic preview.');
+      } else {
+        UI().toast('Demo video is not bundled — this is an M2 media item.', 'info');
+      }
     });
     root.querySelectorAll('[data-genre]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -94,6 +116,7 @@
     });
     loadList(root);
     renderDetail(root);
+    loadHomeBuilds(root);
   }
 
   function refreshProjects() {
@@ -135,7 +158,14 @@
       slot.querySelectorAll('.proj-main').forEach(function (btn) {
         btn.addEventListener('click', function () {
           S().set({ currentId: btn.dataset.id });
-          renderHome(root);
+          // Targeted update only: keep scroll position and focus instead of
+          // rebuilding the whole hero + genre grid + list.
+          slot.querySelectorAll('li').forEach(function (li) {
+            var b = li.querySelector('.proj-main');
+            li.classList.toggle('sel', !!b && b.dataset.id === btn.dataset.id);
+          });
+          renderDetail(root);
+          loadHomeBuilds(root);
           globalThis.KgsmApp.renderRail();
         });
       });
@@ -144,6 +174,36 @@
       slot.innerHTML = UI().errorPanel('Could not load projects', err,
         '<button type="button" class="btn ghost" data-a="retry">' + icon('refresh') + 'Retry</button>');
       slot.querySelector('[data-a="retry"]').addEventListener('click', function () { loadList(root); });
+    });
+  }
+
+  function loadHomeBuilds(root) {
+    var slot = root.querySelector('[data-slot="builds"]');
+    if (!slot) return;
+    var p = S().current();
+    if (!p || !p.id || p.state === '?') {
+      slot.innerHTML = '<p class="muted">Select a project to see its recent builds.</p>';
+      return;
+    }
+    if (!S().get('online')) { slot.innerHTML = UI().offlinePanel(); return; }
+    slot.innerHTML = UI().loadingPanel('Loading builds…');
+    api().listExports(p.id).then(function (res) {
+      if (!slot.isConnected) return;
+      var ex = (res.exports || []).slice(-5).reverse();
+      if (!ex.length) {
+        slot.innerHTML = '<p class="muted">No builds yet — run Export Center.</p>';
+        return;
+      }
+      slot.innerHTML = '<ul class="asset-list">' + ex.map(function (b) {
+        return '<li><code>' + U().esc(b.file) + '</code> <span class="muted">'
+          + U().esc(U().fmtBytes(b.bytes)) + ' · ' + U().esc(U().fmtDate(b.createdAt)) + '</span></li>';
+      }).join('') + '</ul>';
+    }, function (err) {
+      if (!slot.isConnected) return;
+      slot.innerHTML = UI().errorPanel('Could not load builds', err,
+        '<button type="button" class="btn ghost" data-a="b-retry">' + icon('refresh') + 'Retry</button>');
+      var rb = slot.querySelector('[data-a="b-retry"]');
+      if (rb) rb.addEventListener('click', function () { loadHomeBuilds(root); });
     });
   }
 
@@ -166,11 +226,13 @@
       + (t.forward ? '<button type="button" class="btn primary" data-a="fwd">Advance → ' + U().esc(U().stateLabel(t.forward)) + '</button>' : '<span class="pill green">final state</span>')
       + '</div>'
       + '<div class="form-row"><label>Move back (needs reason)<div class="row">'
-      + '<select data-f="back">' + t.backward.map(function (s) {
+      + '<select data-f="back"' + (t.backward.length ? '' : ' disabled') + '>' + t.backward.map(function (s) {
         return '<option value="' + s + '">' + U().esc(U().stateLabel(s)) + '</option>';
       }).join('') + '</select>'
-      + '<input data-f="back-reason" placeholder="reason (required)" size="22">'
-      + '<button type="button" class="btn ghost" data-a="back">Move</button></div></label></div>'
+      + '<input data-f="back-reason" placeholder="reason (required)" size="22"' + (t.backward.length ? '' : ' disabled') + '>'
+      + '<button type="button" class="btn ghost" data-a="back"'
+      + (t.backward.length ? '' : ' disabled title="Nothing to move back to from this state"') + '>Move</button></div></label>'
+      + (t.backward.length ? '' : '<p class="muted small">Already at the first state — nothing to move back to.</p>') + '</div>'
       + '<div class="form-row"><label>Mark stale<div class="row">'
       + '<input data-f="stale-reason" placeholder="reason (required)" size="22">'
       + '<button type="button" class="btn ghost" data-a="stale">Mark stale</button></div></label></div>'
@@ -182,7 +244,8 @@
       + '<p class="muted small">State machine: forward exactly one step; backward any distance with a reason (contract §1).</p>';
 
     function reload() { refreshProjects().then(function () { renderHome(root); }); }
-    slot.querySelector('[data-a="fwd"]').addEventListener('click', function (e) {
+    var fwdBtn = slot.querySelector('[data-a="fwd"]');
+    if (fwdBtn) fwdBtn.addEventListener('click', function (e) {
       UI().busy(e.target, function () {
         return api().transitionProject(p.id, t.forward).then(function () {
           UI().toast('Advanced to ' + U().stateLabel(t.forward), 'success');
@@ -193,6 +256,7 @@
     var backBtn = slot.querySelector('[data-a="back"]');
     if (backBtn) backBtn.addEventListener('click', function (e) {
       var to = slot.querySelector('[data-f="back"]').value;
+      if (!to) { UI().toast('Nothing to move back to from this state.', 'error'); return; }
       var reason = slot.querySelector('[data-f="back-reason"]').value.trim();
       if (!reason) { UI().toast('A reason is required to move back.', 'error'); return; }
       UI().busy(e.target, function () {
@@ -212,23 +276,26 @@
         });
       }, 'Marking…');
     });
+    function nameError(v) {
+      return U().isValidProjectName(v) ? '' : 'Name must be 1..80 characters.';
+    }
     slot.querySelector('[data-a="rename"]').addEventListener('click', function () {
-      var name = window.prompt('New project name (1..80 chars):', p.name);
-      if (name == null) return;
-      if (!U().isValidProjectName(name)) { UI().toast('Name must be 1..80 characters.', 'error'); return; }
-      api().patchProject(p.id, { name: name.trim() }).then(function () {
-        UI().toast('Renamed.', 'success'); reload();
-      }, function (e) { UI().toast(UI().errorText(e), 'error'); });
+      UI().promptModal('Rename project', p.name, nameError).then(function (name) {
+        if (name == null) return;
+        api().patchProject(p.id, { name: name }).then(function () {
+          UI().toast('Renamed.', 'success'); reload();
+        }, function (e) { UI().toast(UI().errorText(e), 'error'); });
+      });
     });
     slot.querySelector('[data-a="dup"]').addEventListener('click', function () {
-      var name = window.prompt('Name for the duplicate:', p.name + ' (copy)');
-      if (name == null) return;
-      if (!U().isValidProjectName(name)) { UI().toast('Name must be 1..80 characters.', 'error'); return; }
-      api().duplicateProject(p.id, name.trim()).then(function (np) {
-        UI().toast('Duplicated as "' + np.name + '".', 'success');
-        S().set({ currentId: np.id });
-        reload();
-      }, function (e) { UI().toast(UI().errorText(e), 'error'); });
+      UI().promptModal('Duplicate project', p.name + ' (copy)', nameError).then(function (name) {
+        if (name == null) return;
+        api().duplicateProject(p.id, name).then(function (np) {
+          UI().toast('Duplicated as "' + np.name + '".', 'success');
+          S().set({ currentId: np.id });
+          reload();
+        }, function (e) { UI().toast(UI().errorText(e), 'error'); });
+      });
     });
     slot.querySelector('[data-a="arch1"]').addEventListener('click', function (e) {
       UI().busy(e.target, function () {
@@ -263,7 +330,8 @@
       '<div class="view-head"><div><h2>' + icon('plus') + 'New Game Wizard</h2>'
       + '<p class="muted">Genre, theme, style, runtime → blueprint preview. Nothing is stored until you create the project.</p></div></div>'
       + '<ol class="steps">' + STEPS.map(function (s, i) {
-        return '<li class="' + (i === wiz.step ? 'cur' : i < wiz.step ? 'done' : '') + '">' + (i + 1) + '. ' + s + '</li>';
+        return '<li class="' + (i === wiz.step ? 'cur' : i < wiz.step ? 'done' : '') + '"'
+          + (i === wiz.step ? ' aria-current="step"' : '') + '>' + (i + 1) + '. ' + s + '</li>';
       }).join('') + '</ol>'
       + '<section class="panel glass-panel"><div data-slot="body"></div>'
       + '<div class="btn-row wizard-nav"><button type="button" class="btn ghost" data-a="prev">← Back</button>'
@@ -420,8 +488,17 @@
     });
   }
 
-  // Copies visible step fields into wiz.data; returns local validation errors
-  // relevant to forward navigation (full check only on Preview actions).
+  // Error-message keywords owned by each wizard step (from validateWizardLocal).
+  var STEP_KEYS = [
+    ['Project name', 'Unknown genre', 'Theme'],
+    ['Width', 'Height', 'Seed'], // Seed input lives on the Setup step
+    ['Game loop', 'ability', 'health', 'lives', 'Enemy', 'enemy', 'Progression',
+      'Scoring', 'Win condition', 'Lose condition'],
+    null, // Preview: full check
+  ];
+
+  // Copies visible step fields into wiz.data; returns the local validation
+  // errors relevant to the current step so Next blocks early with feedback.
   function collectStep(root) {
     var w = wiz.data;
     root.querySelectorAll('[data-f]').forEach(function (inp) {
@@ -432,7 +509,12 @@
       else w[k] = inp.value;
     });
     collectEnemies(root);
-    return [];
+    var all = U().validateWizardLocal(w);
+    var keys = STEP_KEYS[wiz.step];
+    if (!keys) return all;
+    return all.filter(function (msg) {
+      return keys.some(function (k) { return msg.indexOf(k) >= 0; });
+    });
   }
 
   V().register('home', { title: 'Home', render: renderHome });

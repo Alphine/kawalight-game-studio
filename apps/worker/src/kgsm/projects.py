@@ -94,25 +94,33 @@ def create(name: str, genre: str, conn: sqlite3.Connection | None = None) -> Pro
     own = conn is None
     conn = conn or dbmod.connect()
     try:
-        project = Project(
-            id=uuid.uuid4().hex[:12],
-            name=name,
-            genre=genre,
-            state="draft",
-            state_reason="",
-            archived=False,
-            created_at=_now(),
-            updated_at=_now(),
-        )
-        conn.execute(
-            "INSERT INTO projects (id, name, genre, state, state_reason, archived,"
-            " created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (project.id, project.name, project.genre, project.state, "",
-             0, project.created_at, project.updated_at),
-        )
-        conn.commit()
-        _write_record(project)
-        return project
+        # A 12-hex id collision raises IntegrityError; retry with a fresh
+        # id instead of surfacing an unhandled 500.
+        for _ in range(8):
+            project = Project(
+                id=uuid.uuid4().hex[:12],
+                name=name,
+                genre=genre,
+                state="draft",
+                state_reason="",
+                archived=False,
+                created_at=_now(),
+                updated_at=_now(),
+            )
+            try:
+                conn.execute(
+                    "INSERT INTO projects (id, name, genre, state, state_reason,"
+                    " archived, created_at, updated_at)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (project.id, project.name, project.genre, project.state,
+                     "", 0, project.created_at, project.updated_at),
+                )
+            except sqlite3.IntegrityError:
+                continue
+            conn.commit()
+            _write_record(project)
+            return project
+        raise ProjectError("could not mint a unique project id; retry")
     finally:
         if own:
             conn.close()

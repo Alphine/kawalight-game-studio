@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 
 from .. import costs as costs_mod
@@ -35,11 +36,10 @@ _MAX_IMAGE_SIDE = 4096  # upper bound for provider generate width/height
 _INSPECT_KEYS = ("format", "mode", "width", "height", "hasAlpha", "alphaMin",
                  "alphaMax", "colorCount64", "distinctColorsCapped257")
 
-# inspect.py requests a 257-color adaptive palette, which Pillow rejects
-# (max 256), so every successful inspect currently carries this bogus error
-# and lacks distinctColorsCapped257. Filter only that exact message and
-# recompute the capped count here until inspect.py is fixed upstream.
-_BOGUS_COLORS_ERROR = "unreadable image: bad number of colors"
+# Serializes generate_assets' quote→authorize→generate→record_spend flow so
+# concurrent ThreadingHTTPServer requests cannot both pass limits and both
+# spend (TOCTOU overspend), and generated-file numbering cannot collide.
+_GENERATE_LOCK = threading.Lock()
 
 
 def _posix(rel_path: str) -> str:
@@ -48,21 +48,9 @@ def _posix(rel_path: str) -> str:
 
 
 def _inspect_with_capped_colors(target: Path) -> dict:
-    info = inspect_image(target)
-    if info.get("errors") != [_BOGUS_COLORS_ERROR]:
-        return info
-    from PIL import Image
-
-    info["errors"] = []
-    try:
-        with Image.open(target) as img:
-            img.load()
-            found = img.convert("RGB").getcolors(maxcolors=257)
-            info["distinctColorsCapped257"] = \
-                len(found) if found is not None else 257
-    except Exception as exc:  # noqa: BLE001 - surfaced as data, like inspect
-        info["errors"] = [f"unreadable image: {exc}"]
-    return info
+    # inspect.py already reports distinctColorsCapped257 via
+    # getcolors(maxcolors=256); kept as a thin alias for the route below.
+    return inspect_image(target)
 
 
 def import_asset_route(req: Request) -> tuple[int, dict]:
@@ -108,43 +96,47 @@ def generate_assets(req: Request) -> tuple[int, dict]:
     role = check_segment(body.get("role"), "role")
     confirmed = opt_bool(body, "confirmed", False)
 
-    try:
-        quote = costs_mod.quote(provider_id, n_images, project_id=project.id)
-    except ProviderError as exc:
-        raise ApiError("unknown-provider", str(exc), 404) from None
-    except costs_mod.CostError as exc:
-        raise ApiError("bad-request", str(exc), 400) from None
-    try:
-        costs_mod.authorize(quote, confirmed)
-    except costs_mod.CostError as exc:
-        message = str(exc)
-        quoted = {"quote": quote_to_dict(quote)}
-        if "exceeds" in message:
-            raise ApiError("cost-blocked", message, 402, quoted) from None
-        raise ApiError("needs-confirmation", message, 409, quoted) from None
-
-    provider = get_provider(provider_id)
-    try:
-        images = provider.generate(prompt, style=style, width=width,
-                                   height=height, seed=seed, n_images=n_images)
-    except ProviderError as exc:
-        raise ApiError("provider-error", str(exc), 502) from None
-    saved = []
-    for image in images:
+    with _GENERATE_LOCK:
         try:
-            record = save_generated(
-                project.dir, image, entity=entity, role=role, prompt=prompt,
-                provider_id=provider_id, seed=seed)
-        except AssetError as exc:
-            raise ApiError("asset-error", str(exc), 400) from None
-        record["path"] = _posix(record["path"])
-        saved.append(record)
-    spent = quote.cents if quote.cents is not None else 0
-    costs_mod.record_spend(
-        spent, f"generate {n_images} image(s) via {provider_id}",
-        project_id=project.id)
-    return 201, {"assets": saved, "quote": quote_to_dict(quote),
-                 "spentCents": spent}
+            quote = costs_mod.quote(provider_id, n_images,
+                                    project_id=project.id)
+        except ProviderError as exc:
+            raise ApiError("unknown-provider", str(exc), 404) from None
+        except costs_mod.CostError as exc:
+            raise ApiError("bad-request", str(exc), 400) from None
+        try:
+            costs_mod.authorize(quote, confirmed)
+        except costs_mod.CostError as exc:
+            message = str(exc)
+            quoted = {"quote": quote_to_dict(quote)}
+            if quote.blocked:
+                raise ApiError("cost-blocked", message, 402, quoted) from None
+            raise ApiError("needs-confirmation", message, 409,
+                           quoted) from None
+
+        provider = get_provider(provider_id)
+        try:
+            images = provider.generate(
+                prompt, style=style, width=width, height=height, seed=seed,
+                n_images=n_images)
+        except ProviderError as exc:
+            raise ApiError("provider-error", str(exc), 502) from None
+        saved = []
+        for image in images:
+            try:
+                record = save_generated(
+                    project.dir, image, entity=entity, role=role,
+                    prompt=prompt, provider_id=provider_id, seed=seed)
+            except AssetError as exc:
+                raise ApiError("asset-error", str(exc), 400) from None
+            record["path"] = _posix(record["path"])
+            saved.append(record)
+        spent = quote.cents if quote.cents is not None else 0
+        costs_mod.record_spend(
+            spent, f"generate {n_images} image(s) via {provider_id}",
+            project_id=project.id)
+        return 201, {"assets": saved, "quote": quote_to_dict(quote),
+                     "spentCents": spent}
 
 
 def slice_assets(req: Request) -> tuple[int, dict]:

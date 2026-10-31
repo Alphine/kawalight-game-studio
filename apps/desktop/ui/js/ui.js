@@ -81,15 +81,105 @@
       overlay.querySelector('h3').textContent = title;
       overlay.querySelector('.modal-body').textContent = bodyText;
       var yes = overlay.querySelector('[data-x="yes"]');
+      var cancel = overlay.querySelector('[data-x="no2"]');
       yes.textContent = okLabel || 'Confirm';
       if (danger) yes.classList.add('danger');
-      function done(v) { overlay.remove(); resolve(v); }
+      var prevFocus = document.activeElement;
+      var settled = false;
+      function done(v) {
+        if (settled) return;
+        settled = true;
+        document.removeEventListener('keydown', onKey, true);
+        overlay.remove();
+        if (prevFocus && prevFocus.focus) { try { prevFocus.focus(); } catch (e) { /* ignore */ } }
+        resolve(v);
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); done(false); return; }
+        if (e.key !== 'Tab') return;
+        var focusables = overlay.querySelectorAll('button, input, select, textarea, [tabindex]');
+        var list = [];
+        for (var i = 0; i < focusables.length; i++) {
+          if (!focusables[i].disabled) list.push(focusables[i]);
+        }
+        if (!list.length) return;
+        var first = list[0], last = list[list.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
       overlay.querySelector('[data-x="no"]').addEventListener('click', function () { done(false); });
-      overlay.querySelector('[data-x="no2"]').addEventListener('click', function () { done(false); });
+      cancel.addEventListener('click', function () { done(false); });
       yes.addEventListener('click', function () { done(true); });
       overlay.addEventListener('click', function (e) { if (e.target === overlay) done(false); });
+      document.addEventListener('keydown', onKey, true);
       document.body.appendChild(overlay);
-      yes.focus();
+      cancel.focus();
+    });
+  }
+
+  // Inline text-prompt modal in the app's dialog vocabulary (replaces blocking
+  // window.prompt). validate(value) returns an error string or '' when ok.
+  // Resolves to the trimmed string, or null when cancelled.
+  function promptModal(title, initial, validate) {
+    return new Promise(function (resolve) {
+      var overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.innerHTML =
+        '<div class="modal glass-panel glass-panel-glow" role="dialog" aria-modal="true">'
+        + '<div class="modal-head"><h3></h3>'
+        + '<button type="button" class="icon-btn" data-x="no" aria-label="Cancel">✕</button></div>'
+        + '<label class="fld"><span>Name</span><input data-x="input" maxlength="80"></label>'
+        + '<p class="err-msg" data-x="err" role="alert" hidden></p>'
+        + '<div class="modal-actions"><button type="button" class="btn ghost" data-x="no2">Cancel</button>'
+        + '<button type="button" class="btn primary" data-x="yes">Save</button></div></div>';
+      overlay.querySelector('h3').textContent = title;
+      var input = overlay.querySelector('[data-x="input"]');
+      var err = overlay.querySelector('[data-x="err"]');
+      var yes = overlay.querySelector('[data-x="yes"]');
+      input.value = initial == null ? '' : String(initial);
+      var prevFocus = document.activeElement;
+      var settled = false;
+      function showErr(msg) {
+        err.hidden = !msg;
+        err.textContent = msg || '';
+      }
+      function done(v) {
+        if (settled) return;
+        settled = true;
+        document.removeEventListener('keydown', onKey, true);
+        overlay.remove();
+        if (prevFocus && prevFocus.focus) { try { prevFocus.focus(); } catch (e) { /* ignore */ } }
+        resolve(v);
+      }
+      function submit() {
+        var v = input.value.trim();
+        var msg = validate ? validate(v) : '';
+        if (msg) { showErr(msg); input.focus(); return; }
+        done(v);
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') { e.preventDefault(); done(null); return; }
+        if (e.key === 'Enter' && document.activeElement === input) { e.preventDefault(); submit(); return; }
+        if (e.key !== 'Tab') return;
+        var focusables = overlay.querySelectorAll('button, input, select, textarea, [tabindex]');
+        var list = [];
+        for (var i = 0; i < focusables.length; i++) {
+          if (!focusables[i].disabled) list.push(focusables[i]);
+        }
+        if (!list.length) return;
+        var first = list[0], last = list[list.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+      overlay.querySelector('[data-x="no"]').addEventListener('click', function () { done(null); });
+      overlay.querySelector('[data-x="no2"]').addEventListener('click', function () { done(null); });
+      yes.addEventListener('click', submit);
+      input.addEventListener('input', function () { showErr(''); });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) done(null); });
+      document.addEventListener('keydown', onKey, true);
+      document.body.appendChild(overlay);
+      input.focus();
+      input.select();
     });
   }
 
@@ -163,7 +253,8 @@
 
   globalThis.KgsmUi = {
     toast: toast, setBusy: setBusy, busy: busy, errorText: errorText,
-    confirmModal: confirmModal, loadingPanel: loadingPanel, emptyPanel: emptyPanel,
+    confirmModal: confirmModal, promptModal: promptModal,
+    loadingPanel: loadingPanel, emptyPanel: emptyPanel,
     errorPanel: errorPanel, offlinePanel: offlinePanel, issueList: issueList,
     reportHtml: reportHtml, pre: pre, kvRows: kvRows,
   };

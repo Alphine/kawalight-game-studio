@@ -58,12 +58,22 @@ class MockProvider(ImageProvider):
             raise ProviderError("prompt must not be empty")
         if n_images < 1 or n_images > 16:
             raise ProviderError("n_images must be 1..16")
+        for name, side in (("width", width), ("height", height)):
+            if (isinstance(side, bool) or not isinstance(side, int)
+                    or side < 1 or side > 4096):
+                raise ProviderError(
+                    f"{name} must be an integer 1..4096")
         self.calls.append({"prompt": prompt, "style": style, "n_images": n_images})
         out = []
         for i in range(n_images):
             s = (seed or 0) + i
+            try:
+                png = render_placeholder(width, height, s)
+            except Exception as exc:  # noqa: BLE001 - mapped below
+                raise ProviderError(
+                    f"mock render failed: {exc}") from None
             out.append(GeneratedImage(
-                png_bytes=render_placeholder(width, height, s),
+                png_bytes=png,
                 width=width, height=height, model=self.model, seed=seed,
             ))
         return out

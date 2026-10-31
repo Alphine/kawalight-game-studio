@@ -28,6 +28,7 @@ class Quote:
     cents: int | None  # None = unknown cost
     needs_confirmation: bool
     reason: str
+    blocked: bool = False  # True when a spend limit is exceeded (never confirmable)
 
 
 def _month_prefix() -> str:
@@ -142,13 +143,14 @@ def quote(
         if own:
             conn.close()
     if reasons:
-        return Quote(provider_id, project_id, n_images, cents, True, "; ".join(reasons))
+        return Quote(provider_id, project_id, n_images, cents, True,
+                     "; ".join(reasons), blocked=True)
     return Quote(provider_id, project_id, n_images, cents, True,
                  "paid generation: confirmation required")
 
 
 def authorize(quote_: Quote, confirmed: bool) -> None:
-    if quote_.needs_confirmation and not confirmed:
+    if quote_.blocked:
         raise CostError(f"generation blocked: {quote_.reason}")
-    if "exceeds" in quote_.reason:
+    if quote_.needs_confirmation and not confirmed:
         raise CostError(f"generation blocked: {quote_.reason}")

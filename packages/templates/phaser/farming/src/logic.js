@@ -210,7 +210,7 @@ export function stepGame(state, config, input = {}, dtMs = 16) {
     plot.growthMs += dt;
     const need = crop.stageTimeSec * 1000;
     if (plot.growthMs >= need) {
-      plot.growthMs = 0;
+      plot.growthMs -= need;
       plot.stage++;
       plot.watered = false;
       const col = i % config.farm.cols;

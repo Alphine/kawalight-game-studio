@@ -22,10 +22,11 @@ stderr, stable 20 s+, clean kill — from a normal (non-sandboxed) terminal.
    against it. No separate step needed.
 4. API keys (Asset Forge, real providers): Settings view, stored locally only.
 
-Known binary limitation: the Playtest view embeds a staged-game URL, and no
-static file server ships inside the binary yet — stage + serve from a dev
-checkout for playtests (`packages/templates/phaser/README` flow), or open an
-exported build directly. A worker-hosted preview endpoint is an M2 item.
+Playtest notes: the Playtest view runs a UI-side schematic preview
+(per-genre canvas sim, works offline in the binary) and can also embed a
+staged-game URL. For full-fidelity playtests, stage + serve from a dev
+checkout (root README: `stage-demo.mjs` + `smoke.mjs` commands) or open an
+exported build directly.
 
 ## Architecture
 

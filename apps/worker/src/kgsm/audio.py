@@ -10,9 +10,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import shutil
 import wave
 from pathlib import Path
+
+from . import paths as paths_mod
 
 AUDIO_EXTS = {".wav", ".mp3", ".ogg"}
 
@@ -26,6 +29,9 @@ class AudioError(Exception):
     pass
 
 
+_NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
+
+
 def _check_name(value: str | None, field_name: str,
                 required: bool) -> str | None:
     if value is None:
@@ -33,9 +39,26 @@ def _check_name(value: str | None, field_name: str,
             raise AudioError(f"{field_name} must be a non-empty string")
         return None
     if (not isinstance(value, str) or not value or value in (".", "..")
-            or "/" in value or "\\" in value or "\x00" in value):
-        raise AudioError(f"{field_name} must be a plain name")
+            or "/" in value or "\\" in value or "\x00" in value
+            or not _NAME_RE.match(value)):
+        raise AudioError(f"{field_name} must be a plain name "
+                         f"(^[A-Za-z0-9][A-Za-z0-9_-]{{0,63}}$)")
     return value
+
+
+def _check_import_src(src: Path) -> None:
+    """Reject symlink escapes and worker-store reads for audio imports."""
+    if src.is_symlink():
+        raise AudioError(f"import source must not be a symlink: {src}")
+    real = src.resolve()
+    try:
+        data_root = paths_mod.data_dir().resolve()
+    except OSError:
+        data_root = None
+    if data_root is not None and (
+            real == data_root or data_root in real.parents):
+        raise AudioError("import source must not live under the worker "
+                         "data dir")
 
 
 def _sha256_file(path: Path) -> str:
@@ -217,6 +240,7 @@ def import_audio(project_dir: str | Path, src: str | Path, *,
     role = _check_name(role, "role", required=True)
     assert role is not None
     entity = _check_name(entity, "entity", required=False)
+    _check_import_src(src)
     if src.suffix.lower() not in AUDIO_EXTS:
         raise AudioError(f"unsupported audio {src.suffix!r}; expected one of"
                          f" {sorted(AUDIO_EXTS)}")

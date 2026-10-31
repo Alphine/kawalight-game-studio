@@ -30,8 +30,10 @@
 
   function paintHeader(s) {
     var pill = el('hudMetrics');
+    if (pill) pill.classList.toggle('is-offline', !s.online);
+    var headDot = el('headDot');
+    if (headDot) headDot.classList.toggle('off', !s.online);
     if (!pill) return;
-    pill.classList.toggle('is-offline', !s.online);
     if (!s.online) {
       setText('hudLatency', 'OFFLINE');
       setText('hudProject', s.project ? s.project.name : 'NO PROJECT');

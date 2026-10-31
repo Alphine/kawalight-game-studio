@@ -85,22 +85,34 @@ function spawnPattern(state, config) {
   };
   const grounds = ofKind(config, 'ground');
   const highs = ofKind(config, 'high');
-  const ground = () => grounds[Math.floor(state.rand() * grounds.length)];
+  // Schema-valid configs may hold only high obstacles: fall back to the
+  // high pool instead of indexing an empty array (TypeError crash).
+  const ground = () => {
+    const pool = grounds.length ? grounds : highs;
+    if (!pool.length) return undefined;
+    return pool[Math.floor(state.rand() * pool.length)];
+  };
   const r = state.rand();
   if (r < 0.38) {
-    addObstacle(ground());
+    const d = ground();
+    if (d) addObstacle(d);
   } else if (r < 0.52) {
     const d = ground();
-    addObstacle(d);
-    addObstacle(d, d.w + 6); // tight pair: always cleared as one jump
+    if (d) {
+      addObstacle(d);
+      addObstacle(d, d.w + 6); // tight pair: always cleared as one jump
+    }
   } else if (r < 0.66) {
     if (highs.length) addObstacle(highs[Math.floor(state.rand() * highs.length)]);
-    else addObstacle(ground());
+    else {
+      const d = ground();
+      if (d) addObstacle(d);
+    }
   } else if (r < 0.84) {
     for (let i = 0; i < 5; i++) addCoin(x + i * 34, 34); // low coin line
   } else {
     const d = ground();
-    addObstacle(d);
+    if (d) addObstacle(d);
     for (let i = 0; i < 5; i++) { // coin arc over the obstacle
       const t = i / 4;
       addCoin(x - 100 + t * 200, 30 + Math.sin(t * Math.PI) * 120);
@@ -180,9 +192,10 @@ export function suggestInput(state, config) {
 export function stepGame(state, config, input, dtMs) {
   const events = [];
   if (state.phase !== 'playing') return events;
-  const dt = clamp(dtMs, 0, 50) / 1000;
+  const dtMsSafe = clamp(dtMs, 0, 50);
+  const dt = dtMsSafe / 1000;
   state.tick++;
-  state.timeMs += dtMs;
+  state.timeMs += dtMsSafe;
   const w = config.world;
   const p = config.player;
   const pl = state.player;

@@ -317,9 +317,10 @@ export function suggestInput(state, config) {
 export function stepGame(state, config, input, dtMs) {
   const events = [];
   if (state.phase !== 'playing') return events;
-  const dt = Math.min(Math.max(dtMs, 0), 50) / 1000;
+  const dtMsSafe = Math.min(Math.max(dtMs, 0), 50);
+  const dt = dtMsSafe / 1000;
   state.tick++;
-  state.timeMs += dtMs;
+  state.timeMs += dtMsSafe;
   const now = state.timeMs;
   const enemyDefs = defsById(config.enemies);
   const p = state.player;

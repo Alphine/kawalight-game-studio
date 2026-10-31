@@ -36,7 +36,18 @@ CREATE TABLE IF NOT EXISTS settings (
 def connect(db_file: Path | None = None) -> sqlite3.Connection:
     target = db_file or paths.db_path()
     target.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(target)
+    # ThreadingHTTPServer serves concurrent writers: a generous busy
+    # timeout plus WAL mode keeps lock contention from surfacing as
+    # "database is locked" 500s.
+    conn = sqlite3.connect(target, timeout=30.0)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+    except sqlite3.DatabaseError:
+        pass  # e.g. read-only/odd filesystems; default rollback journal
+    try:
+        conn.execute("PRAGMA busy_timeout=30000;")
+    except sqlite3.DatabaseError:
+        pass
     conn.executescript(_SCHEMA)
     return conn

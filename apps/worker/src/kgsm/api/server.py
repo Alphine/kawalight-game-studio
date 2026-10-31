@@ -1,15 +1,13 @@
 """Localhost JSON HTTP API server (stdlib ``http.server`` + ``json`` only).
 
 Binds ``127.0.0.1`` (default port 4317) and serves ``/api/v1/*`` per
-``docs/api-contract.md``. Route plugins owned by this builder are imported
-directly; ``routes_providers`` / ``routes_ops`` (other builders) are imported
-defensively and skipped when absent. Health and cost endpoints (§0, §6) are
-core routes implemented here.
+``docs/api-contract.md``. All route tables are imported directly; a broken
+route module must fail loudly at import, never silently disable endpoints.
+Health and cost endpoints (§0, §6) are core routes implemented here.
 """
 
 from __future__ import annotations
 
-import importlib
 import json
 import re
 import sys
@@ -34,14 +32,13 @@ from . import (
     need_str,
     quote_to_dict,
 )
-from . import (routes_assets, routes_config, routes_export, routes_projects,
-                 routes_secrets)
+from . import (routes_assets, routes_config, routes_export, routes_ops,
+                 routes_projects, routes_providers, routes_secrets)
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 4317
 
 _MONTH_RE = re.compile(r"^\d{4}-(0[1-9]|1[0-2])$")
-_OPTIONAL_PLUGINS = ("routes_providers", "routes_ops")
 
 
 # --------------------------------------------------------------------------
@@ -79,7 +76,7 @@ def costs_authorize(req: Request) -> tuple[int, dict]:
     except costs_mod.CostError as exc:
         message = str(exc)
         quoted = {"quote": quote_to_dict(quote)}
-        if "exceeds" in message:
+        if quote.blocked:
             raise ApiError("cost-blocked", message, 402, quoted) from None
         raise ApiError("needs-confirmation", message, 409, quoted) from None
     return 200, {"authorized": True, "quote": quote_to_dict(quote)}
@@ -169,13 +166,8 @@ CORE_ROUTES = [
 def _collect_routes() -> list:
     tables = [CORE_ROUTES, routes_projects.ROUTES, routes_config.ROUTES,
               routes_assets.ROUTES, routes_export.ROUTES,
-              routes_secrets.ROUTES]
-    for name in _OPTIONAL_PLUGINS:
-        try:
-            module = importlib.import_module(f".{name}", __package__)
-        except ImportError:
-            continue  # sibling builder has not landed yet; skip silently
-        tables.append(getattr(module, "ROUTES", None) or [])
+              routes_secrets.ROUTES, routes_providers.ROUTES,
+              routes_ops.ROUTES]
     compiled = []
     for table in tables:
         for method, pattern, handler in table:
@@ -208,11 +200,14 @@ _JSON_CONTENT = "application/json; charset=utf-8"
 
 
 def _allowed_origin(origin: str | None) -> str | None:
-    """Echo back only localhost-class origins (contract §11)."""
-    if not origin:
+    """Echo back only localhost-class origins (contract §11).
+
+    The opaque Origin 'null' (sandboxed iframes, file:// pages) is never
+    allowed: echoing it would grant any local file read access to the
+    unauthenticated localhost API.
+    """
+    if not origin or origin == "null":
         return None
-    if origin == "null":
-        return "null"
     try:
         parts = urlsplit(origin)
     except ValueError:
@@ -379,8 +374,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--host", default=DEFAULT_HOST)
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     args = parser.parse_args(argv)
-    if args.host in ("0.0.0.0", "::"):
-        parser.error("refusing a public bind; use 127.0.0.1 (contract §11)")
+    # Contract §11: loopback only. An allowlist (not a 0.0.0.0/:: denylist)
+    # so LAN IPs can never bind beyond loopback either.
+    if args.host not in ("127.0.0.1", "localhost", "::1"):
+        parser.error("refusing a non-loopback bind; use 127.0.0.1 "
+                     "(contract §11)")
     run(args.host, args.port)
     return 0
 

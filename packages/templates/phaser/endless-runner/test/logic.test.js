@@ -224,3 +224,35 @@ describe('determinism', () => {
     assert.notDeepEqual(layout(1), layout(2));
   });
 });
+
+describe('time advance', () => {
+  it('clamps dt for timeMs (no rewind, no leap)', () => {
+    const config = testConfig();
+    const s = createGame(config);
+    stepGame(s, config, IDLE, -100);
+    assert.equal(s.timeMs, 0);
+    stepGame(s, config, IDLE, 1000);
+    assert.equal(s.timeMs, 50);
+    stepGame(s, config, IDLE, 16);
+    assert.equal(s.timeMs, 66);
+  });
+});
+
+describe('high-only obstacle configs', () => {
+  it('spawns high obstacles without crashing (no ground pool)', () => {
+    const config = testConfig();
+    config.obstacles = [
+      { id: 'drone', sprite: 'obstacle-drone', w: 26, h: 18, kind: 'high', hoverH: 20 },
+    ];
+    for (let seed = 1; seed <= 8; seed++) {
+      const s = createGame(config, { seed });
+      let sawHigh = false;
+      for (let i = 0; i < 1200 && s.phase === 'playing'; i++) {
+        stepGame(s, config, suggestInput(s, config), 16);
+        if (s.obstacles.some((o) => o.kind === 'high')) sawHigh = true;
+      }
+      assert.ok(sawHigh, `seed ${seed} never spawned a high obstacle`);
+      assert.ok(s.distancePx > 0);
+    }
+  });
+});

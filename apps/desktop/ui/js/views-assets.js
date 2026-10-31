@@ -88,6 +88,18 @@
     var quoteSlot = slot.querySelector('[data-slot="quote"]');
     var genBtn = slot.querySelector('[data-a="gen"]');
     var lastQuote = null;
+    // Any form edit invalidates the previous quote: clear it and re-disable
+    // Generate until the user re-quotes, so generation never runs stale.
+    slot.querySelectorAll('[data-f]').forEach(function (inp) {
+      inp.addEventListener('input', invalidateQuote);
+      inp.addEventListener('change', invalidateQuote);
+    });
+    function invalidateQuote() {
+      if (!lastQuote && genBtn.disabled) return;
+      lastQuote = null;
+      genBtn.disabled = true;
+      quoteSlot.innerHTML = '<p class="muted small">Form changed — get a fresh quote before generating.</p>';
+    }
     slot.querySelector('[data-a="quote"]').addEventListener('click', function (e) {
       var b = forgeBody(slot);
       if (!b.prompt) { UI().toast('Prompt is required.', 'error'); return; }
@@ -170,8 +182,9 @@
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · import, inspect, slice, diagnose.</p></div>'
       + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh assets</button></div></div>'
       + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('plus') + ' Import local file</h3></div>'
-      + '<label class="fld"><span>Absolute path on this machine</span>'
+      + '<div class="row"><label class="fld grow"><span>Absolute path on this machine</span>'
       + '<input data-f="src" placeholder="C:\\art\\ship.png (.png/.jpg/.jpeg/.webp)"></label>'
+      + '<button type="button" class="btn ghost" data-a="browse" title="Open the native file picker when available">Browse…</button></div>'
       + '<div class="form-grid"><label class="fld"><span>Entity</span><input data-f="entity" value="player"></label>'
       + '<label class="fld"><span>Role</span><input data-f="role" value="ship" placeholder="ship"></label>'
       + '<label class="fld"><span>Animation (optional)</span><input data-f="animation" placeholder="fly"></label></div>'
@@ -197,8 +210,16 @@
       + '<label class="fld"><span>Margin</span><input data-f="margin" type="number" value="0" min="0"></label>'
       + '<label class="fld"><span>Spacing</span><input data-f="spacing" type="number" value="0" min="0"></label>'
       + '</div><div class="btn-row"><button type="button" class="btn primary" data-a="slice">Slice</button></div>'
-      + '<div data-slot="slice"></div></section></div>';
+      + '<div data-slot="slice"></div></section></div>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('lab') + ' Planned (not in wave 1)</h3></div>'
+      + '<div class="btn-row"><button type="button" class="btn ghost" disabled title="Planned — crop UI is not in this build">Crop</button> '
+      + '<button type="button" class="btn ghost" disabled title="Planned — frame reordering is not in this build">Frame ordering</button> '
+      + '<button type="button" class="btn ghost" disabled title="Planned — tile diagnostics are not in this build">Tile diagnostics</button></div>'
+      + '<p class="muted small">Wave 1 covers import, inspect, slice, and palette; the SDD §2.3 items above are explicitly out of scope until a later milestone.</p></section>';
     root.querySelector('[data-a="refresh"]').addEventListener('click', function () { loadLabAssets(root, p); });
+    root.querySelector('[data-a="browse"]').addEventListener('click', function () {
+      pickFile(root.querySelector('[data-f="src"]'));
+    });
     root.querySelector('[data-a="import"]').addEventListener('click', function (e) {
       var body = {
         src: root.querySelector('[data-f="src"]').value.trim(),
@@ -272,6 +293,34 @@
       }, 'Slicing…');
     });
     loadLabAssets(root, p);
+  }
+
+  // Native file picker when the Tauri dialog API is exposed; otherwise the
+  // typed path field stays the fallback (no new deps: purely optional).
+  function pickFile(inputEl) {
+    function fill(sel) {
+      if (sel == null) return;
+      var v = Array.isArray(sel) ? sel[0] : sel;
+      if (v != null) inputEl.value = String(v);
+    }
+    try {
+      var T = window.__TAURI__ || {};
+      var open = (T.dialog && T.dialog.open) || (T.pluginDialog && T.pluginDialog.open);
+      if (typeof open === 'function') {
+        open({ multiple: false }).then(fill, function (e) {
+          UI().toast('Picker failed — type or paste the path. (' + UI().errorText(e) + ')', 'error');
+        });
+        return;
+      }
+      var invoke = T.core && T.core.invoke;
+      if (typeof invoke === 'function') {
+        invoke('plugin:dialog|open', { options: { multiple: false } }).then(fill, function () {
+          UI().toast('File picker plugin is not installed — type or paste the path.', 'info');
+        });
+        return;
+      }
+    } catch (e) { /* fall through */ }
+    UI().toast('Native picker unavailable here — type or paste the path.', 'info');
   }
 
   function loadLabAssets(root, p) {

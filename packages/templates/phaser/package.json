@@ -9,7 +9,7 @@
     "stage": "node tools/stage-demo.mjs",
     "stage:shooter": "node tools/stage-demo.mjs space-shooter",
     "stage:runner": "node tools/stage-demo.mjs endless-runner",
-    "test": "node --test space-shooter/test/logic.test.js endless-runner/test/logic.test.js",
+    "test": "node --test space-shooter/test/logic.test.js endless-runner/test/logic.test.js tools/assets.test.mjs",
     "test:shooter": "node --test space-shooter/test/logic.test.js",
     "test:runner": "node --test endless-runner/test/logic.test.js",
     "smoke": "node tools/smoke.mjs",

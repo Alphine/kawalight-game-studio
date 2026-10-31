@@ -471,3 +471,19 @@ describe('determinism', () => {
     assert.ok(layouts.size > 1, 'enemy patrol never varies by seed');
   });
 });
+
+describe('time advance', () => {
+  it('clamps dt for timeMs and cooldowns (no rewind, no leap)', () => {
+    const config = testConfig();
+    const s = createGame(config);
+    stepGame(s, config, IDLE, -100);
+    assert.equal(s.timeMs, 0);
+    assert.equal(s.player.invuln, 0);
+    assert.equal(s.player.buffer, 0);
+    assert.equal(s.player.coyote, 0);
+    stepGame(s, config, IDLE, 1000);
+    assert.equal(s.timeMs, 50);
+    stepGame(s, config, IDLE, 16);
+    assert.equal(s.timeMs, 66);
+  });
+});

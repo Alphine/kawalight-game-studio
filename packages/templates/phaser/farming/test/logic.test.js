@@ -280,3 +280,16 @@ describe('pause, restart, determinism', () => {
     assert.deepEqual(a, b);
   });
 });
+
+describe('growth overflow', () => {
+  it('carries leftover growth into the next stage', () => {
+    const config = testConfig();
+    const s = createGame(config);
+    plantAt(s, config, 0, 0, 0); // turnip: stageTimeSec 5
+    waterAt(s, config, 0, 0);
+    s.plots[0].growthMs = 4900;
+    stepGame(s, config, {}, 1000);
+    assert.equal(s.plots[0].stage, 1);
+    assert.equal(s.plots[0].growthMs, 900);
+  });
+});

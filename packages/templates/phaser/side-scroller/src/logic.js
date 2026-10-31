@@ -138,14 +138,15 @@ function hurt(state, config, events, damage, srcX, isFall) {
 export function stepGame(state, config, input, dtMs) {
   const events = [];
   if (state.phase !== 'playing') return events;
-  const dt = clamp(dtMs, 0, 50) / 1000;
+  const dtMsSafe = clamp(dtMs, 0, 50);
+  const dt = dtMsSafe / 1000;
   state.tick++;
-  state.timeMs += dtMs;
+  state.timeMs += dtMsSafe;
   const w = config.world;
   const p = config.player;
   const lvl = config.level;
   const pl = state.player;
-  pl.invuln = Math.max(0, pl.invuln - dtMs);
+  pl.invuln = Math.max(0, pl.invuln - dtMsSafe);
 
   // Horizontal drive: accelerate toward the held direction, friction to a
   // stop with no input; air control scales the response mid-air.
@@ -159,12 +160,12 @@ export function stepGame(state, config, input, dtMs) {
   // Jump with coyote time + input buffer (level-triggered like the runner:
   // holding jump re-jumps on landing).
   if (input.jump) pl.buffer = p.jumpBufferMs;
-  else pl.buffer -= dtMs;
+  else pl.buffer -= dtMsSafe;
   if (pl.grounded) {
     pl.coyote = p.coyoteMs;
     pl.jumpsUsed = 0;
   } else {
-    pl.coyote -= dtMs;
+    pl.coyote -= dtMsSafe;
   }
   if (pl.buffer > 0 && (pl.grounded || pl.coyote > 0)
       && pl.jumpsUsed < p.maxJumps) {

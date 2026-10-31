@@ -13,10 +13,13 @@ from __future__ import annotations
 import base64
 import binascii
 import io
+import ipaddress
 import json
+import socket
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
+from urllib.parse import urlsplit
 
 from PIL import Image
 
@@ -40,6 +43,53 @@ _STYLE_SUFFIX = {
 }
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
+_LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+
+def _host_is_loopback(host: str) -> bool:
+    if (host or "").lower() in _LOOPBACK_HOSTS:
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def _host_is_blocked(host: str) -> bool:
+    """True when *host* must never be fetched (SSRF guard).
+
+    Literal private/loopback/link-local/reserved IPs are always blocked.
+    DNS names are resolved and blocked when they settle on such an
+    address; an unresolvable name is allowed through so the fetch itself
+    fails naturally (and fails closed as a ProviderError).
+    """
+    if not host:
+        return True
+    lowered = host.lower()
+    if lowered == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_private or \
+            ipaddress.ip_address(host).is_loopback or \
+            ipaddress.ip_address(host).is_link_local or \
+            ipaddress.ip_address(host).is_reserved or \
+            ipaddress.ip_address(host).is_multicast
+    except ValueError:
+        pass  # not a literal IP: resolve below
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except (socket.gaierror, OSError):
+        return False
+    for info in infos:
+        try:
+            addr = ipaddress.ip_address(info[4][0])
+        except ValueError:
+            continue
+        if addr.is_private or addr.is_loopback or addr.is_link_local \
+                or addr.is_reserved or addr.is_multicast:
+            return True
+    return False
 
 
 def _positive_int(value: object) -> int | None:
@@ -160,6 +210,15 @@ class OpenAICompatProvider(ImageProvider):
                 f"openai-compat: base URL must start with http:// or https://: "
                 f"{base_url!r}"
             )
+        # The Bearer key travels on every request: require TLS unless the
+        # endpoint is explicitly loopback (local gateway development).
+        _scheme, _, _rest = base_url.partition("://")
+        _host = urlsplit(base_url).hostname or ""
+        if _scheme == "http" and not _host_is_loopback(_host):
+            raise ProviderError(
+                "openai-compat: base URL must use https:// outside "
+                f"loopback: {base_url!r}"
+            )
 
         model = self.model
         suffix = _STYLE_SUFFIX.get(style)
@@ -235,6 +294,16 @@ class OpenAICompatProvider(ImageProvider):
         ):
             raise ProviderError(
                 f"openai-compat: image {index} has an invalid 'url'"
+            )
+        # SSRF guard: provider-supplied URLs must never reach private,
+        # loopback, link-local (169.254/metadata), or reserved addresses.
+        try:
+            _host = urlsplit(url).hostname or ""
+        except ValueError:
+            _host = ""
+        if _host_is_blocked(_host):
+            raise ProviderError(
+                f"openai-compat: image {index} 'url' host is not allowed"
             )
         # Signed URLs carry their own auth; never forward our API key to a
         # third-party host.

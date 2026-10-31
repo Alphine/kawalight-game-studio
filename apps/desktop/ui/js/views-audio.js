@@ -31,8 +31,9 @@
       + ' · import SFX and music loops for the exported game.</p></div>'
       + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh library</button></div></div>'
       + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('plus') + ' Import local file</h3></div>'
-      + '<label class="fld"><span>Absolute path on this machine</span>'
+      + '<div class="row"><label class="fld grow"><span>Absolute path on this machine</span>'
       + '<input data-f="src" placeholder="C:\\audio\\jump.wav (.wav / .mp3 / .ogg)"></label>'
+      + '<button type="button" class="btn ghost" data-a="browse" title="Open the native file picker when available">Browse…</button></div>'
       + '<div class="form-grid">'
       + '<label class="fld"><span>Role (required)</span>'
       + '<input data-f="role" value="sfx" placeholder="sfx"></label>'
@@ -45,6 +46,9 @@
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('audio') + ' Library</h3></div><div data-slot="list">'
       + UI().loadingPanel('Loading audio…') + '</div></section></div>';
     root.querySelector('[data-a="refresh"]').addEventListener('click', function () { loadList(root, p); });
+    root.querySelector('[data-a="browse"]').addEventListener('click', function () {
+      pickFile(root.querySelector('[data-f="src"]'));
+    });
     root.querySelector('[data-a="import"]').addEventListener('click', function (e) {
       var body = {
         src: root.querySelector('[data-f="src"]').value.trim(),
@@ -92,6 +96,34 @@
         '<button type="button" class="btn ghost" data-a="retry">' + I('refresh') + 'Retry</button>');
       slot.querySelector('[data-a="retry"]').addEventListener('click', function () { loadList(root, p); });
     });
+  }
+
+  // Native file picker when the Tauri dialog API is exposed; otherwise the
+  // typed path field stays the fallback (no new deps: purely optional).
+  function pickFile(inputEl) {
+    function fill(sel) {
+      if (sel == null) return;
+      var v = Array.isArray(sel) ? sel[0] : sel;
+      if (v != null) inputEl.value = String(v);
+    }
+    try {
+      var T = window.__TAURI__ || {};
+      var open = (T.dialog && T.dialog.open) || (T.pluginDialog && T.pluginDialog.open);
+      if (typeof open === 'function') {
+        open({ multiple: false }).then(fill, function (e) {
+          UI().toast('Picker failed — type or paste the path. (' + UI().errorText(e) + ')', 'error');
+        });
+        return;
+      }
+      var invoke = T.core && T.core.invoke;
+      if (typeof invoke === 'function') {
+        invoke('plugin:dialog|open', { options: { multiple: false } }).then(fill, function () {
+          UI().toast('File picker plugin is not installed — type or paste the path.', 'info');
+        });
+        return;
+      }
+    } catch (e) { /* fall through */ }
+    UI().toast('Native picker unavailable here — type or paste the path.', 'info');
   }
 
   function describe(meta) {

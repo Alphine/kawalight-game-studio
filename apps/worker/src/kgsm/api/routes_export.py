@@ -39,6 +39,10 @@ def create_export(req: Request) -> tuple[int, dict]:
     if "config" not in req.body:
         config = read_project_json(project.dir, "config.json",
                                    "config-not-found")
+        if not isinstance(config, dict):
+            raise ApiError("internal",
+                           "config.json is corrupt: must be an object",
+                           500)
     else:
         config = req.body["config"]
         if not isinstance(config, dict):
@@ -48,6 +52,10 @@ def create_export(req: Request) -> tuple[int, dict]:
     if validate is None:
         raise ApiError("validation-failed",
                        f"unknown template id {template_id!r}", 422)
+    if template_id != f"phaser.{project.genre}":
+        raise ApiError("validation-failed",
+                       f"config template {template_id!r} does not match"
+                       f" project genre {project.genre!r}", 422)
     report = validate(config)
     if not report.ok:
         errors = report.errors()
@@ -66,7 +74,8 @@ def create_export(req: Request) -> tuple[int, dict]:
         with zipfile.ZipFile(playable) as zf:
             manifest = json.loads(
                 zf.read("kgsm-manifest.json").decode("utf-8"))
-    except (OSError, KeyError, json.JSONDecodeError) as exc:
+    except (OSError, KeyError, json.JSONDecodeError,
+            zipfile.BadZipFile) as exc:
         raise ApiError("internal",
                        f"export succeeded but manifest is unreadable: {exc}",
                        500) from None
@@ -99,6 +108,10 @@ def export_godot(req: Request) -> tuple[int, dict]:
     if "config" not in req.body:
         config = read_project_json(project.dir, "config.json",
                                    "config-not-found")
+        if not isinstance(config, dict):
+            raise ApiError("internal",
+                           "config.json is corrupt: must be an object",
+                           500)
     else:
         config = req.body["config"]
         if not isinstance(config, dict):
@@ -148,7 +161,8 @@ def export_godot(req: Request) -> tuple[int, dict]:
         with zipfile.ZipFile(gz) as zf:
             manifest = json.loads(
                 zf.read("kgsm-manifest.json").decode("utf-8"))
-    except (OSError, KeyError, json.JSONDecodeError) as exc:
+    except (OSError, KeyError, json.JSONDecodeError,
+            zipfile.BadZipFile) as exc:
         raise ApiError("internal",
                        f"export succeeded but manifest is unreadable: {exc}",
                        500) from None

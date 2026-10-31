@@ -76,6 +76,11 @@ def put_blueprint(req: Request) -> tuple[int, dict]:
     if not report.ok:
         raise ApiError("validation-failed", _first_error_message(report), 422,
                        {"report": report.to_dict()})
+    bp_genre = blueprint.get("genre")
+    if bp_genre is not None and bp_genre != project.genre:
+        raise ApiError("validation-failed",
+                       f"blueprint genre {bp_genre!r} does not match"
+                       f" project genre {project.genre!r}", 422)
     write_project_json(project.dir, "blueprint.json", blueprint)
     return 200, {"stored": True, "report": report.to_dict()}
 
@@ -85,6 +90,10 @@ def assemble_blueprint(req: Request) -> tuple[int, dict]:
     if "blueprint" not in req.body:
         blueprint = read_project_json(project.dir, "blueprint.json",
                                       "blueprint-not-found")
+        if not isinstance(blueprint, dict):
+            raise ApiError("internal",
+                           "blueprint.json is corrupt: must be an object",
+                           500)
     else:
         blueprint = req.body["blueprint"]
         if not isinstance(blueprint, dict):
@@ -96,8 +105,13 @@ def assemble_blueprint(req: Request) -> tuple[int, dict]:
         report = validate_blueprint(blueprint)
         message = _first_error_message(report) if not report.ok else str(exc)
         raise ApiError("assembly-failed", message, 422) from None
-    write_project_json(project.dir, "config.json", config)
+    # Validate BEFORE persisting so an invalid assembled config is never
+    # stored (it would only fail later at export instead).
     config_report = validate(config)
+    if not config_report.ok:
+        return 200, {"config": config, "report": config_report.to_dict(),
+                     "storedConfig": False}
+    write_project_json(project.dir, "config.json", config)
     return 200, {"config": config, "report": config_report.to_dict(),
                  "storedConfig": True}
 

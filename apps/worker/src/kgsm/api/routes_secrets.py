@@ -24,7 +24,11 @@ def put_secret(req: Request) -> tuple[int, dict]:
 
 def delete_secret(req: Request) -> tuple[int, dict]:
     name = req.group("name")
-    return 200, {"name": name, "deleted": secrets_mod.delete_secret(name)}
+    try:
+        deleted = secrets_mod.delete_secret(name)
+    except ValueError as exc:
+        raise bad_request(str(exc)) from None
+    return 200, {"name": name.strip(), "deleted": deleted}
 
 
 def list_secrets(req: Request) -> tuple[int, dict]:

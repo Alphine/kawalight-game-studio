@@ -23,6 +23,7 @@ from ..validation import (
     validate_side_scroller_config,
     validate_space_shooter_config,
 )
+from .manifest import ManifestError, assert_no_secrets
 from .phaser import export_zip
 
 
@@ -87,6 +88,13 @@ def stage_export(
             + "; ".join(i.message for i in report.errors()[:5]))
     stamped = copy.deepcopy(config)
     stamped["template"]["id"] = f"godot.{cfg_genre}"
+    # The standalone stage_export/build_manifest never scans for secrets,
+    # so the worker scans the stamped config here (plus the full staged
+    # dir in package_all via the shared secret-scanned export_zip).
+    try:
+        assert_no_secrets(stamped)
+    except ManifestError as exc:
+        raise GodotExportError(str(exc)) from None
     mod = _load_standalone()
     assets = project_dir / "assets"
     try:

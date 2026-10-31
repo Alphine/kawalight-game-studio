@@ -17,6 +17,7 @@
   // ---------- Playtest ----------
   var consoleLines = [];
   var lastBlobUrl = null;
+  var lastFrameEl = null;
 
   function renderPlaytest(root) {
     var p = V().needProject(root);
@@ -31,9 +32,9 @@
       + 'validates it, then loads a live schematic preview drawn from your own level data.</p></div>'
       + '<div><button type="button" class="btn primary" data-a="stage">Auto-stage &amp; preview</button></div></div>'
       + '<div data-slot="steps"></div>'
-      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="run">' + I('play') + 'Run</button> '
-      + '<button type="button" class="btn ghost" data-a="pause">' + I('dot') + 'Pause</button> '
-      + '<button type="button" class="btn ghost" data-a="restart">' + I('refresh') + 'Restart</button></div>'
+      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="run" disabled title="Auto-stage a preview first">' + I('play') + 'Run</button> '
+      + '<button type="button" class="btn ghost" data-a="pause" disabled title="Auto-stage a preview first">' + I('dot') + 'Pause</button> '
+      + '<button type="button" class="btn ghost" data-a="restart" disabled title="Auto-stage a preview first">' + I('refresh') + 'Restart</button></div>'
       + '<p class="muted small">Run/Pause/Restart send a postMessage command to the preview; '
       + 'the schematic preview obeys them and reports back to the console.</p>'
       + '<details class="advanced"><summary>Advanced: load an external staged build</summary>'
@@ -43,7 +44,9 @@
       + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('gamepad') + ' Preview</h3></div>'
       + '<div data-slot="frame"><p class="muted">No preview loaded — auto-stage to start.</p></div></section>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('info') + ' Console</h3>'
-      + '<button type="button" class="btn ghost" data-a="clear">' + I('close') + 'Clear</button></div>'
+      + '<span class="row"><button type="button" class="btn ghost" data-a="copy" title="Copy console lines to the clipboard">Copy</button> '
+      + '<button type="button" class="btn ghost" data-a="dl" title="Download console lines as text">Download</button> '
+      + '<button type="button" class="btn ghost" data-a="clear">' + I('close') + 'Clear</button></span></div>'
       + '<div data-slot="console" class="console"></div>'
       + '<p class="muted small">Previews post <code>{source:"kgsm-game", level, text}</code> messages here.</p></section></div>';
     paintConsole(root);
@@ -59,11 +62,18 @@
       slot.innerHTML = '';
       var f = document.createElement('iframe');
       f.setAttribute('title', label || 'Game preview');
-      f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-pointer-lock');
+      // No allow-same-origin: the blob-URL preview (built from config data)
+      // stays cross-origin so it cannot reach the shell DOM/storage; the
+      // postMessage bridge below is the only channel.
+      f.setAttribute('sandbox', 'allow-scripts allow-pointer-lock');
       var t0 = Date.now();
       f.addEventListener('load', function () {
         pushConsole('info', 'preview loaded in ' + (Date.now() - t0) + ' ms');
         UI().toast('Preview loaded.', 'success');
+        ['run', 'pause', 'restart'].forEach(function (a) {
+          var b = root.querySelector('[data-a="' + a + '"]');
+          if (b) { b.disabled = false; b.removeAttribute('title'); }
+        });
         paintConsole(root);
       });
       f.addEventListener('error', function () {
@@ -72,6 +82,7 @@
       });
       f.src = url;
       slot.appendChild(f);
+      lastFrameEl = f;
     }
     root.querySelector('[data-a="load"]').addEventListener('click', function () {
       var url = root.querySelector('[data-f="url"]').value.trim();
@@ -99,6 +110,64 @@
       consoleLines = [];
       paintConsole(root);
     });
+    root.querySelector('[data-a="copy"]').addEventListener('click', function () {
+      copyConsole();
+    });
+    root.querySelector('[data-a="dl"]').addEventListener('click', function () {
+      downloadConsole(p);
+    });
+  }
+
+  function consoleText() {
+    return consoleLines.map(function (l) {
+      return l.at + ' [' + l.level + '] ' + l.text;
+    }).join('\n');
+  }
+
+  function copyConsole() {
+    if (!consoleLines.length) { UI().toast('Console is empty — nothing to copy.', 'info'); return; }
+    var text = consoleText();
+    function done() { UI().toast(consoleLines.length + ' console line(s) copied.', 'success'); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+
+  function fallbackCopy(text, done) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      done();
+    } catch (e) {
+      UI().toast('Copy failed: ' + e.message, 'error');
+    }
+  }
+
+  function downloadConsole(p) {
+    if (!consoleLines.length) { UI().toast('Console is empty — nothing to download.', 'info'); return; }
+    try {
+      var blob = new Blob([consoleText()], { type: 'text/plain;charset=utf-8' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'playtest-console-' + (p && p.id ? p.id : 'log') + '.txt';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () {
+        try { URL.revokeObjectURL(a.href); } catch (e) { /* ignore */ }
+        a.remove();
+      }, 1000);
+      UI().toast(consoleLines.length + ' console line(s) downloaded.', 'success');
+    } catch (e) {
+      UI().toast('Download failed: ' + e.message, 'error');
+    }
   }
 
   // End-to-end from a project: config (assemble when missing) → validate →
@@ -165,6 +234,10 @@
     });
   }
 
+  function consoleErrorCount() {
+    return consoleLines.filter(function (l) { return l.level === 'error'; }).length;
+  }
+
   function pushConsole(level, text) {
     consoleLines.push({ at: new Date().toISOString(), level: level, text: String(text).slice(0, 2000) });
     if (consoleLines.length > 200) consoleLines.splice(0, consoleLines.length - 200);
@@ -187,6 +260,11 @@
   window.addEventListener('message', function (ev) {
     var d = ev.data;
     if (!d || d.source !== 'kgsm-game') return;
+    // Accept console lines only from the staged preview frame — never from
+    // arbitrary framed/opener pages (works for blob + external URLs alike).
+    try {
+      if (!lastFrameEl || !lastFrameEl.isConnected || ev.source !== lastFrameEl.contentWindow) return;
+    } catch (e) { return; }
     pushConsole(d.level || 'info', d.text || '(empty message)');
     var slot = document.querySelector('[data-slot="console"]');
     if (slot) {
@@ -209,9 +287,14 @@
       + '<button type="button" class="btn ghost" data-a="c-config">Validate stored config</button>'
       + '<button type="button" class="btn ghost" data-a="c-assets">Inspect all assets</button>'
       + '<button type="button" class="btn ghost" data-a="c-exports">List exports (export health)</button>'
+      + '<button type="button" class="btn ghost danger" data-a="c-cancel" title="Stop a running asset inspection">Cancel inspection</button>'
       + '</div>'
-      + '<p class="muted small">Runtime smoke tests run inside the Playtest preview; automated template smoke tests are pytest/JS-side (FR-020).</p></section>'
-      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('shield') + ' Security notes</h3></div>'
+      + '<p class="muted small" data-slot="inspect-status" aria-live="polite"></p>'
+      + '<p class="muted small">Runtime smoke: manual — exercise the Playtest preview and watch its console; '
+      + 'automated template smoke tests run out-of-band via pytest/JS (FR-020), not from this view.</p>'
+      + '<p class="muted small">Live signal: <strong>' + consoleErrorCount()
+      + '</strong> Playtest console error(s) this session.</p></section>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('shield') + ' Security notes (design claims — not live checks)</h3></div>'
       + '<ul class="notes"><li>Secrets never enter builds, ZIPs, manifests, or logs (NFR-002) — exports are secret-scanned and fail closed.</li>'
       + '<li>Billable operations always pass quote → authorize (NFR-011).</li>'
       + '<li>Generation/export failures never corrupt the project or last good build (NFR-003).</li></ul></section></div>'
@@ -241,6 +324,10 @@
     });
     root.querySelector('[data-a="c-assets"]').addEventListener('click', function (e) {
       UI().busy(e.target, function () { return inspectAll(p, root); }, 'Inspecting…');
+    });
+    root.querySelector('[data-a="c-cancel"]').addEventListener('click', function () {
+      inspectCancelled = true;
+      UI().toast('Inspection will stop after the current asset.', 'info');
     });
     root.querySelector('[data-a="c-exports"]').addEventListener('click', function (e) {
       UI().busy(e.target, function () {
@@ -303,7 +390,14 @@
     };
   }
 
+  var inspectCancelled = false;
+
   function inspectAll(p, root) {
+    inspectCancelled = false;
+    function status(text) {
+      var slot = root.querySelector('[data-slot="inspect-status"]');
+      if (slot) slot.textContent = text || '';
+    }
     return api().listAssets(p.id).then(function (res) {
       var assets = res.assets || [];
       if (!assets.length) {
@@ -316,9 +410,12 @@
       }
       var errors = [];
       var warnings = [];
+      var done = 0;
       var chain = Promise.resolve();
       assets.forEach(function (a) {
         chain = chain.then(function () {
+          if (inspectCancelled) return;
+          status('Inspecting ' + (done + 1) + '/' + assets.length + '… ' + a.path);
           return api().inspectAsset(p.id, a.path).then(function (r) {
             (r.errors || []).forEach(function (m) {
               errors.push({ level: 'error', code: 'asset', message: m, path: a.path });
@@ -328,16 +425,27 @@
             });
           }).catch(function (err) {
             errors.push({ level: 'error', code: err.code || 'inspect-failed', message: UI().errorText(err), path: a.path });
+          }).then(function () {
+            done += 1;
+            status(inspectCancelled ? '' : 'Inspecting ' + done + '/' + assets.length + '…');
           });
         });
       });
       return chain.then(function () {
-        S().rememberReport('validation-assets', 'Asset inspection (' + assets.length + ' files)', {
+        if (inspectCancelled) {
+          warnings.push({
+            level: 'warning', code: 'cancelled',
+            message: 'Inspection cancelled after ' + done + '/' + assets.length + ' assets.', path: '',
+          });
+        }
+        status('');
+        S().rememberReport('validation-assets', 'Asset inspection (' + done + '/' + assets.length + ' files)', {
           ok: errors.length === 0, errors: errors, warnings: warnings,
         });
         paintRemembered(root);
       });
     }).catch(function (err) {
+      status('');
       S().rememberReport('validation-assets', 'Asset inspection', toReport(err));
       paintRemembered(root);
     });
@@ -346,10 +454,17 @@
   function paintRemembered(root) {
     var slot = root.querySelector('[data-slot="reports"]');
     if (!slot) return;
-    var R = S().get('lastReports');
-    var keys = Object.keys(R);
+    var R = S().get('lastReports') || {};
+    var cur = S().get('currentId') || null;
+    // Show only this project's reports (plus project-agnostic ones) so
+    // switching projects never shows another project's stale results.
+    var keys = Object.keys(R).filter(function (k) {
+      var pid = R[k].pid;
+      return pid == null || pid === cur;
+    });
     if (!keys.length) {
-      slot.innerHTML = UI().emptyPanel('No reports yet', 'Run a check above — results land here.');
+      slot.innerHTML = UI().emptyPanel('No reports yet',
+        'Run a check above — results land here. (Reports from other projects are hidden.)');
       return;
     }
     slot.innerHTML = keys.map(function (k) {
@@ -461,7 +576,10 @@
       }).join('') + '</ul>';
     }, function (err) {
       if (!slot.isConnected) return;
-      slot.innerHTML = UI().errorPanel('Could not list builds', err);
+      slot.innerHTML = UI().errorPanel('Could not list builds', err,
+        '<button type="button" class="btn ghost" data-a="retry">' + I('refresh') + 'Retry</button>');
+      var rb = slot.querySelector('[data-a="retry"]');
+      if (rb) rb.addEventListener('click', function () { loadBuilds(root, p); });
     });
   }
 
@@ -497,7 +615,10 @@
       });
     }, function (err) {
       if (!slot.isConnected) return;
-      slot.innerHTML = UI().errorPanel('Could not list backups', err);
+      slot.innerHTML = UI().errorPanel('Could not list backups', err,
+        '<button type="button" class="btn ghost" data-a="retry">' + I('refresh') + 'Retry</button>');
+      var rb = slot.querySelector('[data-a="retry"]');
+      if (rb) rb.addEventListener('click', function () { loadBackups(root); });
     });
   }
 
@@ -527,8 +648,8 @@
       + '<button type="button" class="btn ghost" data-a="ledger">This month\'s ledger</button></div>'
       + '<div data-slot="ledger"></div></section></div>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('info') + ' Environment</h3></div><div data-slot="env"></div>'
-      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="storage">' + I('folder') + 'Change storage path</button> '
-      + '<button type="button" class="btn ghost" data-a="runtimes">' + I('chip') + 'Runtime versions</button></div></section>';
+      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="storage" disabled title="Planned (M2) — wave 1 uses the worker\'s projects/ dir">' + I('folder') + 'Change storage path (Planned)</button> '
+      + '<button type="button" class="btn ghost" data-a="runtimes" disabled title="Planned (M2) — wave 1 targets the bundled Phaser 3 template">' + I('chip') + 'Runtime versions (Planned)</button></div></section>';
     paintHealth(root);
     loadProvidersSettings(root);
     loadSecrets(root);
@@ -590,12 +711,7 @@
         });
       }, 'Loading…');
     });
-    root.querySelector('[data-a="storage"]').addEventListener('click', function () {
-      UI().toast('Custom storage paths are an M2 item — wave 1 uses the worker\'s projects/ dir.', 'error');
-    });
-    root.querySelector('[data-a="runtimes"]').addEventListener('click', function () {
-      UI().toast('Runtime version pinning UI is an M2 item — wave 1 targets the bundled Phaser 3 template.', 'error');
-    });
+    // storage/runtimes buttons are disabled Planned placeholders (no handlers).
   }
 
   function paintHealth(root) {

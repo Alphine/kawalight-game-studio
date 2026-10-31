@@ -13,6 +13,7 @@ from pathlib import Path
 
 from PIL import Image
 
+from .. import paths as paths_mod
 from ..providers.base import GeneratedImage
 
 IMPORT_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
@@ -20,6 +21,25 @@ IMPORT_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
 
 class AssetError(Exception):
     pass
+
+
+def _check_import_src(src: Path) -> Path:
+    """Reject symlink escapes and worker-store reads for asset imports."""
+    if src.is_symlink():
+        raise AssetError(f"import source must not be a symlink: {src}")
+    real = src.resolve()
+    # The worker data dir holds secrets.json, the DB, and backups: never
+    # let an import pull those bytes into a project (and then an export).
+    # (Cross-project imports stay allowed; same-user local data.)
+    try:
+        data_root = paths_mod.data_dir().resolve()
+    except OSError:
+        data_root = None
+    if data_root is not None and (
+            real == data_root or data_root in real.parents):
+        raise AssetError("import source must not live under the worker "
+                         "data dir")
+    return real
 
 
 def _sha256_file(path: Path) -> str:
@@ -50,6 +70,7 @@ def import_asset(
 ) -> dict:
     """Copy a local image into the project's asset library (FR-010/FR-011)."""
     project_dir, src = Path(project_dir), Path(src)
+    _check_import_src(src)
     if src.suffix.lower() not in IMPORT_EXTS:
         raise AssetError(
             f"unsupported import {src.suffix!r}; expected one of"
@@ -61,7 +82,16 @@ def import_asset(
     if animation:
         folder /= animation
     folder.mkdir(parents=True, exist_ok=True)
+    # Never silently overwrite: first import keeps the canonical name,
+    # re-imports get a unique suffix.
     dest = folder / f"{role}-{src.stem}{src.suffix.lower()}"
+    if dest.exists():
+        stem = f"{role}-{src.stem}"
+        suffix = src.suffix.lower()
+        n = 1
+        while (folder / f"{stem}-{n:02d}{suffix}").exists():
+            n += 1
+        dest = folder / f"{stem}-{n:02d}{suffix}"
     shutil.copy2(src, dest)
     return {
         "path": str(dest.relative_to(project_dir)),
@@ -82,8 +112,12 @@ def save_generated(
     project_dir = Path(project_dir)
     folder = project_dir / "assets" / entity
     folder.mkdir(parents=True, exist_ok=True)
-    existing = sorted(folder.glob(f"{role}-gen-*.png"))
-    dest = folder / f"{role}-gen-{len(existing):03d}.png"
+    # Unique-suffix numbering (no len(existing) overwrite/race).
+    n = len(sorted(folder.glob(f"{role}-gen-*.png")))
+    dest = folder / f"{role}-gen-{n:03d}.png"
+    while dest.exists():
+        n += 1
+        dest = folder / f"{role}-gen-{n:03d}.png"
     dest.write_bytes(generated.png_bytes)
     return {
         "path": str(dest.relative_to(project_dir)),
@@ -148,6 +182,13 @@ def save_frames(
     frames = slice_sheet(sheet, **grid)
     folder = project_dir / "assets" / entity / animation
     folder.mkdir(parents=True, exist_ok=True)
+    # Clear prior slices first so re-slicing with fewer frames leaves no
+    # stale frame-*.png files beside the new animation.json.
+    for stale in sorted(folder.glob("frame-*.png")):
+        try:
+            stale.unlink()
+        except OSError:
+            pass
     with Image.open(sheet) as img:
         img.load()
         names = []

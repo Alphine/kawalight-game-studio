@@ -61,27 +61,39 @@
           + U().esc(o) + '</option>';
       }).join('') + '</select></label>';
   }
+  // Human-readable label derived from a data-c path (e.g. "enemies.0.health"
+  // -> "enemies 1 health") so table inputs are never unlabeled for AT.
+  function cellLabel(path) {
+    return U().esc(String(path).split('.').map(function (seg, i, parts) {
+      if (/^\d+$/.test(seg) && i > 0) return 'row ' + (Number(seg) + 1);
+      return seg;
+    }).join(' '));
+  }
   function cell(path, v, w) {
-    return '<td><input data-c="' + path + '" type="text" value="' + U().esc(v) + '" style="width:' + (w || '5em') + '"></td>';
+    return '<td><input data-c="' + path + '" type="text" aria-label="' + cellLabel(path)
+      + '" value="' + U().esc(v) + '" style="width:' + (w || '5em') + '"></td>';
   }
   function ncell(path, v, w) {
-    return '<td><input data-c="' + path + '" type="number" value="' + U().esc(v) + '" style="width:' + (w || '4.5em') + '"></td>';
+    return '<td><input data-c="' + path + '" type="number" aria-label="' + cellLabel(path)
+      + '" value="' + U().esc(v) + '" style="width:' + (w || '4.5em') + '"></td>';
   }
   function optNCell(path, v, w) {
-    return '<td><input data-c="' + path + '" data-c-opt="1" type="number" value="'
-      + U().esc(v == null ? '' : v) + '" style="width:' + (w || '4.5em') + '"></td>';
+    return '<td><input data-c="' + path + '" data-c-opt="1" type="number" aria-label="' + cellLabel(path)
+      + '" value="' + U().esc(v == null ? '' : v) + '" style="width:' + (w || '4.5em') + '"></td>';
   }
   function selCell(path, cur, options) {
-    return '<td><select data-c="' + path + '">' + options.map(function (o) {
-      return '<option' + (cur === o ? ' selected' : '') + '>' + U().esc(o) + '</option>';
-    }).join('') + '</select></td>';
+    return '<td><select data-c="' + path + '" aria-label="' + cellLabel(path) + '">'
+      + options.map(function (o) {
+        return '<option' + (cur === o ? ' selected' : '') + '>' + U().esc(o) + '</option>';
+      }).join('') + '</select></td>';
   }
   function checkCell(path, v) {
-    return '<td><input data-c="' + path + '" type="checkbox"' + (v ? ' checked' : '') + '></td>';
+    return '<td><input data-c="' + path + '" type="checkbox" aria-label="' + cellLabel(path)
+      + '"' + (v ? ' checked' : '') + '></td>';
   }
   function table(headers, rows) {
     return '<div class="table-wrap"><table class="tbl"><thead><tr>'
-      + headers.map(function (h) { return '<th>' + U().esc(h) + '</th>'; }).join('')
+      + headers.map(function (h) { return '<th scope="col">' + U().esc(h) + '</th>'; }).join('')
       + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
   var ROW_NOTE = '<p class="muted small">Row add/remove is a later item — edit values here; '
@@ -120,7 +132,10 @@
         });
         return;
       }
-      body.innerHTML = UI().errorPanel('Could not load config', err);
+      body.innerHTML = UI().errorPanel('Could not load config', err,
+        '<button type="button" class="btn ghost" data-a="retry">' + icon('refresh') + 'Retry</button>');
+      var rb = body.querySelector('[data-a="retry"]');
+      if (rb) rb.addEventListener('click', function () { loadConfig(body, p, onOk); });
     });
   }
 
@@ -389,10 +404,12 @@
         return num(f.label, f.path, cfg, f.attrs);
       }).join('');
       if (sec.title === 'Scoring & difficulty') {
+        var preset = (cfg.difficulty || {}).preset;
         fields += '<label class="fld"><span>Difficulty preset</span><select data-c="difficulty.preset">'
           + ['easy', 'normal', 'hard'].map(function (s) {
-            return '<option' + (cfg.difficulty.preset === s ? ' selected' : '') + '>' + s + '</option>';
-          }).join('') + '</select></label>';
+            return '<option' + (preset === s ? ' selected' : '') + '>' + s + '</option>';
+          }).join('') + '</select></label>'
+          + (cfg.difficulty ? '' : '<p class="muted small">Note: config has no difficulty block — saving will add the selected preset.</p>');
       }
       return '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('sliders') + U().esc(sec.title) + '</h3></div>'
         + '<div class="form-grid">' + fields + '</div></section>';

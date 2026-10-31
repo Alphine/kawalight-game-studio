@@ -384,7 +384,7 @@
       + 'T("x"+n,ex+14,ey+4,"#8b94b3",10);}}'
       + 'R(px-14,py-10,28,20,"#22c55e");R(px-3,py-22,6,12,"#22c55e");'
       + 'if(running){for(i=0;i<4;i++){'
-      + 'R(px-9+i*6,py-24-((tick*7+i*53)%(py-40)),2,10,"#7fff9f");}}'
+      + 'R(px-9+i*6,py-24-((tick*7+i*53)%Math.max(1,(py-40))),2,10,"#7fff9f");}}'
       + 'T("WAVE "+(wave+1)+"/"+Math.max(1,waves.length)'
       + '+(cur?("  "+cur.id):""),12,20,"#cfc2ff",13);'
       + 'var vic=KGSM_CONFIG.victory||{};'

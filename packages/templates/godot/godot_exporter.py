@@ -18,7 +18,7 @@ import shutil
 import sys
 import tempfile
 import zipfile
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from godot_genres import GENRES
 from godot_genres.base import (
@@ -150,6 +150,22 @@ def _scene_asset_refs(out_dir: Path) -> dict[str, str]:
     return refs
 
 
+def _safe_sprite_rel(rel: str) -> str:
+    """Normalize a config sprite path; reject traversal/absolute entries.
+
+    Sprite values come from config JSON (or scene refs) and are joined
+    under out_dir, so absolute paths and '..' segments would write
+    outside the staged project. Returns a posix-style relative path.
+    """
+    text = str(rel)
+    segs = [s for s in re.split(r"[\\/]+", text) if s not in ("", ".")]
+    if (not segs or ".." in segs or Path(text).is_absolute()
+            or PureWindowsPath(text).is_absolute()):
+        raise GodotExportError(
+            f"unsafe sprite path {rel!r}: must be relative without '..'")
+    return "/".join(segs)
+
+
 def _stage_assets(
     *,
     config: dict,
@@ -180,7 +196,8 @@ def _stage_assets(
 
     staged: dict[str, dict] = {}
     for role, rel in sprites.items():
-        dest = out_dir / str(rel)
+        rel = _safe_sprite_rel(rel)
+        dest = out_dir / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         found = None
         for d in asset_dirs:
@@ -314,9 +331,45 @@ def _slug(name: str) -> str:
     return slug or "game"
 
 
-def export_zip(staged_dir: str | Path, zip_path: str | Path) -> Path:
-    """Zip a staged Godot project atomically (write temp, then replace)."""
+def _assert_no_secrets(staged_dir: Path, secrets: list[str]) -> None:
+    """Fail closed when a staged plaintext file contains a secret value.
+
+    Scans every UTF-8-decodable staged file in full (never truncated);
+    binary files that fail UTF-8 decoding are skipped.
+    """
+    values = [s for s in secrets if isinstance(s, str) and s]
+    if not values:
+        return
+    for item in sorted(staged_dir.rglob("*")):
+        if not item.is_file():
+            continue
+        try:
+            text = item.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        for secret in values:
+            if secret in text:
+                rel = item.relative_to(staged_dir).as_posix()
+                raise GodotExportError(
+                    f"secret value detected in staged file {rel!r}")
+
+
+def export_zip(
+    staged_dir: str | Path,
+    zip_path: str | Path,
+    *,
+    secrets: list[str] | None = None,
+) -> Path:
+    """Zip a staged Godot project atomically (write temp, then replace).
+
+    When ``secrets`` (a list of secret values) is given, every staged
+    UTF-8-decodable file is scanned first and a match fails the export.
+    With ``secrets=None`` no scan runs: standalone/CLI callers that handle
+    secrets must pass their values explicitly.
+    """
     staged_dir, zip_path = Path(staged_dir), Path(zip_path)
+    if secrets:
+        _assert_no_secrets(staged_dir, list(secrets))
     zip_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = zip_path.with_suffix(zip_path.suffix + ".tmp")
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -335,8 +388,12 @@ def package_all(
     project_dir: str | Path | None = None,
     asset_dirs: list[str | Path] | None = None,
     builds_dir: str | Path,
+    secrets: list[str] | None = None,
 ) -> dict:
-    """Stage into temp and publish one Godot project ZIP (never partial)."""
+    """Stage into temp and publish one Godot project ZIP (never partial).
+
+    ``secrets`` is forwarded to :func:`export_zip` for the pre-zip scan.
+    """
     builds_dir = Path(builds_dir)
     slug = _slug(project_name)
     with tempfile.TemporaryDirectory(prefix="kgsm-godot-") as tmp:
@@ -345,7 +402,8 @@ def package_all(
             project_dir=project_dir, asset_dirs=asset_dirs,
             out_dir=Path(tmp) / "project")
         project_zip = export_zip(
-            staged["dir"], builds_dir / f"{slug}-godot.zip")
+            staged["dir"], builds_dir / f"{slug}-godot.zip",
+            secrets=secrets)
     return {"project": str(project_zip), "warnings": staged["warnings"],
             "manifest": staged["manifest"]}
 
@@ -367,15 +425,27 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("out_dir", help="output directory (cleared first)")
     parser.add_argument("--project-dir", default=None)
     parser.add_argument("--asset-dir", action="append", default=None)
+    parser.add_argument("--secrets-file", default=None,
+                        help="JSON list of secret values to scan the"
+                             " staged files for (match fails the export)")
     args = parser.parse_args(argv)
     blueprint = _read_json(Path(args.blueprint), "blueprint")
     config = _read_json(Path(args.config), "config")
+    secrets = None
+    if args.secrets_file is not None:
+        secrets = _read_json(Path(args.secrets_file), "secrets")
+        if not isinstance(secrets, list):
+            print("error: secrets file must hold a JSON list of strings",
+                  file=sys.stderr)
+            return 1
     try:
         staged = stage_export(
             project_name=str(blueprint.get("projectName", "game")),
             blueprint=blueprint, config=config,
             project_dir=args.project_dir, asset_dirs=args.asset_dir,
             out_dir=args.out_dir)
+        if secrets:
+            _assert_no_secrets(Path(staged["dir"]), secrets)
     except GodotExportError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

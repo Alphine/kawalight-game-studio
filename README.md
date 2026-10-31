@@ -25,10 +25,13 @@ packages/
   schemas/                 blueprint, genre config, export manifest (JSON Schema)
   templates/
     phaser/
-      runtime/             shared Phaser services (input, scenes, audio, UI,
-                           save, debug) as ES modules
-      space-shooter/       genre module #1 (SDD §3.1, §3.6) + demo game
-      endless-runner/      genre module #2 + demo game (M2)
+      runtime/             shared Phaser services (audio, debug, input,
+                           juice, store) as ES modules
+      space-shooter/       genre module (SDD §3.1, §3.6) + demo game
+      endless-runner/      genre module + demo game
+      side-scroller/       genre module + demo game
+      battle-2d/           genre module + demo game
+      farming/             genre module + demo game
     godot/                 Godot 4 exporter templates (separate adapter, FR-021)
 projects/                  local project data root (user content, git-ignored)
 ```
@@ -102,6 +105,6 @@ node packages\templates\phaser\tools\smoke.mjs farming
 - First run: dashboard opens in an app window; the worker sidecar
   auto-starts on `127.0.0.1:4317`. API keys stay local (Settings view).
 - Rebuild/runbook/troubleshooting: [docs/RELEASE.md](docs/RELEASE.md).
-- Known binary limitation: Playtest needs a staged game served over HTTP —
-  use a dev checkout or an exported build for playtests (M2: worker-hosted
-  preview endpoint).
+- Playtest runs a UI-side schematic preview (per-genre canvas sim) with no
+  server needed; for full-fidelity playtests stage + serve from a dev
+  checkout (stage-demo/smoke commands above) or open an exported build.

@@ -8,8 +8,15 @@ import sys
 from pathlib import Path
 
 
+class _InputError(Exception):
+    """A CLI input file that is missing or not valid JSON."""
+
+
 def _load_json(path: str) -> dict:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise _InputError(f"cannot read {path}: {exc}") from None
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
@@ -19,7 +26,15 @@ def cmd_validate(args: argparse.Namespace) -> int:
         validate_space_shooter_config,
     )
 
-    data = _load_json(args.file)
+    try:
+        data = _load_json(args.file)
+    except _InputError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    if not isinstance(data, dict):
+        print(f"error: {args.file} must contain a JSON object",
+              file=sys.stderr)
+        return 1
     if args.kind == "config":
         # Auto-detect the genre validator from the config's template id.
         template_id = (data.get("template") or {}).get("id", "")
@@ -55,8 +70,12 @@ def cmd_assemble(args: argparse.Namespace) -> int:
         assemble_space_shooter,
     )
 
-    blueprint = _load_json(args.blueprint)
-    genre = blueprint.get("genre", "")
+    try:
+        blueprint = _load_json(args.blueprint)
+    except _InputError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    genre = blueprint.get("genre", "") if isinstance(blueprint, dict) else ""
     if genre == "endless-runner":
         assemble = assemble_endless_runner
     elif genre == "space-shooter":
@@ -177,9 +196,14 @@ def cmd_export(args: argparse.Namespace) -> int:
     from .exporters import ExportError, package_all
 
     try:
+        config = _load_json(args.config)
+    except _InputError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    try:
         result = package_all(
             project_name=args.name, genre=args.genre,
-            config=_load_json(args.config), project_dir=args.project_dir,
+            config=config, project_dir=args.project_dir,
             builds_dir=args.builds_dir)
     except ExportError as exc:
         print(f"error: {exc}", file=sys.stderr)

@@ -22,7 +22,11 @@ from ..validation import (
     validate_side_scroller_config,
     validate_space_shooter_config,
 )
-from .manifest import assert_no_secrets, build_manifest, sha256_hex
+from .manifest import (
+    assert_no_secrets_in_dir,
+    build_manifest,
+    sha256_hex,
+)
 
 
 class ExportError(Exception):
@@ -76,25 +80,26 @@ def _collect_assets(staged_assets: Path, project_dir: Path) -> list[dict]:
             "source": "starter",
             "provider": None, "model": None, "prompt": None, "seed": None,
         }
+        # Project copy overrides starter: resolve the project-side
+        # sidecar by relative path (exact file, no bare-filename rglob,
+        # so glob metachars in names cannot match the wrong sidecar).
         sidecar = project_dir / "assets" / rel
         meta_file = sidecar.with_suffix(sidecar.suffix + ".meta.json")
-        # Project copy overrides starter: find any project-side meta by name.
-        for cand in (project_dir / "assets").rglob(f.name + ".meta.json") \
-                if (project_dir / "assets").is_dir() else []:
-            try:
-                meta = json.loads(cand.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            if meta.get("source") in ("imported", "generated"):
-                entry.update({
-                    "role": str(meta.get("role", entry["role"])),
-                    "source": meta["source"],
-                    "provider": meta.get("provider"),
-                    "model": meta.get("model"),
-                    "prompt": meta.get("prompt"),
-                    "seed": meta.get("seed"),
-                })
-                break
+        try:
+            meta = json.loads(meta_file.read_text(encoding="utf-8")) \
+                if meta_file.is_file() else None
+        except (OSError, json.JSONDecodeError):
+            meta = None
+        if isinstance(meta, dict) and \
+                meta.get("source") in ("imported", "generated"):
+            entry.update({
+                "role": str(meta.get("role", entry["role"])),
+                "source": meta["source"],
+                "provider": meta.get("provider"),
+                "model": meta.get("model"),
+                "prompt": meta.get("prompt"),
+                "seed": meta.get("seed"),
+            })
         entries.append(entry)
     return entries
 
@@ -168,7 +173,11 @@ def stage_export(
     project_assets = project_dir / "assets"
     if project_assets.is_dir():
         for item in sorted(project_assets.rglob("*")):
-            if item.is_file() and not item.name.endswith(".meta.json"):
+            # Never follow a planted symlink: its target bytes would leak
+            # into the export.
+            if item.is_symlink() or not item.is_file():
+                continue
+            if not item.name.endswith(".meta.json"):
                 rel = item.relative_to(project_assets)
                 target = staged_assets / rel
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -205,16 +214,20 @@ def stage_export(
 
 
 def export_zip(staged_dir: str | Path, zip_path: str | Path) -> Path:
-    """Zip a staged dir atomically (write temp, then replace)."""
+    """Zip a staged dir atomically (write temp, then replace).
+
+    Every staged file's full plaintext is secret-scanned BEFORE the zip
+    is written, so a leaking export fails without publishing anything.
+    """
     staged_dir, zip_path = Path(staged_dir), Path(zip_path)
+    assert_no_secrets_in_dir(staged_dir)
     zip_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = zip_path.with_suffix(zip_path.suffix + ".tmp")
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zf:
         for item in sorted(staged_dir.rglob("*")):
-            if item.is_file():
-                zf.write(item, item.relative_to(staged_dir).as_posix())
-    blob = tmp.read_bytes()
-    assert_no_secrets({"_zip_probe": blob.decode("utf-8", "ignore")[:100000]})
+            if item.is_symlink() or not item.is_file():
+                continue
+            zf.write(item, item.relative_to(staged_dir).as_posix())
     os.replace(tmp, zip_path)
     return zip_path
 

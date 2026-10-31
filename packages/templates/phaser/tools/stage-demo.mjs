@@ -6,24 +6,10 @@
 import { cpSync, copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseGenreArgv } from './genre-args.mjs';
 
-const GENRES = ['space-shooter', 'endless-runner', 'battle-2d'];
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-// Genre-generic: any sibling dir with a config.demo.json is stageable,
-// so new genre modules need no per-genre tool edit.
-const isGenre = (g) => GENRES.includes(g)
-  || existsSync(join(root, g, 'config.demo.json'));
-let genre = 'space-shooter';
-let outArg = null;
-for (const a of process.argv.slice(2)) {
-  if (a.startsWith('--genre=')) genre = a.slice('--genre='.length);
-  else if (isGenre(a)) genre = a;
-  else if (!outArg) outArg = a;
-}
-if (!isGenre(genre)) {
-  console.error(`unknown genre: ${genre} (known: ${GENRES.join(', ')})`);
-  process.exit(2);
-}
+const { genre, positional: outArg } = parseGenreArgv(process.argv.slice(2), { root });
 
 const game = join(root, genre);
 const out = join(root, outArg || `dist-${genre}`);

@@ -42,8 +42,11 @@
 
   function go(name) {
     if (!globalThis.KgsmViews.get(name)) name = 'home';
-    window.location.hash = '#/' + name;
-    render();
+    var target = '#/' + name;
+    // Set the hash and let the hashchange listener render exactly once;
+    // render synchronously only when the hash is already correct (same-view).
+    if (window.location.hash === target) render();
+    else window.location.hash = target;
   }
 
   function fromHash() {
@@ -52,8 +55,20 @@
     return globalThis.KgsmViews.get(name) ? name : 'home';
   }
 
+  // Normalize bogus deep-links (e.g. mockup tabs with no view) to #/home so
+  // the URL never disagrees with the rendered view. Uses replaceState to
+  // avoid firing a second hashchange render.
+  function normalizeHash(view) {
+    try {
+      if (window.location.hash !== '#/' + view) {
+        window.history.replaceState(null, '', '#/' + view);
+      }
+    } catch (e) { /* non-browser env: ignore */ }
+  }
+
   function render() {
     currentView = fromHash();
+    normalizeHash(currentView);
     document.querySelectorAll('#nav button[data-view]').forEach(function (b) {
       var on = b.dataset.view === currentView;
       b.classList.toggle('active', on);
@@ -101,16 +116,18 @@
       paintBanner();
       renderRail();
       if (!wasOnline && globalThis.KgsmViews.refreshProjects) {
-        globalThis.KgsmViews.refreshProjects().catch(function () { /* stay quiet */ });
-        if (currentView) render();
+        // Reconnect: refresh cached data quietly but never full-render —
+        // rebuilding the active view would wipe unsubmitted edits.
+        globalThis.KgsmViews.refreshProjects()
+          .then(renderRail, function () { /* stay quiet */ });
       }
       return h;
     }, function () {
-      var wasOnline = store.get('online');
       store.set({ online: false, health: null, latencyMs: null });
+      // Offline flip: repaint chrome only (banner/rail/HUD via subscribe);
+      // views keep their state and offer Retry once the worker is back.
       paintBanner();
       renderRail();
-      if (wasOnline && currentView) render();
       return null;
     });
   }
@@ -149,7 +166,10 @@
     var empty = document.getElementById('recentEmpty');
     if (recent && empty) {
       recent.innerHTML = '';
-      var shown = projects.slice(0, 5);
+      // True recency order: newest updatedAt first (API order is by name).
+      var shown = projects.slice().sort(function (a, b) {
+        return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
+      }).slice(0, 5);
       empty.hidden = shown.length > 0;
       shown.forEach(function (p) {
         var li = document.createElement('li');
@@ -161,8 +181,9 @@
         b.addEventListener('click', function () {
           store.set({ currentId: p.id });
           renderRail();
-          if (currentView !== 'home') go('home');
-          else render();
+          // Stay in the current workspace view; re-render it in place so the
+          // newly selected project loads without yanking the user to Home.
+          render();
         });
         li.appendChild(b);
         recent.appendChild(li);
