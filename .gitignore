@@ -18,6 +18,7 @@ pytest-of-*/
 apps/desktop/.npm-cache/
 .venv/
 apps/desktop/dist-release/
+dist-web/
 .DS_Store
 Thumbs.db
 

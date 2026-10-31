@@ -1,0 +1,16 @@
+[Unit]
+Description=KGSM worker API (Kawalight Game Studio Maker)
+After=network.target
+
+[Service]
+Type=simple
+User=kgsm
+WorkingDirectory=/opt/kgsm
+Environment=PYTHONPATH=/opt/kgsm/apps/worker/src
+Environment=KGSM_HOME=/var/lib/kgsm
+ExecStart=/usr/bin/python3 /opt/kgsm/apps/worker/kgsm-worker.py --host 127.0.0.1 --port 4317
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

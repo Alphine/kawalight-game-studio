@@ -4,7 +4,7 @@
 // Back-compat: bare `node tools/stage-demo.mjs [outdir]` still stages space-shooter.
 // Dev preview only; the worker stage_export is canonical for real exports.
 import { cpSync, copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseGenreArgv } from './genre-args.mjs';
 
@@ -12,7 +12,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const { genre, positional: outArg } = parseGenreArgv(process.argv.slice(2), { root });
 
 const game = join(root, genre);
-const out = join(root, outArg || `dist-${genre}`);
+const out = outArg ? resolve(root, outArg) : join(root, `dist-${genre}`);
 
 if (!existsSync(join(game, 'config.demo.json'))) {
   console.error(`no staged template at ${game} (missing config.demo.json)`);
