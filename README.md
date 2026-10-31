@@ -97,11 +97,11 @@ node packages\templates\phaser\tools\smoke.mjs farming
   `rustup component add rustc --toolchain stable` before running the Tauri shell;
   the UI in `apps/desktop/ui` also runs in a plain browser for development.
 
-## Binary release (v0.1.0)
+## Binary release (v0.2.0)
 
-- Installer + portable exe: `apps/desktop/dist-release/` (git-ignored,
-  regenerable) — `Kawalight Game Studio Maker_0.1.0_x64-setup.exe` (~20 MB)
-  and `kawalight-studio-maker.exe` + `kgsm-worker-*.exe` sidecar.
+- One portable folder: `apps/desktop/dist-release/` (git-ignored,
+  regenerable) — `kawalight-studio-maker.exe` + `kgsm-worker-*.exe`
+  sidecar side by side. Copy anywhere and run, no installer.
 - First run: dashboard opens in an app window; the worker sidecar
   auto-starts on `127.0.0.1:4317`. API keys stay local (Settings view).
 - Rebuild/runbook/troubleshooting: [docs/RELEASE.md](docs/RELEASE.md).

@@ -104,9 +104,10 @@ def _extra_providers():
 # --------------------------------------------------------------------------
 
 def test_health(api):
+    from kgsm import __version__
     status, body = call(api, "GET", "/health")
     assert status == 200
-    assert body == {"status": "ok", "worker": "kgsm", "version": "0.1.0",
+    assert body == {"status": "ok", "worker": "kgsm", "version": __version__,
                     "contractVersion": "1.0.0"}
 
 

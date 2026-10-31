@@ -1,22 +1,28 @@
 # KGSM binary release runbook
 
-## Artifacts (v0.1.0)
+## Artifacts (v0.2.0)
 
-Built from this repo, in `apps/desktop/dist-release/` (git-ignored, regenerable):
+Single portable folder in `apps/desktop/dist-release/` (git-ignored,
+regenerable) — copy it anywhere and run:
 
-- `Kawalight Game Studio Maker_0.1.0_x64-setup.exe` (~20 MB) — NSIS installer.
-  Installs the app + runs it. No admin needed for per-user install.
-- `kawalight-studio-maker.exe` (~11 MB) — portable app. Needs
-  `kgsm-worker-x86_64-pc-windows-msvc.exe` next to it (same folder).
+- `kawalight-studio-maker.exe` (~11 MB) — the app.
+- `kgsm-worker-x86_64-pc-windows-msvc.exe` (~19 MB) — worker sidecar.
+- `kgsm-worker.exe` — same sidecar bytes, short name (fallback alias).
 
-Launch-verified 2026-10-30: app window appears (title "Kawalight Game
-Studio Maker"), sidecar health 200 on 127.0.0.1:4317 within 5 s, empty
-stderr, stable 20 s+, clean kill — from a normal (non-sandboxed) terminal.
+No installer: one folder is the whole distribution (v0.1.0's NSIS
+installer is retired).
+
+Launch-verified 2026-10-31 (v0.2.0): app window appears (title
+"Kawalight Game Studio Maker"), empty stderr, stable 21 s+, clean kill;
+sidecar standalone health 200 with `version: 0.2.0` on a scratch port.
+App-to-sidecar spawn path is unchanged since v0.1.0, where the pair was
+verified end-to-end (window + sidecar health 200 on 4317).
 
 ## First run
 
-1. Install via the setup exe (or unzip the portable pair into one folder).
-2. Launch the app: the dashboard opens in an app window.
+1. Copy the `dist-release` folder anywhere (or unzip the portable set
+   into one folder).
+2. Launch `kawalight-studio-maker.exe`: the dashboard opens in an app window.
 3. The app auto-starts its worker sidecar on `http://127.0.0.1:4317` —
    projects, wizard, Asset Forge/Lab, validation, export, backup all work
    against it. No separate step needed.
@@ -56,7 +62,7 @@ cd apps/desktop; npm install; cd ../..
 # 1. Freeze the worker sidecar (writes src-tauri/binaries/)
 $env:LOCALAPPDATA='<repo>\.local-appdata'
 robocopy packages\templates .pyinstaller-work\stage\templates /E `
-  /XD node_modules .npm-cache dist-space-shooter dist-endless-runner .smoke
+  /XD node_modules .npm-cache .smoke dist-*
 .\.venv\Scripts\pyinstaller.exe --noconfirm --clean --onefile --console `
   --name kgsm-worker --paths apps/worker/src `
   --hidden-import=kgsm.api.routes_providers `
@@ -66,8 +72,9 @@ robocopy packages\templates .pyinstaller-work\stage\templates /E `
   --distpath apps/desktop/src-tauri/binaries `
   --workpath .pyinstaller-work\build --specpath .pyinstaller-work `
   apps/worker/kgsm-worker.py
+Remove-Item apps/desktop/src-tauri/binaries/kgsm-worker-x86_64-pc-windows-msvc.exe -Force -ErrorAction SilentlyContinue
 Rename-Item apps/desktop/src-tauri/binaries/kgsm-worker.exe `
-  kgsm-worker-x86_64-pc-windows-msvc.exe -Force
+  kgsm-worker-x86_64-pc-windows-msvc.exe
 
 # 2. Smoke-test the sidecar alone (use a scratch port + KGSM_HOME)
 $env:KGSM_HOME='<repo>\.pyinstaller-work\frozen-probe'
@@ -77,20 +84,25 @@ Invoke-WebRequest http://127.0.0.1:4399/api/v1/health -UseBasicParsing
 Invoke-WebRequest http://127.0.0.1:4399/api/v1/providers -UseBasicParsing
 Stop-Process -Name 'kgsm-worker*' -Force
 
-# 3. Build the installer (first run downloads crates + NSIS tools; 10-25 min)
-cmd /c '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x64 -no_logo >NUL && cd /d <repo>\apps\desktop && set "CARGO_TARGET_DIR=<writable-temp>\kgsm-target" && node_modules\.bin\tauri.cmd build --bundles nsis'
+# 3. Build the portable exe (first run downloads crates; 10-25 min,
+#    incremental rebuilds ~1 min; no installer is produced)
+cmd /c '"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" -arch=x64 -no_logo >NUL && cd /d <repo>\apps\desktop && set "CARGO_TARGET_DIR=<writable-temp>\kgsm-target" && node_modules\.bin\tauri.cmd build --no-bundle'
 
-# 4. Collect artifacts
-Copy-Item <temp>\kgsm-target\release\bundle\nsis\*.exe apps/desktop/dist-release/
+# 4. Collect artifacts (one portable folder; stop any running app first,
+#    a live sidecar locks its exe)
 Copy-Item <temp>\kgsm-target\release\kawalight-studio-maker.exe apps/desktop/dist-release/
 Copy-Item apps/desktop/src-tauri/binaries/kgsm-worker-x86_64-pc-windows-msvc.exe apps/desktop/dist-release/
+Copy-Item apps/desktop/src-tauri/binaries/kgsm-worker-x86_64-pc-windows-msvc.exe apps/desktop/dist-release/kgsm-worker.exe
 
-# 5. Instrumented launch check (window must appear, health 200, clean kill)
+# 5. Instrumented launch check (window must appear, health 200, clean kill;
+#    free port 4317 first so the sidecar leg is conclusive)
+Stop-Process -Name kawalight-studio-maker, 'kgsm-worker*' -Force -ErrorAction SilentlyContinue
 $p = Start-Process apps/desktop/dist-release/kawalight-studio-maker.exe -PassThru `
   -RedirectStandardError apps/desktop/dist-release/app-stderr.log
 Start-Sleep -Seconds 15
 (Get-Process -Id $p.Id).MainWindowHandle -ne 0  # expect True
 (Invoke-WebRequest http://127.0.0.1:4317/api/v1/health -UseBasicParsing).StatusCode  # expect 200
+Remove-Item apps/desktop/dist-release/app-stderr.log -Force
 Stop-Process -Name kawalight-studio-maker, 'kgsm-worker*' -Force
 ```
 
@@ -102,6 +114,10 @@ Stop-Process -Name kawalight-studio-maker, 'kgsm-worker*' -Force
   bundle resources and the exe folder — rebuild the sidecar (step 1).
 - **Dashboard shows worker offline**: port 4317 busy (another worker running?)
   or sidecar crashed — check for `kgsm-worker*` processes and free the port.
+- **Stale `kgsm-worker*` processes pile up**: each app launch spawns one
+  sidecar; kill leftovers from your own terminal (`Stop-Process -Name
+  'kgsm-worker*' -Force`) or reboot before rebuilding — a live sidecar
+  locks its exe and blocks artifact collection.
 - **cargo fetch stalls**: the sandbox blocks the local proxy; run cargo steps
   unsandboxed (or set `CARGO_NET_RETRY`, longer `http.timeout`).
 - **`gh` push auth fails**: token expired — run `gh auth login` in your own

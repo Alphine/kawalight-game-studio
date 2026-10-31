@@ -226,11 +226,11 @@
         return invoke('app_version').then(function (v) {
           document.getElementById('appVersion').textContent = 'v' + v + ' (tauri)';
         }, function () {
-          document.getElementById('appVersion').textContent = 'v1.0.0 (tauri?)';
+          document.getElementById('appVersion').textContent = 'v0.2.0 (tauri?)';
         });
       }
     } catch (e) { /* fall through */ }
-    document.getElementById('appVersion').textContent = 'v1.0.0 (browser dev)';
+    document.getElementById('appVersion').textContent = 'v0.2.0 (browser dev)';
     return Promise.resolve();
   }
 
