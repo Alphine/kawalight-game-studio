@@ -10,7 +10,10 @@ regenerable) — copy it anywhere and run:
 - `kgsm-worker.exe` — same sidecar bytes, short name (fallback alias).
 
 No installer: one folder is the whole distribution (v0.1.0's NSIS
-installer is retired).
+installer is retired from the release process — note
+`apps/desktop/src-tauri/tauri.conf.json` still declares
+`targets: ["nsis"]`, but release builds pass `--no-bundle` in step 3, so
+no installer is produced).
 
 Launch-verified 2026-10-31 (v0.2.0, exact shipped bytes by SHA-256):
 app window appears (title "Kawalight Game Studio Maker"), sidecar spawns
@@ -47,6 +50,26 @@ exported build directly.
   keep writable data in `%LOCALAPPDATA%\KawalightStudioMaker\`
   (`projects/`, `data/`), overridable via `KGSM_PROJECTS_DIR`/`KGSM_DATA_DIR`/
   `KGSM_HOME`.
+
+## Pre-release checklist (run before packaging)
+
+- [ ] **Version parity.** The app version lives in four places with no
+  automated sync — confirm all four match the release being cut:
+  `apps/desktop/package.json` (`version`), `apps/desktop/src-tauri/
+  Cargo.toml` (`version`), `apps/desktop/src-tauri/tauri.conf.json`
+  (`version`), `apps/worker/src/kgsm/__init__.py` (`__version__`).
+  (All `0.2.0` today.) `contractVersion` (`1.0.0` in
+  `apps/worker/src/kgsm/api/__init__.py`) is unrelated — see the
+  contract's Revision 1.5 policy before touching it.
+- [ ] **Docs refresh.** Test counts in the root README are reproduced
+  values — rerun both suites and update them
+  (`apps/worker/tests`, `packages/templates/godot/tests`). Confirm
+  `docs/api-contract.md` carries a Revision entry for any additive
+  change since the last release, and that this runbook's artifact
+  list / launch notes still describe the shipped bytes.
+- [ ] **Tauri config.** Confirm `tauri.conf.json` bundle targets and
+  `externalBin` still match the portable-folder process above (step 3
+  passes `--no-bundle`; the declared `nsis` target stays dormant).
 
 ## Rebuild from source (Windows, verified 2026-10-30)
 

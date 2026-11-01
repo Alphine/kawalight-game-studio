@@ -262,9 +262,19 @@ def duplicate(
             for item in source.dir.iterdir():
                 if item.name == "project.json":
                     continue
+                # Never follow a planted symlink: its target bytes would
+                # leak into the copy (mirrors create_backup, which skips
+                # symlinks when snapshotting).
+                if item.is_symlink():
+                    continue
                 dest = copy.dir / item.name
                 if item.is_dir():
-                    shutil.copytree(item, dest)
+                    shutil.copytree(
+                        item, dest,
+                        ignore=lambda d, names: [
+                            n for n in names
+                            if (Path(d) / n).is_symlink()],
+                    )
                 else:
                     shutil.copy2(item, dest)
         return get(copy.id, conn)

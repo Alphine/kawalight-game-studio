@@ -129,8 +129,7 @@
             S().rememberReport('blueprint', 'Blueprint save', err.report);
             reportSlot.innerHTML = UI().reportHtml(err.report, 'Blueprint save');
           }
-          UI().toast(UI().errorText(err), 'error');
-          throw err;
+          throw err; // UI().busy owns the error toast
         });
       }, 'Saving…');
     });

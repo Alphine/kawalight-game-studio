@@ -402,6 +402,7 @@
         + field('Seed (empty = random)', '<input data-f="seed" type="number" min="0" value="' + U().esc(w.seed) + '" placeholder="empty">')
         + '</div><label class="check"><input type="checkbox" data-f="remappable"' + (w.remappable ? ' checked' : '') + '> Remappable controls (P2 preview — stored, template ignores it)</label>';
     } else if (wiz.step === 2) {
+      var foeWord = U().foeWordFor(w.genre);
       body.innerHTML =
         field('Game loop', '<textarea data-f="gameLoop" rows="2">' + U().esc(w.gameLoop) + '</textarea>')
         + '<div class="form-grid">'
@@ -409,8 +410,8 @@
         + field('Health (1..99)', '<input data-f="health" type="number" min="1" max="99" value="' + w.health + '">')
         + field('Lives (1..9)', '<input data-f="lives" type="number" min="1" max="9" value="' + w.lives + '">')
         + '</div>'
-        + '<h4>' + icon('gamepad') + 'Enemies</h4><div data-slot="enemies"></div>'
-        + '<button type="button" class="btn ghost" data-a="add-enemy">' + icon('plus') + 'Add enemy</button>'
+        + '<h4>' + icon('gamepad') + U().esc(foeWord + 's') + '</h4><div data-slot="enemies"></div>'
+        + '<button type="button" class="btn ghost" data-a="add-enemy">' + icon('plus') + 'Add ' + U().esc(foeWord.toLowerCase()) + '</button>'
         + field('Progression', '<textarea data-f="progression" rows="2">' + U().esc(w.progression) + '</textarea>')
         + field('Scoring', '<textarea data-f="scoring" rows="2">' + U().esc(w.scoring) + '</textarea>')
         + '<div class="form-grid">'
@@ -468,12 +469,13 @@
   }
 
   function renderEnemies(list) {
+    var foeLower = U().foeWordFor(wiz.data.genre).toLowerCase();
     list.innerHTML = wiz.data.enemies.map(function (e, i) {
       return '<div class="row enemy-row"><input data-e="id" data-i="' + i + '" value="' + U().esc(e.id) + '" placeholder="id" size="14">'
         + '<input data-e="role" data-i="' + i + '" value="' + U().esc(e.role) + '" placeholder="role" size="34">'
         + '<input data-e="count" data-i="' + i + '" type="number" min="1" max="512" value="' + e.count + '" title="count" style="width:5em">'
         + '<button type="button" class="btn ghost danger" data-a="rm" data-i="' + i + '">' + icon('close') + 'Remove</button></div>';
-    }).join('') || '<p class="muted">No enemies — add at least one.</p>';
+    }).join('') || '<p class="muted">No ' + U().esc(foeLower + 's') + ' — add at least one.</p>';
     list.querySelectorAll('[data-a="rm"]').forEach(function (b) {
       b.addEventListener('click', function () {
         collectEnemies(list.closest('section') || document);
@@ -544,19 +546,40 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();
     }).then(function (data) {
+      if (!isValidThemeData(data)) throw new Error('bad theme data shape');
       themeCache = data;
       if (slot.isConnected) paintThemeCards(body);
     }, function () {
+      themeCache = null;
       themeLoadFailed = true;
       if (slot.isConnected) paintThemeCards(body);
     });
+  }
+
+  // Shape-check data/themes.json before use: a malformed local file (or a
+  // bundle missing it) falls back to manual fields instead of breaking the
+  // picker. Rendering stays escaped regardless.
+  function isValidThemeData(data) {
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return false;
+    var genres = U().GENRES;
+    for (var i = 0; i < genres.length; i++) {
+      var list = data[genres[i]];
+      if (list === undefined) continue; // picker tolerates a missing genre
+      if (!Array.isArray(list)) return false;
+      for (var j = 0; j < list.length; j++) {
+        var t = list[j];
+        if (!t || typeof t !== 'object' || typeof t.id !== 'string' || !t.id) return false;
+      }
+    }
+    return true;
   }
 
   // Error-message keywords owned by each wizard step (from validateWizardLocal).
   var STEP_KEYS = [
     ['Project name', 'Unknown genre', 'Theme'],
     ['Width', 'Height', 'Seed'], // Seed input lives on the Setup step
-    ['Game loop', 'ability', 'health', 'lives', 'Enemy', 'enemy', 'Progression',
+    ['Game loop', 'ability', 'health', 'lives', 'Enemy', 'enemy',
+      'Obstacle', 'obstacle', 'Progression',
       'Scoring', 'Win condition', 'Lose condition'],
     null, // Preview: full check
   ];

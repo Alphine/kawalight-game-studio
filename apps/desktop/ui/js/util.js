@@ -219,10 +219,22 @@
     };
   }
 
+  // Foe-list key per genre (mirrors blueprint.schema.json allOf):
+  // space-shooter + battle-2d require `enemies`, the other genres `obstacles`.
+  function foeKeyFor(genre) {
+    return (genre === 'endless-runner' || genre === 'side-scroller' || genre === 'farming')
+      ? 'obstacles' : 'enemies';
+  }
+
+  // Human-readable foe word per genre for wizard labels and validation text.
+  function foeWordFor(genre) {
+    return foeKeyFor(genre) === 'obstacles' ? 'Obstacle' : 'Enemy';
+  }
+
   function buildWizardBlueprint(w) {
     var abilities = (w.abilities || []).map(function (a) { return String(a).trim(); })
       .filter(function (a) { return a.length > 0; });
-    var enemies = (w.enemies || []).map(function (e) {
+    var foes = (w.enemies || []).map(function (e) {
       return { id: e.id, role: e.role, count: Number(e.count) || 1 };
     });
     var bp = {
@@ -240,7 +252,6 @@
         abilities: abilities,
         health: Number(w.health), lives: Number(w.lives),
       },
-      enemies: enemies,
       progression: String(w.progression || '').trim(),
       scoring: String(w.scoring || '').trim(),
       winCondition: String(w.winCondition || '').trim(),
@@ -248,6 +259,7 @@
       seed: (w.seed === '' || w.seed == null) ? null : Number(w.seed),
       notes: String(w.notes || ''),
     };
+    bp[foeKeyFor(w.genre)] = foes;
     return bp;
   }
 
@@ -266,11 +278,13 @@
     if (abilities.length < 1) errs.push('At least one player ability is required.');
     if (!(w.health >= 1 && w.health <= 99)) errs.push('Player health must be 1..99.');
     if (!(w.lives >= 1 && w.lives <= 9)) errs.push('Player lives must be 1..9.');
-    if (!w.enemies || w.enemies.length < 1) errs.push('At least one enemy is required.');
+    var foeWord = foeWordFor(w.genre);
+    var foeLower = foeWord.toLowerCase();
+    if (!w.enemies || w.enemies.length < 1) errs.push('At least one ' + foeLower + ' is required.');
     (w.enemies || []).forEach(function (e, i) {
-      if (!ENEMY_ID_RE.test(e.id || '')) errs.push('Enemy #' + (i + 1) + ': id must match [a-z0-9-]{1,40}.');
-      if (!e.role || !String(e.role).trim()) errs.push('Enemy #' + (i + 1) + ': role is required.');
-      if (!(e.count >= 1 && e.count <= 512)) errs.push('Enemy #' + (i + 1) + ': count must be 1..512.');
+      if (!ENEMY_ID_RE.test(e.id || '')) errs.push(foeWord + ' #' + (i + 1) + ': id must match [a-z0-9-]{1,40}.');
+      if (!e.role || !String(e.role).trim()) errs.push(foeWord + ' #' + (i + 1) + ': role is required.');
+      if (!(e.count >= 1 && e.count <= 512)) errs.push(foeWord + ' #' + (i + 1) + ': count must be 1..512.');
     });
     if (!w.progression || !w.progression.trim()) errs.push('Progression is required.');
     if (!w.scoring || !w.scoring.trim()) errs.push('Scoring is required.');
@@ -324,13 +338,20 @@
 
   // Append generated story text to a blueprint's notes field. Pure: returns
   // a new blueprint, the input is untouched. Blank stories are a no-op.
+  // Blueprint notes has maxLength 4000, so over-long results are truncated
+  // with a visible marker instead of failing PUT with 422 after generation.
+  var MAX_NOTES_LEN = 4000;
+  var NOTES_TRUNC_MARKER = '\n\n[…truncated to fit the 4000-character blueprint notes limit]';
   function appendStoryToNotes(bp, storyText) {
     var next = {};
     Object.keys(bp || {}).forEach(function (k) { next[k] = bp[k]; });
     var story = String(storyText || '').trim();
     if (!story) return next;
     var prev = String(next.notes || '').trim();
-    next.notes = prev ? prev + '\n\n--- Story ---\n' + story : story;
+    var combined = prev ? prev + '\n\n--- Story ---\n' + story : story;
+    next.notes = combined.length > MAX_NOTES_LEN
+      ? combined.slice(0, MAX_NOTES_LEN - NOTES_TRUNC_MARKER.length) + NOTES_TRUNC_MARKER
+      : combined;
     return next;
   }
 
@@ -553,7 +574,8 @@
       fmtDate: fmtDate, fmtDuration: fmtDuration, stateLabel: stateLabel,
       allowedTransitions: allowedTransitions, isValidProjectName: isValidProjectName,
       defaultWizard: defaultWizard, buildWizardBlueprint: buildWizardBlueprint,
-      validateWizardLocal: validateWizardLocal, themeFoes: themeFoes,
+      validateWizardLocal: validateWizardLocal, foeKeyFor: foeKeyFor,
+      foeWordFor: foeWordFor, themeFoes: themeFoes,
       applyThemeToWizard: applyThemeToWizard, appendStoryToNotes: appendStoryToNotes,
       parseApiError: parseApiError,
       summarizeReport: summarizeReport, controlsKeysFor: controlsKeysFor,

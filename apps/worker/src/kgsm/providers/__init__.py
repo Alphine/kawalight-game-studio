@@ -13,6 +13,7 @@ from .registry import (
     list_providers,
     list_text_providers,
     register_provider,
+    unregister_provider,
 )
 
 __all__ = [
@@ -27,4 +28,5 @@ __all__ = [
     "list_providers",
     "list_text_providers",
     "register_provider",
+    "unregister_provider",
 ]

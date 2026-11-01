@@ -1,16 +1,32 @@
 // Builds dist-web/: static hosting bundle for Kawalight Game Studio Maker.
-// Usage: node packages/web/tools/make-web-bundle.mjs [outdir]
+// Usage: node packages/web/tools/make-web-bundle.mjs [outdir] [--force]
 // Output: landing + studio UI + 5 staged games + server refs + deploy README.
 // Stdlib only (node:fs/path/url/child_process).
+// --force is required when outdir is outside the repo; the repo root itself
+// is never wiped.
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const webDir = join(here, '..');
 const repo = join(webDir, '..', '..');
-const out = resolve(process.argv[2] || join(repo, 'dist-web'));
+const cliArgs = process.argv.slice(2);
+const force = cliArgs.includes('--force');
+const out = resolve(cliArgs.find((a) => a !== '--force') || join(repo, 'dist-web'));
+
+function assertSafeOutdir() {
+  if (out === repo) {
+    console.error(`refusing to wipe the repo root: ${out}`);
+    process.exit(2);
+  }
+  const rel = relative(repo, out);
+  if ((rel.startsWith('..') || isAbsolute(rel)) && !force) {
+    console.error(`refusing to wipe outside the repo without --force: ${out}`);
+    process.exit(2);
+  }
+}
 
 const GENRES = [
   { id: 'space-shooter', title: 'Space Shooter', tag: 'ARCADE', glyph: '▲', desc: 'Enemy waves, powerups, bosses.' },
@@ -106,11 +122,18 @@ Options -Indexes
 
 <IfModule mod_headers.c>
   Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  # Baseline CSP for landing + studio + games (one static bundle):
+  # 'unsafe-inline' scripts/styles are required by existing inline code;
+  # jsdelivr covers the Phaser CDN fallback in staged games; connect/img/
+  # media allow http(s) because Studio calls a user-configured worker origin.
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: http: https:; media-src 'self' data: blob: http: https:; font-src 'self' data:; connect-src 'self' http: https: ws: wss:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'"
 </IfModule>
 `;
 
 function main() {
   const ver = version();
+  assertSafeOutdir();
   rmSync(out, { recursive: true, force: true });
   mkdirSync(join(out, 'games'), { recursive: true });
 

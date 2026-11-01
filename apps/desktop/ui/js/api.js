@@ -153,7 +153,10 @@
         return post(V1 + '/projects/' + encodeURIComponent(id) + '/exports', b, { timeoutMs: 300000 });
       },
       listExports: function (id) { return get(V1 + '/projects/' + encodeURIComponent(id) + '/exports'); },
-      godotExport: function (id) { return post(V1 + '/projects/' + encodeURIComponent(id) + '/exports/godot', {}); },
+      godotExport: function (id, config) {
+        var b = config ? { config: config } : {};
+        return post(V1 + '/projects/' + encodeURIComponent(id) + '/exports/godot', b);
+      },
       // §8 Backup / restore
       backupProject: function (id) { return post(V1 + '/projects/' + encodeURIComponent(id) + '/backup', {}); },
       listBackups: function () { return get(V1 + '/backups'); },
@@ -165,6 +168,11 @@
       putSecret: function (name, value) { return put(V1 + '/secrets/' + encodeURIComponent(name), { value: value }); },
       deleteSecret: function (name) { return del(V1 + '/secrets/' + encodeURIComponent(name)); },
       listSecrets: function () { return get(V1 + '/secrets'); },
+      // §13 Stories (additive: same route/timeout the Forge Story tab used
+      // via its bespoke postStory; shared client owns headers/timeouts now).
+      generateStory: function (body) {
+        return post(V1 + '/stories/generate', body, { timeoutMs: 120000 });
+      },
     };
   }
 

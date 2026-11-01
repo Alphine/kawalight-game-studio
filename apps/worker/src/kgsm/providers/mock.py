@@ -1,7 +1,8 @@
 """Mock provider (FR-006): deterministic placeholder PNGs, zero cost.
 
-Used for tests, offline development, and UI previews. Real provider adapters
-(DALL-E, Stable Diffusion, ...) plug into the same registry later.
+Used for tests, offline development, and UI previews. BYOK adapters
+(``openai-compat``, ``llama-image``/``llama-text``) plug into the same
+registry; mock stays the side-effect-free offline default.
 """
 
 from __future__ import annotations

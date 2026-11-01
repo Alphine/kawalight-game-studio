@@ -217,6 +217,25 @@
       });
       nav.appendChild(group);
     });
+    wireNavToggle();
+  }
+
+  // Small-screen sidebar collapse (styles.css shows #navToggle ≤700px).
+  function wireNavToggle() {
+    var tgl = document.getElementById('navToggle');
+    var sidebar = document.querySelector('.sidebar');
+    if (!tgl || !sidebar || tgl.dataset.bound) return;
+    tgl.dataset.bound = '1';
+    tgl.addEventListener('click', function () {
+      var collapsed = sidebar.classList.toggle('nav-collapsed');
+      tgl.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    });
+    try {
+      if (window.matchMedia && window.matchMedia('(max-width: 700px)').matches) {
+        sidebar.classList.add('nav-collapsed');
+        tgl.setAttribute('aria-expanded', 'false');
+      }
+    } catch (e) { /* non-browser env: ignore */ }
   }
 
   function detectShell() {

@@ -19,6 +19,7 @@ from .providers.base import ProviderError
 
 MAX_PROMPT_CHARS = 8000
 MAX_GENRE_CHARS = 64
+MAX_TEXT_CHARS = 65536  # provider-returned text is truncated past this
 
 
 class StoryError(Exception):
@@ -104,6 +105,11 @@ def generate_text(
         raise StoryError(
             f"provider {getattr(provider, 'id', provider)!r} "
             "does not support text generation")
+    if len(text) > MAX_TEXT_CHARS:
+        # A runaway provider must not bloat the blueprint past its
+        # maxLength (or the response past reason): truncate visibly.
+        text = text[:MAX_TEXT_CHARS] + "\n\n[truncated: provider text " \
+            f"exceeded {MAX_TEXT_CHARS} characters]"
     usage = dict(usage)
     usage["promptChars"] = len(prompt)
     usage["textChars"] = len(text)

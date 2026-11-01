@@ -37,13 +37,13 @@
     if (busy) {
       if (btn.dataset.busy === '1') return;
       btn.dataset.busy = '1';
-      btn.dataset.label = btn.textContent;
+      btn.dataset.label = btn.innerHTML;
       btn.disabled = true;
       btn.textContent = label || 'Working…';
     } else {
       btn.dataset.busy = '';
       btn.disabled = false;
-      if (btn.dataset.label != null) btn.textContent = btn.dataset.label;
+      if (btn.dataset.label != null) btn.innerHTML = btn.dataset.label;
     }
   }
 
@@ -212,7 +212,32 @@
     return '<div class="state error-state">' + art('error', '⌁')
       + '<h3>Worker offline</h3>'
       + '<p class="muted">Start the local worker (default http://127.0.0.1:4317) or fix the '
-      + 'Worker URL in Settings. This view needs a live connection.</p></div>';
+      + 'Worker URL in Settings. This view needs a live connection.</p>'
+      + '<div class="btn-row"><button type="button" class="btn ghost" data-kgsm-offline-retry>'
+      + 'Retry connection</button></div></div>';
+  }
+
+  // Delegated Retry for every offlinePanel: re-check health, then re-render
+  // the current view in place when the worker is back (no caller wiring).
+  if (typeof document !== 'undefined') {
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest
+        ? e.target.closest('[data-kgsm-offline-retry]') : null;
+      if (!b || b.disabled) return;
+      var App = globalThis.KgsmApp;
+      if (!App || !App.checkHealth || !App.go) return;
+      setBusy(b, true, 'Retrying…');
+      App.checkHealth().then(function () {
+        setBusy(b, false);
+        var S = globalThis.KgsmStore;
+        if (S && S.get('online')) {
+          var m = /^#\/([a-z-]+)/.exec(window.location.hash || '');
+          App.go(m ? m[1] : 'home');
+        } else {
+          toast('Worker is still offline.', 'error');
+        }
+      });
+    });
   }
 
   function issueList(items, cls) {

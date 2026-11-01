@@ -163,7 +163,7 @@
             + '<span class="muted">spent ' + U().esc(U().fmtCents(res.spentCents)) + '</span></p>'
             + '<ul class="asset-list">' + (res.assets || []).map(function (a) {
               return '<li><code>' + U().esc(a.path) + '</code>'
-                + (a.meta ? ' <span class="muted">' + a.meta.width + '×' + a.meta.height + ' ' + U().esc(a.meta.mode || '') + '</span>' : '')
+                + (a.meta ? ' <span class="muted">' + U().esc(a.meta.width) + '×' + U().esc(a.meta.height) + ' ' + U().esc(a.meta.mode || '') + '</span>' : '')
                 + '</li>';
             }).join('') + '</ul>';
           UI().toast('Generated ' + (res.assets || []).length + ' asset(s).', 'success');
@@ -175,59 +175,22 @@
             quoteSlot.innerHTML = '<table class="kv"><tbody>' + UI().kvRows({
               Blocked: err.message, Cost: U().fmtCents(err.quote.cents), Reason: err.quote.reason || '—',
             }) + '</tbody></table>';
+            if (err.code === 'cost-blocked') {
+              // Mirror the story tab: stay disabled until a fresh quote.
+              lastQuote = null;
+              genBtn.disabled = true;
+              quoteSlot.innerHTML += '<p class="err-msg">Blocked by a spend limit — raise it in Settings, then get a fresh quote.</p>';
+            }
           }
-          UI().toast(UI().errorText(err), 'error');
-          throw err;
+          throw err; // UI().busy owns the error toast
         });
       }, 'Generating…');
     });
   }
 
   // ---------- Forge: Story tab ----------
-  // POST /api/v1/stories/generate (contract §13). The shared api.js client is
-  // frozen, so this tab posts directly and normalizes errors with
-  // KgsmUtil.parseApiError, mirroring api.js semantics.
-  function postStory(body) {
-    var base = String(S().get('workerUrl') || 'http://127.0.0.1:4317').replace(/\/+$/, '');
-    var url = base + '/api/v1/stories/generate';
-    var init = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      body: JSON.stringify(body),
-    };
-    var ctrl = null;
-    var timer = null;
-    if (typeof AbortController !== 'undefined') {
-      ctrl = new AbortController();
-      init.signal = ctrl.signal;
-      timer = setTimeout(function () { ctrl.abort(); }, 120000);
-    }
-    return fetch(url, init).then(function (res) {
-      if (timer) clearTimeout(timer);
-      return res.text().then(function (text) {
-        var payload = null;
-        try { payload = text ? JSON.parse(text) : null; } catch (e) { payload = null; }
-        if (res.ok) return payload == null ? {} : payload;
-        var parsed = U().parseApiError(payload, res.status, 'Request failed');
-        var err = new Error(parsed.message);
-        err.code = parsed.code;
-        err.status = parsed.status;
-        if (parsed.quote) err.quote = parsed.quote;
-        throw err;
-      });
-    }).catch(function (err) {
-      if (timer) clearTimeout(timer);
-      if (err && err.code) throw err;
-      var msg = (err && err.name === 'AbortError')
-        ? 'Worker timed out after 120s'
-        : 'Worker unreachable at ' + base + ' (is it running?)';
-      var off = new Error(msg);
-      off.code = 'worker-offline';
-      off.status = 0;
-      throw off;
-    });
-  }
-
+  // POST /api/v1/stories/generate (contract §13) via the shared api.js
+  // client (api.generateStory), so headers/timeouts/error shape stay uniform.
   function loadStoryProviders(root, p) {
     var slot = root.querySelector('[data-slot="story-form"]');
     if (!slot) return;
@@ -251,7 +214,7 @@
         + '<label class="fld"><span>Prompt</span><textarea data-f="story-prompt" rows="4" placeholder="A drifting scavenger crew finds a singing wreck…"></textarea></label>'
         + '<label class="fld"><span>Genre voice (optional, ≤ 64 chars)</span><input data-f="story-genre" value="' + U().esc(p.genre || '') + '" maxlength="64"></label>'
         + '<div data-slot="story-quote"></div>'
-        + '<div class="btn-row"><button type="button" class="btn ghost" data-a="story-gen">Generate</button> '
+        + '<div class="btn-row"><button type="button" class="btn ghost" data-a="story-gen">Get quote</button> '
         + '<button type="button" class="btn primary" data-a="story-confirm" disabled>Confirm + generate</button></div>'
         + '<p class="muted small">One story = one billable unit: paid or unknown-cost providers quote first, nothing is spent until you confirm (NFR-011). mock is free and offline.</p>';
       wireStory(slot, root, p);
@@ -286,7 +249,7 @@
       if (!lastQuote && confirmBtn.disabled) return;
       lastQuote = null;
       confirmBtn.disabled = true;
-      quoteSlot.innerHTML = '<p class="muted small">Form changed — generate again for a fresh quote.</p>';
+      quoteSlot.innerHTML = '<p class="muted small">Form changed — get a fresh quote before generating.</p>';
     }
     function paintQuote(q, blocked) {
       quoteSlot.innerHTML = '<table class="kv"><tbody>' + UI().kvRows({
@@ -304,7 +267,7 @@
       if (!b.prompt) { UI().toast('Prompt is required.', 'error'); return Promise.resolve(); }
       b.confirmed = confirmed;
       return UI().busy(btn, function () {
-        return postStory(b).then(function (res) {
+        return api().generateStory(b).then(function (res) {
           lastQuote = res.quote || null;
           confirmBtn.disabled = true;
           showStory(root, p, res);
@@ -324,7 +287,7 @@
       }, label);
     }
     slot.querySelector('[data-a="story-gen"]').addEventListener('click', function (e) {
-      attempt(false, e.target, 'Generating…');
+      attempt(false, e.target, 'Requesting…');
     });
     confirmBtn.addEventListener('click', function (e) {
       attempt(true, e.target, 'Generating…');
@@ -347,11 +310,15 @@
       + '<div data-slot="story-insert"></div>'
       + '<p class="muted small">Insert appends this story to the stored blueprint\'s notes field (nothing else changes).</p>';
     rslot.querySelector('[data-slot="story-text"]').appendChild(UI().pre(res.text || ''));
-    rslot.querySelector('[data-a="insert-story"]').addEventListener('click', function (e) {
+    var insertBtn = rslot.querySelector('[data-a="insert-story"]');
+    var insertDone = false;
+    insertBtn.addEventListener('click', function (e) {
+      if (insertDone) return;
       UI().busy(e.target, function () {
         return api().getBlueprint(p.id).then(function (stored) {
           var next = U().appendStoryToNotes(stored.blueprint, res.text || '');
           return api().putBlueprint(p.id, next).then(function (saved) {
+            insertDone = true;
             S().rememberReport('blueprint', 'Blueprint save (story insert)', saved.report);
             rslot.querySelector('[data-slot="story-insert"]').innerHTML =
               '<p><span class="pill green">inserted</span> <span class="muted">Story appended to blueprint notes.</span></p>';
@@ -371,7 +338,14 @@
           }
           UI().toast(UI().errorText(err), 'error');
         });
-      }, 'Inserting…');
+      }, 'Inserting…').then(function () {
+        // Chained after busy's label restore: lock the button so repeat
+        // clicks cannot append duplicate '--- Story ---' blocks.
+        if (insertDone) {
+          insertBtn.disabled = true;
+          insertBtn.textContent = 'Inserted into blueprint ✓';
+        }
+      }, function () { /* busy already toasted */ });
     });
   }
 
@@ -389,7 +363,7 @@
         var m = a.meta || {};
         var prov = m.provider ? ' · ' + U().esc(m.provider) + '/' + U().esc(m.model || '?') : '';
         return '<li><code>' + U().esc(a.path) + '</code>'
-          + ' <span class="muted">' + (m.width || '?') + '×' + (m.height || '?') + prov + '</span></li>';
+          + ' <span class="muted">' + U().esc(m.width == null ? '?' : m.width) + '×' + U().esc(m.height == null ? '?' : m.height) + prov + '</span></li>';
       }).join('') + '</ul>';
     }, function (err) {
       if (!slot.isConnected) return;
@@ -438,11 +412,18 @@
       + '</div><div class="btn-row"><button type="button" class="btn primary" data-a="slice">Slice</button></div>'
       + '<div data-slot="slice"></div></section></div>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('lab') + ' Planned (not in wave 1)</h3></div>'
-      + '<div class="btn-row"><button type="button" class="btn ghost" disabled title="Planned — crop UI is not in this build">Crop</button> '
-      + '<button type="button" class="btn ghost" disabled title="Planned — frame reordering is not in this build">Frame ordering</button> '
-      + '<button type="button" class="btn ghost" disabled title="Planned — tile diagnostics are not in this build">Tile diagnostics</button></div>'
+      + '<div class="btn-row"><button type="button" class="btn ghost" data-planned="Crop" aria-disabled="true" title="Planned — crop UI is not in this build">Crop</button> '
+      + '<button type="button" class="btn ghost" data-planned="Frame ordering" aria-disabled="true" title="Planned — frame reordering is not in this build">Frame ordering</button> '
+      + '<button type="button" class="btn ghost" data-planned="Tile diagnostics" aria-disabled="true" title="Planned — tile diagnostics are not in this build">Tile diagnostics</button></div>'
       + '<p class="muted small">Wave 1 covers import, inspect, slice, and palette; the SDD §2.3 items above are explicitly out of scope until a later milestone.</p></section>';
     root.querySelector('[data-a="refresh"]').addEventListener('click', function () { loadLabAssets(root, p); });
+    // Planned actions stay focusable (aria-disabled) and explain themselves
+    // via toast, since title tooltips never reach keyboard/SR users.
+    root.querySelectorAll('[data-planned]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        UI().toast(b.dataset.planned + ' is planned — not in this build (wave 1 covers import, inspect, slice, palette).', 'info');
+      });
+    });
     root.querySelector('[data-a="browse"]').addEventListener('click', function () {
       pickFile(root.querySelector('[data-f="src"]'));
     });
@@ -486,7 +467,7 @@
       UI().busy(e.target, function () {
         return api().paletteAsset(p.id, path, 16).then(function (res) {
           var slot = root.querySelector('[data-slot="inspect"]');
-          slot.innerHTML = '<p><span class="muted">sampled ' + res.sampledColors + ' colors · '
+          slot.innerHTML = '<p><span class="muted">sampled ' + U().esc(res.sampledColors) + ' colors · '
             + 'pixel-art hint: ' + U().esc(res.pixelArtHint) + '</span></p>'
             + '<div class="swatches">' + (res.topColors || []).map(function (c) {
               var rgb = 'rgb(' + c.rgb.join(',') + ')';

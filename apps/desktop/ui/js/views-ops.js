@@ -513,8 +513,7 @@
           if (err && err.report) {
             root.querySelector('[data-slot="pkg"]').innerHTML = UI().reportHtml(err.report, 'Export blocked by validation');
           }
-          UI().toast(UI().errorText(err), 'error');
-          throw err;
+          throw err; // UI().busy owns the error toast
         });
       }, 'Building…');
     });
@@ -535,8 +534,7 @@
           if (err && err.report) {
             root.querySelector('[data-slot="pkg"]').innerHTML = UI().reportHtml(err.report, 'Export blocked by validation');
           }
-          UI().toast(UI().errorText(err), 'error');
-          throw err;
+          throw err; // UI().busy owns the error toast
         });
       }, 'Building…');
     });
@@ -671,7 +669,8 @@
       + Object.keys(LLAMA_PRESETS).map(function (k) {
         return '<option value="' + k + '">' + U().esc(LLAMA_PRESETS[k].label) + '</option>';
       }).join('') + '</select></label>'
-      + '<label class="fld"><span>API key</span><input data-f="ll-key" type="password" placeholder="stored, never shown" autocomplete="off"></label>'
+      + '<label class="fld"><span>API key</span><span class="row"><input data-f="ll-key" type="password" placeholder="stored, never shown" autocomplete="off" style="flex:1">'
+      + '<button type="button" class="btn ghost" data-a="ll-key-toggle" aria-pressed="false" aria-label="Show API key">Show</button></span></label>'
       + '<label class="fld"><span>Base URL</span><input data-f="ll-base" placeholder="https://api.together.xyz/v1"></label>'
       + '<label class="fld"><span>Text model (llama-text)</span><input data-f="ll-text" placeholder="meta-llama/Llama-3.3-70B-Instruct-Turbo"></label>'
       + '<label class="fld"><span>Image model (llama-image)</span><input data-f="ll-image" placeholder="black-forest-labs/FLUX.1-schnell"></label>'
@@ -679,7 +678,7 @@
       + '</div>'
       + '<p class="muted small" data-slot="ll-preset-note"></p>'
       + '<div class="btn-row"><button type="button" class="btn primary" data-a="ll-save">Save Llama settings</button> '
-      + '<button type="button" class="btn ghost" data-a="ll-test">Test connection</button></div>'
+      + '<button type="button" class="btn ghost" data-a="ll-test">Check configuration</button></div>'
       + '<div data-slot="ll-status"></div></section>'
       + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('shield') + ' Secrets (names only — values are write-only)</h3></div>'
       + '<div data-slot="secrets">' + UI().loadingPanel('Loading secret names…') + '</div>'
@@ -695,8 +694,8 @@
       + '<button type="button" class="btn ghost" data-a="ledger">This month\'s ledger</button></div>'
       + '<div data-slot="ledger"></div></section></div>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('info') + ' Environment</h3></div><div data-slot="env"></div>'
-      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="storage" disabled title="Planned (M2) — wave 1 uses the worker\'s projects/ dir">' + I('folder') + 'Change storage path (Planned)</button> '
-      + '<button type="button" class="btn ghost" data-a="runtimes" disabled title="Planned (M2) — wave 1 targets the bundled Phaser 3 template">' + I('chip') + 'Runtime versions (Planned)</button></div></section>';
+      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="storage" aria-disabled="true" title="Planned (M2) — wave 1 uses the worker\'s projects/ dir">' + I('folder') + 'Change storage path (Planned)</button> '
+      + '<button type="button" class="btn ghost" data-a="runtimes" aria-disabled="true" title="Planned (M2) — wave 1 targets the bundled Phaser 3 template">' + I('chip') + 'Runtime versions (Planned)</button></div></section>';
     paintHealth(root);
     loadProvidersSettings(root);
     loadSecrets(root);
@@ -731,15 +730,28 @@
       var key = root.querySelector('[data-f="ll-preset"]').value;
       var pr = LLAMA_PRESETS[key] || LLAMA_PRESETS.together;
       if (fill) {
-        root.querySelector('[data-f="ll-base"]').value = pr.base;
-        root.querySelector('[data-f="ll-text"]').value = pr.text;
-        root.querySelector('[data-f="ll-image"]').value = pr.image;
+        // Fill empty fields only: switching presets must never clobber
+        // typed Base URL / model values.
+        ['ll-base', 'll-text', 'll-image'].forEach(function (f, i) {
+          var inp = root.querySelector('[data-f="' + f + '"]');
+          var val = [pr.base, pr.text, pr.image][i];
+          if (inp && !inp.value.trim() && val) inp.value = val;
+        });
       }
       root.querySelector('[data-slot="ll-preset-note"]').textContent =
-        'Get a key at ' + pr.keyUrl + ' — ' + pr.note;
+        'Get a key at ' + pr.keyUrl + ' — ' + pr.note
+        + ' Switching presets only fills empty fields; your edits are kept.';
     }
     root.querySelector('[data-f="ll-preset"]').addEventListener('change', function () { paintLlamaPreset(true); });
     paintLlamaPreset(true);
+    root.querySelector('[data-a="ll-key-toggle"]').addEventListener('click', function (e) {
+      var inp = root.querySelector('[data-f="ll-key"]');
+      var show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      e.target.textContent = show ? 'Hide' : 'Show';
+      e.target.setAttribute('aria-pressed', show ? 'true' : 'false');
+      e.target.setAttribute('aria-label', show ? 'Hide API key' : 'Show API key');
+    });
     root.querySelector('[data-a="ll-save"]').addEventListener('click', function (e) {
       var vals = {
         llama_api_key: root.querySelector('[data-f="ll-key"]').value.trim(),
@@ -750,7 +762,7 @@
       };
       var jobs = Object.keys(vals).filter(function (k) { return vals[k] !== ''; })
         .map(function (k) { return api().putSecret(k, vals[k]); });
-      if (!jobs.length) { UI().toast('Fill at least the API key before saving.', 'error'); return; }
+      if (!jobs.length) { UI().toast('Fill at least one field before saving.', 'error'); return; }
       UI().busy(e.target, function () {
         return Promise.all(jobs).then(function () {
           root.querySelector('[data-f="ll-key"]').value = '';
@@ -775,12 +787,13 @@
             return '<li><span class="pill ' + (c[1] ? 'green' : 'red') + '">'
               + (c[1] ? 'PASS' : 'FAIL') + '</span> ' + U().esc(c[0]) + '</li>';
           }).join('') + '</ul>'
-            + '<p class="muted small">Secret values are write-only, so only presence is checked. '
+            + '<p class="muted small">Secret values are write-only, so only presence is checked, and no request '
+            + 'is sent to the provider — a wrong key still passes. '
             + 'Unset base URL / models fall back to the Together defaults.</p>';
-          UI().toast(ok ? 'Llama is ready — try the Forge Story tab.'
+          UI().toast(ok ? 'Configuration check passed — try the Forge Story tab.'
             : 'Llama is not fully configured — see checks above.', ok ? 'success' : 'error');
         });
-      }, 'Testing…');
+      }, 'Checking…');
     });
     root.querySelector('[data-a="lim-save"]').addEventListener('click', function (e) {
       var g = root.querySelector('[data-f="lim-global"]').value;
@@ -813,7 +826,14 @@
         });
       }, 'Loading…');
     });
-    // storage/runtimes buttons are disabled Planned placeholders (no handlers).
+    // storage/runtimes are Planned placeholders: focusable (aria-disabled) with
+    // a toast explanation, since title tooltips never reach keyboard/SR users.
+    root.querySelector('[data-a="storage"]').addEventListener('click', function () {
+      UI().toast('Change storage path is planned (M2) — wave 1 uses the worker\'s projects/ dir.', 'info');
+    });
+    root.querySelector('[data-a="runtimes"]').addEventListener('click', function () {
+      UI().toast('Runtime versions are planned (M2) — wave 1 targets the bundled Phaser 3 template.', 'info');
+    });
   }
 
   function paintHealth(root) {

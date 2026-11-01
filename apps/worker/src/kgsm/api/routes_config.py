@@ -34,7 +34,14 @@ SUPPORTED_GENRES = ("space-shooter", "endless-runner", "side-scroller",
 
 
 def _for_genre(genre: str):
-    """Return (assemble, validate_config) for a genre or raise 501."""
+    """Return (assemble, validate_config) for a genre or raise 501.
+
+    The 501 here is intentional and distinct from the 404 that
+    ``POST /projects`` returns for an unknown genre: creation validates
+    a value against the genre list (client error), while these routes
+    dispatch to per-genre handlers, so a genre with no handler is
+    "not served" (``unknown-genre`` kept as the code for continuity).
+    """
     if genre == "space-shooter":
         return assemble_space_shooter, validate_space_shooter_config
     if genre == "endless-runner":

@@ -8,7 +8,8 @@ studio/             full dashboard UI (static files)
 games/<genre>/      5 playable game demos (pure static, work anywhere)
 server/             reference configs for VPS full-stack hosting
 README-DEPLOY.md    this file
-.htaccess           compression + caching for Apache/LiteSpeed
+.htaccess           compression + caching + security headers for Apache/LiteSpeed
+                (nosniff, SAMEORIGIN framing, baseline Content-Security-Policy)
 ```
 
 Built by `packages/web/tools/make-web-bundle.mjs` in the repo. Rebuild
@@ -36,6 +37,15 @@ anytime; never hand-edit this folder on the server.
    systemctl daemon-reload && systemctl enable --now kgsm-worker`.
 3. Install `server/nginx-kgsm.conf` (replace YOUR-DOMAIN), reload nginx,
    add TLS (Certbot). Studio's worker URL is then just `https://YOUR-DOMAIN`.
+
+> **Security: the worker API has no auth.** The reference nginx config
+> proxies `/api/` straight to the worker, whose routes (secrets, costs,
+> restore, export) assume the loopback-only desktop design — the worker
+> itself refuses non-loopback binds (contract §11) but cannot tell your
+> reverse proxy apart from its owner. Before exposing Option B to the
+> internet, put auth in front of `/api/` (HTTP basic auth or a token
+> check in nginx) or restrict it to your own IPs; otherwise anyone can
+> read secrets names, spend your BYOK budget, and restore projects.
 
 ## Notes
 

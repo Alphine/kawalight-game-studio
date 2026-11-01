@@ -510,7 +510,11 @@ export function stepGame(state, config, input, dtMs) {
       && now >= state.breatherUntil) {
     const cleared = state.waveIndex + 1;
     state.score += config.scoring?.waveClearBonus ?? 0;
-    if (cleared >= (config.victory?.afterWave ?? config.waves.length)) {
+    // afterWave above waves.length is schema-legal; clamp so a hand-fed
+    // config ends in victory instead of indexing past the wave list.
+    const target = Math.min(config.victory?.afterWave ?? config.waves.length,
+      config.waves.length);
+    if (cleared >= target) {
       state.phase = 'stageclear';
       events.push({ type: 'victory', score: state.score });
     } else {

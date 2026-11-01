@@ -12,12 +12,10 @@ deterministic offline placeholders; any registered provider exposing
 
 from __future__ import annotations
 
-import threading
-
 from .. import costs as costs_mod
 from .. import projects as projects_mod
 from .. import story as story_mod
-from ..providers import ProviderError, get_provider
+from ..providers import ProviderError, get_provider, get_text_provider
 from . import (
     ApiError,
     Request,
@@ -29,8 +27,10 @@ from . import (
 
 # Serializes generate_story's quote→authorize→generate→record_spend flow so
 # concurrent ThreadingHTTPServer requests cannot both pass limits and both
-# spend (TOCTOU overspend). Mirrors routes_assets._GENERATE_LOCK.
-_GENERATE_LOCK = threading.Lock()
+# spend (TOCTOU overspend). Shared with the asset route via
+# costs.spend_lock: per-module locks let a concurrent asset+story pair
+# both pass limits.
+_GENERATE_LOCK = costs_mod.spend_lock
 
 
 def generate_story(req: Request) -> tuple[int, dict]:
@@ -81,7 +81,21 @@ def generate_story(req: Request) -> tuple[int, dict]:
             raise ApiError("needs-confirmation", message, 409,
                            quoted) from None
 
-        provider = get_provider(provider_id)
+        # Text backends resolve through the registry's capability view;
+        # ``mock`` keeps its offline placeholder (it exposes no
+        # generate_text by design, and the text views exclude it).
+        if provider_id == "mock":
+            provider = get_provider(provider_id)
+        else:
+            try:
+                provider = get_text_provider(provider_id)
+            except ProviderError as exc:
+                try:
+                    get_provider(provider_id)
+                except ProviderError:
+                    raise ApiError("unknown-provider", str(exc),
+                                   404) from None
+                raise ApiError("provider-error", str(exc), 502) from None
         try:
             text, usage = story_mod.generate_text(
                 provider, prompt, genre)
@@ -90,9 +104,13 @@ def generate_story(req: Request) -> tuple[int, dict]:
         except story_mod.StoryError as exc:
             raise ApiError("provider-error", str(exc), 502) from None
         spent = quote.cents if quote.cents is not None else 0
-        costs_mod.record_spend(
-            spent, f"generate story via {provider_id}",
-            project_id=project_id)
+        label = f"generate story via {provider_id}"
+        if quote.cents is None:
+            # Unknown cost still records 0 actual, but the ledger row is
+            # tagged so unknown-cost spend stays visible (and countable)
+            # instead of silently understating real BYOK spend.
+            label = f"[unknown-cost] {label}"
+        costs_mod.record_spend(spent, label, project_id=project_id)
         return 201, {"text": text, "provider": provider_id,
                      "model": provider.model, "usage": usage,
                      "quote": quote_to_dict(quote), "spentCents": spent}

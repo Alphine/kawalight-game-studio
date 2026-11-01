@@ -81,12 +81,18 @@
 
   // HUD notification modal (title + message + confirm). Not a confirm dialog —
   // use KgsmUi.confirmModal when a boolean answer is needed.
+  // While hidden the modal is inert so its CONFIRM button is not focusable;
+  // while open, focus is trapped and restored to the opener on close.
+  var hudPrevFocus = null;
+
   function notify(title, msg) {
     var modal = el('hud-modal');
     if (!modal) return;
+    hudPrevFocus = document.activeElement;
     setText('modal-title', title || 'KAWALIGHT STUDIO NOTIFICATION');
     setText('modal-msg', msg || '');
     modal.classList.remove('hidden');
+    modal.removeAttribute('inert');
     modal.setAttribute('aria-hidden', 'false');
     var ok = modal.querySelector('[data-x="ok"]');
     if (ok) ok.focus();
@@ -96,18 +102,35 @@
     var modal = el('hud-modal');
     if (!modal) return;
     modal.classList.add('hidden');
+    modal.setAttribute('inert', '');
     modal.setAttribute('aria-hidden', 'true');
+    if (hudPrevFocus && hudPrevFocus.focus) {
+      try { hudPrevFocus.focus(); } catch (e) { /* ignore */ }
+      hudPrevFocus = null;
+    }
   }
 
   function bindModal() {
     var modal = el('hud-modal');
     if (!modal || modal.dataset.bound) return;
     modal.dataset.bound = '1';
+    modal.setAttribute('inert', '');
     modal.addEventListener('click', function (e) {
       if (e.target === modal || e.target.closest('[data-x="ok"],[data-x="close"]')) closeModal();
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+      if (modal.classList.contains('hidden')) return;
+      if (e.key === 'Escape') { closeModal(); return; }
+      if (e.key !== 'Tab') return;
+      var focusables = modal.querySelectorAll('button');
+      var list = [];
+      for (var i = 0; i < focusables.length; i++) {
+        if (!focusables[i].disabled) list.push(focusables[i]);
+      }
+      if (!list.length) return;
+      var first = list[0], last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
   }
 

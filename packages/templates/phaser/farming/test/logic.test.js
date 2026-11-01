@@ -165,6 +165,22 @@ describe('harvest and coins', () => {
     run(s, config, 30, { tool: 'plant', col: 1, row: 1 });
     assert.deepEqual(summarize(s), frozen);
   });
+
+  it('completes via stepGame when the target is already met', () => {
+    const config = testConfig();
+    const s = createGame(config);
+    s.totalEarned = config.scoring.targetCoins; // e.g. restored progress
+    const events = stepGame(s, config, {}, 100);
+    assert.ok(events.some((e) => e.type === 'complete'));
+    assert.equal(s.phase, 'complete');
+  });
+
+  it('completes at creation for a trivially-satisfied target', () => {
+    const config = testConfig();
+    config.scoring.targetCoins = 0; // hand-fed: nothing left to earn
+    const s = createGame(config);
+    assert.equal(s.phase, 'complete');
+  });
 });
 
 describe('day cycle and rain', () => {

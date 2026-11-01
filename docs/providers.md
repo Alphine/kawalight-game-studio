@@ -15,8 +15,9 @@ generation via `POST /stories/generate` (details below).
 
 No installs: the adapter uses stdlib `urllib` only (no OpenAI SDK). All
 configuration lives in the local secret store (`.kgsm/secrets.json`,
-owner-only permissions); values are write-only and never appear in API
-responses, logs, builds, or manifests.
+plaintext JSON; `chmod 0o600` is applied best-effort and is a no-op on
+Windows, where the file relies on user-profile ACLs); values are
+write-only and never appear in API responses, logs, builds, or manifests.
 
 | Secret name | Required | Meaning |
 | --- | --- | --- |
@@ -81,10 +82,14 @@ unchanged.
   price table -- pricing varies by model/size/quality and changes often, so a
   baked-in table would lie. Unknown cost always requires `confirmed: true`
   (`409 needs-confirmation` otherwise); confirmed unknown-cost generations
-  record 0 cents actual spend. With a configured price, quotes return
-  `price × nImages` and still require confirmation; spend limits
-  (`PUT /costs/limits`) block over-limit generations even when confirmed
-  (`402 cost-blocked`).
+  record 0 cents actual spend, with the ledger label tagged
+  `[unknown-cost]` so the unknown spend stays visible and countable.
+  Spend limits (`PUT /costs/limits`) engage on both paths: priced
+  quotes block when new spend would exceed a limit, unknown-cost
+  quotes block when spend is already at/over a limit (and are
+  confirmation-gated regardless). With a configured price, quotes return
+  `price × nImages` and still require confirmation; limits then block
+  over-limit generations even when confirmed (`402 cost-blocked`).
 - Failures are `502 provider-error` and write nothing: no partial assets, no
   ledger entries, last good build untouched (NFR-003).
 
@@ -172,8 +177,30 @@ the provider message, key redacted) and network failures.
   provider-error` and write nothing.
 - `llama-text`: text cost is always unknown (`estimate_cents` returns
   `None`), so story generation requires `confirmed: true` and records 0
-  cents actual spend; spend limits still apply once priced quotes exist.
+  cents actual spend with an `[unknown-cost]` ledger label, exactly
+  like unpriced image rows; spend limits block when spend is already
+  at/over a limit on this path too.
   Per-story price tracking is future work.
+
+## SSRF guards and residual risks (as implemented)
+
+- **Configured base URLs are trusted input.** `validate_base_url` checks
+  only the scheme (`http(s)://`, and plain `http` solely for loopback
+  hosts); it does not block private, link-local, or reserved hosts. The
+  Bearer key is POSTed to whatever `openai_compat_base_url` /
+  `llama_base_url` holds — including `https://` URLs on LAN or
+  cloud-metadata IPs — so only ever configure URLs you trust. These
+  secrets are local-user-controlled (same trust domain as the worker),
+  which bounds the impact.
+- **Provider-returned image URLs are guarded once.** `_fetch_url`
+  refuses an initial host that `host_is_blocked` flags
+  (private/loopback/link-local/reserved literal or resolved DNS), and
+  never forwards the API key to that third-party host. Residual risks,
+  documented, not fixed: `urllib` follows redirects without
+  re-validating the redirect target, and the guard resolves DNS at
+  check time while the fetch re-resolves at use time
+  (TOCTOU/DNS-rebind). Treat image-URL downloads as
+  best-effort-guarded, not airtight.
 
 ## How to add a provider
 

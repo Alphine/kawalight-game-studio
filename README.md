@@ -39,11 +39,12 @@ projects/                  local project data root (user content, git-ignored)
 ## Quickstart
 
 ```powershell
-# worker tests (205; test_api.py needs a real localhost socket,
-# so run outside sandboxes that forbid listen())
+# worker tests (273 passed + 2 skipped; 34 test_api.py socket tests
+# error where localhost listen() is blocked — run outside such sandboxes
+# for the full green)
 .\.venv\Scripts\python.exe -m pytest apps\worker\tests -q
 
-# godot exporter tests (60, no sockets needed)
+# godot exporter tests (72, no sockets needed)
 .\.venv\Scripts\python.exe -m pytest packages\templates\godot\tests -q
 
 # template logic tests (no browser needed)
@@ -68,6 +69,17 @@ node packages\templates\phaser\tools\smoke.mjs battle-2d
 node packages\templates\phaser\tools\stage-demo.mjs farming
 node packages\templates\phaser\tools\smoke.mjs farming
 ```
+
+## Test conventions
+
+- Route tests go through `server.dispatch` directly (no sockets) —
+  `test_api_genres.py`, `test_api_ops.py`, and `test_story.py` are the
+  pattern. `test_api.py` is the one live-socket suite (real localhost
+  `listen()` + HTTP round-trips); keep it that way and don't add more
+  socket-bound suites.
+- Test providers registered via `register_provider()` mutate the global
+  registry: register inside fixtures with teardown that restores the
+  prior state, never bare at module scope.
 
 ## Milestones
 

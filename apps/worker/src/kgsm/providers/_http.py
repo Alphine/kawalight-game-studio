@@ -20,6 +20,8 @@ from .base import ProviderError
 
 _LOOPBACK_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
+_GUARD_INSTALLED = False
+
 
 def host_is_loopback(host: str) -> bool:
     if (host or "").lower() in _LOOPBACK_HOSTS:
@@ -37,6 +39,13 @@ def host_is_blocked(host: str) -> bool:
     DNS names are resolved and blocked when they settle on such an
     address; an unresolvable name is allowed through so the fetch itself
     fails naturally (and fails closed as a ProviderError).
+
+    Residual risk (DNS TOCTOU/rebind): the name is validated at check
+    time but ``urllib`` re-resolves at connect time, so a hostile DNS
+    that flips between the two can bypass the guard. Pinning the
+    validated IP for the fetch would need a custom connector; stdlib
+    ``urllib`` offers none, so this check plus the redirect guard below
+    is the mitigation, not a proof.
     """
     if not host:
         return True
@@ -106,8 +115,34 @@ def require_api_key(
     return api_key
 
 
+def check_request_host(url: str, provider_id: str) -> None:
+    """Reject requests whose host is SSRF-blocked (shared guard).
+
+    The Bearer [REDACTED] travels on every request, so a user-supplied base
+    URL (or a provider redirect target) must never point at private,
+    loopback, link-local, or reserved hosts -- with one explicit
+    exception: cleartext ``http://`` loopback stays allowed for local
+    gateway development (mirrors :func:`validate_base_url`).
+    """
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        raise ProviderError(
+            f"{provider_id}: request URL is not parseable"
+        ) from None
+    host = parts.hostname or ""
+    if parts.scheme == "http" and host_is_loopback(host):
+        return  # explicit local-gateway exception
+    if host_is_blocked(host):
+        raise ProviderError(
+            f"{provider_id}: request host is not allowed"
+        )
+
+
 def validate_base_url(base_url: str, provider_id: str) -> None:
-    """Reject non-HTTP(S) roots and cleartext secrets off loopback."""
+    """Reject non-HTTP(S) roots, cleartext secrets off loopback, and
+    blocked hosts (a user-supplied base URL must never receive the key
+    at a private/link-local/reserved address)."""
     if not base_url.startswith(("http://", "https://")):
         raise ProviderError(
             f"{provider_id}: base URL must start with http:// or https://: "
@@ -122,6 +157,7 @@ def validate_base_url(base_url: str, provider_id: str) -> None:
             f"{provider_id}: base URL must use https:// outside "
             f"loopback: {base_url!r}"
         )
+    check_request_host(base_url, provider_id)
 
 
 def http_detail(exc: urllib.error.HTTPError, api_key: str) -> str:
@@ -146,6 +182,10 @@ def post_json(
     Every transport failure becomes a ProviderError; the key is redacted
     from surfaced provider messages.
     """
+    check_request_host(url, provider_id)  # defense in depth: base URLs
+    # configured after validate_base_url, or passed directly, are checked
+    # again at send time.
+    ensure_redirect_guard()  # every redirect hop re-validated pre-fetch
     request = urllib.request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
@@ -166,6 +206,44 @@ def post_json(
         raise ProviderError(
             f"{provider_id}: request failed: {exc}"
         ) from None
+
+
+class SSRFRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Follow redirects only to SSRF-allowed hosts.
+
+    ``urllib`` follows 301/302/303/307/308 by default, so a provider
+    redirect (e.g. a 302 to 169.254.169.254/metadata) would bypass the
+    pre-fetch host check. Every hop is re-validated here, before it is
+    fetched; a blocked hop fails closed as a ProviderError.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        try:
+            host = urlsplit(newurl).hostname or ""
+        except ValueError:
+            host = ""
+        if host_is_blocked(host):
+            # No URL in the message: redirect targets may carry signed-URL
+            # tokens that must never surface in errors or logs.
+            raise ProviderError("redirect target host is not allowed")
+        return super().redirect_request(
+            req, fp, code, msg, headers, newurl)
+
+
+def ensure_redirect_guard() -> None:
+    """Install the redirect-guarding default opener (idempotent).
+
+    The installed opener is otherwise equivalent to ``urllib``'s
+    default; only redirect targets gain validation. Nothing else in
+    this worker process customizes the global opener, and the guard is
+    stateless, so sharing it across threads is safe.
+    """
+    global _GUARD_INSTALLED
+    if _GUARD_INSTALLED:
+        return
+    urllib.request.install_opener(
+        urllib.request.build_opener(SSRFRedirectHandler()))
+    _GUARD_INSTALLED = True
 
 
 def decode_json(raw: bytes, provider_id: str) -> object:

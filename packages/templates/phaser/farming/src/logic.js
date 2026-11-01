@@ -39,7 +39,7 @@ export function createGame(config, opts = {}) {
   for (let i = 0; i < cols * rows; i++) {
     plots.push({ crop: null, stage: 0, growthMs: 0, watered: false });
   }
-  return {
+  const state = {
     seed,
     rand: mulberry32(seed),
     tick: 0,
@@ -55,6 +55,12 @@ export function createGame(config, opts = {}) {
     harvested: 0,
     plots,
   };
+  // Completion is checked here and in stepGame, not only in harvestAt, so a
+  // trivially-satisfied target can never strand a run in 'playing'.
+  if (state.totalEarned >= (config.scoring.targetCoins ?? Infinity)) {
+    state.phase = 'complete';
+  }
+  return state;
 }
 
 export function pauseGame(state) {
@@ -233,6 +239,7 @@ export function stepGame(state, config, input = {}, dtMs = 16) {
     events.push({ type: 'newday', day: state.day });
     applyRain(state, config, events);
   }
+  checkComplete(state, config, events);
   return events;
 }
 

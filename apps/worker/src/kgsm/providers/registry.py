@@ -24,24 +24,35 @@ def register_provider(provider: ImageProvider) -> None:
     _PROVIDERS[provider.id] = provider
 
 
+def unregister_provider(provider_id: str) -> None:
+    """Remove one registration (test teardown for fixture providers)."""
+    _PROVIDERS.pop(provider_id, None)
+
+
 def _ensure_builtins() -> None:
     if "mock" not in _PROVIDERS:
         from .mock import MockProvider
 
         _PROVIDERS["mock"] = MockProvider()
+    # Each optional adapter registers independently: any failure (missing
+    # module, missing dep, constructor error) skips just that adapter and
+    # the remaining adapters still register. Optional adapters can never
+    # break the mock default, whatever they raise.
     if "openai-compat" not in _PROVIDERS:
         try:
             from .openai_compat import OpenAICompatProvider
-        except ImportError:
-            return  # adapter module absent; mock default still stands
-        _PROVIDERS["openai-compat"] = OpenAICompatProvider()
+
+            _PROVIDERS["openai-compat"] = OpenAICompatProvider()
+        except Exception:  # noqa: BLE001 - optional adapter stays unregistered
+            pass
     if "llama-image" not in _PROVIDERS or "llama-text" not in _PROVIDERS:
         try:
             from .llama import LlamaImageProvider, LlamaTextProvider
-        except ImportError:
-            return  # adapter module absent; other adapters still stand
-        _PROVIDERS.setdefault("llama-image", LlamaImageProvider())
-        _PROVIDERS.setdefault("llama-text", LlamaTextProvider())
+
+            _PROVIDERS.setdefault("llama-image", LlamaImageProvider())
+            _PROVIDERS.setdefault("llama-text", LlamaTextProvider())
+        except Exception:  # noqa: BLE001 - optional adapter stays unregistered
+            pass
 
 
 def get_provider(provider_id: str) -> ImageProvider:

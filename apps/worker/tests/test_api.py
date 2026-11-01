@@ -14,7 +14,12 @@ import pytest
 from PIL import Image
 
 from kgsm.api.server import create_server
-from kgsm.providers import FailingProvider, MockProvider, register_provider
+from kgsm.providers import (
+    FailingProvider,
+    MockProvider,
+    register_provider,
+    unregister_provider,
+)
 from test_config_validator import make_blueprint, make_config
 
 
@@ -97,6 +102,9 @@ class PaidProvider:
 def _extra_providers():
     register_provider(FailingProvider())
     register_provider(PaidProvider())
+    yield
+    unregister_provider("failing")
+    unregister_provider("test-paid")
 
 
 # --------------------------------------------------------------------------

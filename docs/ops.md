@@ -74,6 +74,22 @@ create/list/restore, so deletion is a module + CLI operation until a
 contract revision adds it. Ids are confined to plain names (`/`, `\`,
 `..` rejected) so deletion cannot escape the backups directory.
 
+### Retention (no automatic pruning)
+
+Snapshots accumulate: nothing deletes them unless you do. Prune by hand
+from the CLI when the backups directory grows:
+
+```powershell
+kgsm backups --project-id <id>   # newest first; note stale backupIds
+kgsm backup-delete <backup-id>   # removes ZIP + sidecar
+```
+
+For unattended machines, schedule the same two commands (e.g. a weekly
+Task Scheduler job that lists snapshots and deletes all but the newest
+N per project). A future contract revision may add
+`DELETE /backups/{id}` with UI wiring; until then, retention is this
+documented CLI routine, not an API feature.
+
 ## 2. Audio import (FR-029 wave-1 slice)
 
 Module: `apps/worker/src/kgsm/audio.py`. Stdlib only (`wave` for WAV

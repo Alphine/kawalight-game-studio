@@ -263,6 +263,12 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; 
 }
 
 #nav { display: flex; flex-direction: column; gap: 20px; }
+
+/* Mobile nav toggle: hidden on wide screens, collapses the sidebar stack. */
+.nav-toggle { display: none; width: 100%; margin-bottom: 8px; }
+
+/* Planned actions use aria-disabled (focusable) instead of disabled. */
+.btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
 .nav-group { display: flex; flex-direction: column; gap: 3px; }
 .nav-title {
   display: flex; justify-content: space-between; align-items: center;
@@ -697,6 +703,9 @@ textarea:focus-visible, summary:focus-visible, a:focus-visible {
 @media (max-width: 700px) {
   #app { flex-direction: column; }
   .sidebar { width: 100%; position: static; max-height: none; }
+  .nav-toggle { display: block; }
+  .sidebar.nav-collapsed #nav,
+  .sidebar.nav-collapsed #engineCore { display: none; }
   #nav { gap: 12px; }
   .hero { flex-direction: column; padding: 20px; }
   .hero-tag { text-align: left; }

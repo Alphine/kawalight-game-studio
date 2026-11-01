@@ -34,6 +34,19 @@ _VALIDATORS_BY_TEMPLATE = {
 }
 
 
+def _template_id(config: dict) -> str:
+    """Template id, or "" when ``template`` is missing/non-object.
+
+    A non-object ``template`` (e.g. a string) is an unknown template id
+    (→ 422 validation-failed), never an AttributeError (→ 500).
+    """
+    template = config.get("template")
+    if not isinstance(template, dict):
+        return ""
+    ident = template.get("id", "")
+    return ident if isinstance(ident, str) else ""
+
+
 def create_export(req: Request) -> tuple[int, dict]:
     project = require_project(req.group("id"))
     if "config" not in req.body:
@@ -47,7 +60,7 @@ def create_export(req: Request) -> tuple[int, dict]:
         config = req.body["config"]
         if not isinstance(config, dict):
             raise bad_request("config must be an object")
-    template_id = (config.get("template") or {}).get("id", "")
+    template_id = _template_id(config)
     validate = _VALIDATORS_BY_TEMPLATE.get(template_id)
     if validate is None:
         raise ApiError("validation-failed",
@@ -116,7 +129,7 @@ def export_godot(req: Request) -> tuple[int, dict]:
         config = req.body["config"]
         if not isinstance(config, dict):
             raise bad_request("config must be an object")
-    template_id = (config.get("template") or {}).get("id", "")
+    template_id = _template_id(config)
     validate = _VALIDATORS_BY_TEMPLATE.get(template_id)
     if validate is None:
         raise ApiError("validation-failed",

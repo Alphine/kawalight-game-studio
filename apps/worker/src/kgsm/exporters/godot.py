@@ -72,7 +72,9 @@ def stage_export(
 ) -> dict:
     project_dir = Path(project_dir)
     out_dir = Path(out_dir)
-    template_id = (config.get("template") or {}).get("id", "")
+    _template = config.get("template")
+    template_id = _template.get("id", "") \
+        if isinstance(_template, dict) else ""
     entry = _VALIDATORS_BY_TEMPLATE.get(template_id)
     if entry is None:
         raise GodotExportError(f"unknown template id {template_id!r}")

@@ -8,12 +8,22 @@ through authorize() first.
 from __future__ import annotations
 
 import sqlite3
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from . import db as dbmod
 
 MAX_IMAGES_PER_QUOTE = 16
+
+# One shared lock for every quote→authorize→generate→record_spend flow
+# (asset AND story routes). Per-module locks let a concurrent asset+story
+# pair both pass limits and both spend (TOCTOU overspend), and let
+# generated-file numbering collide. The lock is intentionally held across
+# the provider network call: narrowing it to quote→authorize would reopen
+# the overspend window (authorize-then-generate races) and the numbering
+# race, trading correctness for throughput on a localhost single-user box.
+spend_lock = threading.Lock()
 
 
 class CostError(Exception):
@@ -113,6 +123,33 @@ def spent_this_month(
             conn.close()
 
 
+def _limit_reasons(
+    cents: int | None, project_id: str | None,
+    conn: sqlite3.Connection,
+) -> list[str]:
+    """Spend-limit violations for a quote (shared priced/unknown path).
+
+    Priced quotes block when the new spend would exceed a limit; unknown
+    quotes (``cents`` None) block when spend is already at/over a limit,
+    so limits still engage on unpriced providers.
+    """
+    reasons = []
+    if project_id:
+        limit = get_limit(f"project:{project_id}", conn)
+        if limit is not None:
+            spent = spent_this_month(project_id, conn)
+            if (spent >= limit if cents is None
+                    else spent + cents > limit):
+                reasons.append("exceeds project monthly limit")
+    glimit = get_limit("global", conn)
+    if glimit is not None:
+        gspent = spent_this_month(None, conn)
+        if (gspent >= glimit if cents is None
+                else gspent + cents > glimit):
+            reasons.append("exceeds global monthly limit")
+    return reasons
+
+
 def quote(
     provider_id: str, n_images: int, project_id: str | None = None,
     conn: sqlite3.Connection | None = None,
@@ -124,6 +161,16 @@ def quote(
     provider = get_provider(provider_id)
     cents = provider.estimate_cents(n_images)
     if cents is None:
+        own = conn is None
+        conn = conn or dbmod.connect()
+        try:
+            reasons = _limit_reasons(None, project_id, conn)
+        finally:
+            if own:
+                conn.close()
+        if reasons:
+            return Quote(provider_id, project_id, n_images, None, True,
+                         "; ".join(reasons), blocked=True)
         return Quote(provider_id, project_id, n_images, None, True,
                      "cost unknown: confirmation required")
     if cents == 0:
@@ -131,14 +178,7 @@ def quote(
     own = conn is None
     conn = conn or dbmod.connect()
     try:
-        reasons = []
-        if project_id:
-            limit = get_limit(f"project:{project_id}", conn)
-            if limit is not None and spent_this_month(project_id, conn) + cents > limit:
-                reasons.append("exceeds project monthly limit")
-        glimit = get_limit("global", conn)
-        if glimit is not None and spent_this_month(None, conn) + cents > glimit:
-            reasons.append("exceeds global monthly limit")
+        reasons = _limit_reasons(cents, project_id, conn)
     finally:
         if own:
             conn.close()

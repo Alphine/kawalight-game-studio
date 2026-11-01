@@ -13,7 +13,11 @@ from kgsm import projects as projects_mod
 from kgsm import story as story_mod
 from kgsm.api import ApiError, Request
 from kgsm.api.routes_story import ROUTES, generate_story
-from kgsm.providers import ProviderError, register_provider
+from kgsm.providers import (
+    ProviderError,
+    register_provider,
+    unregister_provider,
+)
 
 
 def call(body):
@@ -105,6 +109,10 @@ def _story_providers():
     register_provider(TupleTextProvider())
     register_provider(ImageOnlyProvider())
     register_provider(OutageTextProvider())
+    yield
+    for pid in ("test-story-paid", "test-story-unknown", "test-story-tuple",
+                "test-story-image-only", "test-story-outage"):
+        unregister_provider(pid)
 
 
 # --------------------------------------------------------------------------

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import threading
 from pathlib import Path
 
 from .. import costs as costs_mod
@@ -39,18 +38,15 @@ _INSPECT_KEYS = ("format", "mode", "width", "height", "hasAlpha", "alphaMin",
 # Serializes generate_assets' quote→authorize→generate→record_spend flow so
 # concurrent ThreadingHTTPServer requests cannot both pass limits and both
 # spend (TOCTOU overspend), and generated-file numbering cannot collide.
-_GENERATE_LOCK = threading.Lock()
+# Shared with the story route via costs.spend_lock: per-module locks let a
+# concurrent asset+story pair both pass limits. Kept as an alias so the
+# lock identity stays obvious at the use site.
+_GENERATE_LOCK = costs_mod.spend_lock
 
 
 def _posix(rel_path: str) -> str:
     """Asset paths go on the wire with forward slashes (contract §4)."""
     return rel_path.replace("\\", "/")
-
-
-def _inspect_with_capped_colors(target: Path) -> dict:
-    # inspect.py already reports distinctColorsCapped257 via
-    # getcolors(maxcolors=256); kept as a thin alias for the route below.
-    return inspect_image(target)
 
 
 def import_asset_route(req: Request) -> tuple[int, dict]:
@@ -132,9 +128,13 @@ def generate_assets(req: Request) -> tuple[int, dict]:
             record["path"] = _posix(record["path"])
             saved.append(record)
         spent = quote.cents if quote.cents is not None else 0
-        costs_mod.record_spend(
-            spent, f"generate {n_images} image(s) via {provider_id}",
-            project_id=project.id)
+        label = f"generate {n_images} image(s) via {provider_id}"
+        if quote.cents is None:
+            # Unknown cost still records 0 actual, but the ledger row is
+            # tagged so unknown-cost spend stays visible (and countable)
+            # instead of silently understating real BYOK spend.
+            label = f"[unknown-cost] {label}"
+        costs_mod.record_spend(spent, label, project_id=project.id)
         return 201, {"assets": saved, "quote": quote_to_dict(quote),
                      "spentCents": spent}
 
@@ -178,7 +178,9 @@ def inspect_asset(req: Request) -> tuple[int, dict]:
     project = require_project(req.group("id"))
     rel = need_str(req.body, "path")
     target = resolve_inside(project.dir, rel)
-    info = _inspect_with_capped_colors(target)
+    # inspect.py already reports distinctColorsCapped257 via
+    # getcolors(maxcolors=256).
+    info = inspect_image(target)
     response: dict = {"errors": info.get("errors", []),
                       "warnings": info.get("warnings", [])}
     for key in _INSPECT_KEYS:

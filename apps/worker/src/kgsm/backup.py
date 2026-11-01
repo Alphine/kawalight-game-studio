@@ -13,6 +13,7 @@ import hashlib
 import json
 import re
 import sqlite3
+import stat
 import uuid
 import zipfile
 from datetime import datetime, timezone
@@ -216,6 +217,12 @@ def _check_entries_safe(zf: zipfile.ZipFile, dest: Path,
         if not name or candidate.is_absolute() or ".." in candidate.parts:
             raise BackupError(f"backup {backup_id!r} is corrupt: unsafe "
                               f"entry {name!r}")
+        # A crafted ZIP could plant symlinks that later reads (copytree,
+        # list, inspect) would follow out of the project dir.
+        mode = (info.external_attr >> 16) & 0o170000
+        if stat.S_ISLNK(mode):
+            raise BackupError(f"backup {backup_id!r} is corrupt: symlink "
+                              f"entry {name!r} not allowed")
         target = (dest / candidate).resolve()
         if target != dest.resolve() and dest.resolve() not in target.parents:
             raise BackupError(f"backup {backup_id!r} is corrupt: entry "

@@ -296,6 +296,25 @@ describe('waves and scoring', () => {
     assert.ok(events.some((e) => e.type === 'victory'));
   });
 
+  it('clamps afterWave past the wave list to victory instead of crashing', () => {
+    const config = testConfig();
+    config.victory.afterWave = 5; // schema-legal (minimum 1, no max)
+    const s = createGame(config);
+    run(s, config, 30);
+    for (const e of s.enemies) {
+      const shot = s.shots.find((x) => !x.active);
+      shot.active = true;
+      shot.x = e.x;
+      shot.y = e.y;
+      shot.vx = 0;
+      shot.vy = 0;
+      e.hp = 1;
+    }
+    const events = run(s, config, 10);
+    assert.equal(s.phase, 'stageclear');
+    assert.ok(events.some((e) => e.type === 'victory'));
+  });
+
   it('spawns the boss with its wave', () => {
     const config = testConfig();
     config.boss = { enemyId: 'mite', waveId: 'wave-1', healthMultiplier: 4 };

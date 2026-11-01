@@ -180,8 +180,7 @@
             S().rememberReport('config', 'Config save', err.report);
             reportSlot.innerHTML = UI().reportHtml(err.report, 'Config save');
           }
-          UI().toast(UI().errorText(err), 'error');
-          throw err;
+          throw err; // UI().busy owns the error toast
         });
       }, 'Saving…');
     });
@@ -240,8 +239,8 @@
           + U().esc(wv.delayAfterPrevMs != null ? wv.delayAfterPrevMs : 1500) + '" style="width:7em"></label></div>'
           + '<ul class="spawns">' + (wv.spawns || []).map(function (sp, j) {
             return '<li class="row"><span>enemy <code>' + U().esc(sp.enemyId) + '</code></span>'
-              + '<label class="fld inline"><span>count</span><input data-c="waves.' + i + '.spawns.' + j + '.count" type="number" value="' + sp.count + '" style="width:4.5em"></label>'
-              + '<label class="fld inline"><span>interval (ms)</span><input data-c="waves.' + i + '.spawns.' + j + '.intervalMs" type="number" value="' + sp.intervalMs + '" style="width:6em"></label></li>';
+              + '<label class="fld inline"><span>count</span><input data-c="waves.' + i + '.spawns.' + j + '.count" type="number" value="' + U().esc(sp.count) + '" style="width:4.5em"></label>'
+              + '<label class="fld inline"><span>interval (ms)</span><input data-c="waves.' + i + '.spawns.' + j + '.intervalMs" type="number" value="' + U().esc(sp.intervalMs) + '" style="width:6em"></label></li>';
           }).join('') + '</ul></div>';
       }).join('') + '</section>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('sliders') + 'Progression</h3></div><div class="form-grid">'

@@ -27,6 +27,7 @@ from PIL import Image
 from .. import secrets as secrets_mod
 from ._http import (
     decode_json,
+    ensure_redirect_guard,
     host_is_blocked,
     positive_int,
     post_json,
@@ -213,6 +214,7 @@ class OpenAICompatProvider(ImageProvider):
             )
         # Signed URLs carry their own auth; never forward our API key to a
         # third-party host.
+        ensure_redirect_guard()  # re-validate every redirect hop pre-fetch
         request = urllib.request.Request(url, method="GET")
         try:
             blob = urllib.request.urlopen(

@@ -114,7 +114,9 @@ def stage_export(
         raise ExportError(f"unknown variant {variant!r}")
     project_dir = Path(project_dir)
     out_dir = Path(out_dir)
-    template_id = (config.get("template") or {}).get("id", "")
+    _template = config.get("template")
+    template_id = _template.get("id", "") \
+        if isinstance(_template, dict) else ""
     if template_id == "phaser.space-shooter":
         validate = validate_space_shooter_config
         default_template = "space-shooter"

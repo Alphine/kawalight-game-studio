@@ -326,3 +326,236 @@ def test_cli_reports_bad_input_cleanly(store, tmp_path, capsys):
     bad.write_text("{oops", encoding="utf-8")
     assert main(["assemble", str(bad), "-o", str(tmp_path / "o.json")]) == 1
     assert main(["validate", "config", str(bad)]) == 1
+
+
+# --------------------------------------------------------------------------
+# audit round 2: registry resilience, shared spend lock, unknown-cost limits
+# --------------------------------------------------------------------------
+
+def test_optional_adapter_failure_keeps_mock_default(monkeypatch):
+    import sys
+
+    from kgsm.providers import get_provider, list_providers
+    from kgsm.providers import registry as registry_mod
+
+    real_import = __import__
+
+    def boom_import(name, *args, **kwargs):
+        if name.endswith("openai_compat") or name.endswith("providers.llama"):
+            raise RuntimeError("simulated adapter blowup")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.__import__", boom_import)
+    monkeypatch.setattr(registry_mod, "_PROVIDERS", {})
+    for mod in ("kgsm.providers.openai_compat", "kgsm.providers.llama"):
+        monkeypatch.delitem(sys.modules, mod, raising=False)
+    # Must not raise: mock default stands, whatever adapters do.
+    assert get_provider("mock").id == "mock"
+    assert {p["id"] for p in list_providers()} == {"mock"}
+
+
+def test_generate_locks_are_one_shared_lock():
+    from kgsm import costs as costs_mod
+    from kgsm.api import routes_assets, routes_story
+
+    assert costs_mod.spend_lock is not None
+    assert routes_assets._GENERATE_LOCK is costs_mod.spend_lock
+    assert routes_story._GENERATE_LOCK is costs_mod.spend_lock
+
+
+def test_unknown_cost_quote_blocked_when_over_limit(store):
+    from kgsm.providers import FailingProvider, register_provider
+
+    register_provider(FailingProvider())
+    try:
+        costs_mod.set_limit("global", 50)
+        costs_mod.record_spend(60, "priced spend")
+        quote = costs_mod.quote("failing", 1, project_id="p1")
+        assert quote.cents is None
+        assert quote.blocked is True
+        with pytest.raises(costs_mod.CostError):
+            costs_mod.authorize(quote, confirmed=True)
+        status, body = call("POST", "/costs/authorize",
+                            {"providerId": "failing", "nImages": 1,
+                             "confirmed": True})
+        assert status == 402
+        assert body["error"]["code"] == "cost-blocked"
+    finally:
+        from kgsm.providers import unregister_provider
+
+        unregister_provider("failing")
+
+
+def test_unknown_cost_quote_allowed_under_limit(store):
+    from kgsm.providers import FailingProvider, register_provider
+
+    register_provider(FailingProvider())
+    try:
+        costs_mod.set_limit("global", 50)
+        quote = costs_mod.quote("failing", 1, project_id="p1")
+        assert quote.cents is None
+        assert quote.blocked is False
+        assert quote.needs_confirmation is True
+    finally:
+        from kgsm.providers import unregister_provider
+
+        unregister_provider("failing")
+
+
+def test_unknown_cost_spend_is_ledger_tagged(store, monkeypatch):
+    from test_openai_provider import (
+        TEST_KEY,
+        FakeResponse,
+        b64_images_body,
+        install_fake,
+        make_png_bytes,
+    )
+
+    secrets_mod.set_secret("openai_compat_api_key", TEST_KEY)
+    install_fake(monkeypatch, lambda req: FakeResponse(
+        b64_images_body(make_png_bytes())))
+    pid = projects_mod.create("Ledger Tag", "space-shooter").id
+    status, body = call(
+        "POST", f"/projects/{pid}/assets/generate",
+        {"providerId": "openai-compat", "prompt": "tagged", "style": "pixel-art",
+         "width": 16, "height": 16, "entity": "e", "role": "r",
+         "confirmed": True})
+    assert status == 201, body
+    assert body["spentCents"] == 0  # 0 actual kept; only the label changes
+    status, body = call("GET", "/costs/ledger")
+    assert status == 200
+    assert body["entries"][0]["label"].startswith("[unknown-cost]")
+
+
+# --------------------------------------------------------------------------
+# audit round 2: SSRF (base URL, redirects), non-object templates
+# --------------------------------------------------------------------------
+
+def test_base_url_to_private_host_rejected(store):
+    for url in ("https://169.254.169.254/v1",
+                "https://10.0.0.5/v1",
+                "https://127.0.0.1/v1"):
+        provider = OpenAICompatProvider(api_key="k", base_url=url)
+        with pytest.raises(ProviderError, match="not allowed"):
+            provider.generate("x", style="pixel-art", width=16, height=16)
+
+
+def test_base_url_loopback_http_exception(store, monkeypatch):
+    from test_openai_provider import (
+        TEST_KEY,
+        FakeResponse,
+        b64_images_body,
+        install_fake,
+        make_png_bytes,
+    )
+
+    install_fake(monkeypatch, lambda req: FakeResponse(
+        b64_images_body(make_png_bytes())))
+    provider = OpenAICompatProvider(api_key=TEST_KEY,
+                                    base_url="http://127.0.0.1:9999/v1")
+    (image,) = provider.generate("x", style="pixel-art", width=4, height=3)
+    assert image.png_bytes[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+def test_redirect_guard_blocks_private_hop():
+    import urllib.request
+
+    from kgsm.providers._http import SSRFRedirectHandler
+
+    handler = SSRFRedirectHandler()
+    req = urllib.request.Request("https://cdn.test/img.png")
+    with pytest.raises(ProviderError, match="not allowed"):
+        handler.redirect_request(
+            req, None, 302, "Found", {}, "http://169.254.169.254/x")
+    # Public hops still build a follow-up request.
+    follow = handler.redirect_request(
+        req, None, 302, "Found", {}, "https://cdn.test/other.png")
+    assert follow.full_url == "https://cdn.test/other.png"
+
+
+def test_export_non_object_template_is_422(store):
+    pid = projects_mod.create("Demo", "space-shooter").id
+    status, body = call("POST", f"/projects/{pid}/exports",
+                        {"config": {"template": "phaser.space-shooter"}})
+    assert status == 422
+    assert body["error"]["code"] == "validation-failed"
+    status, body = call("POST", f"/projects/{pid}/exports/godot",
+                        {"config": {"template": ["phaser.space-shooter"]}})
+    assert status == 422
+    assert body["error"]["code"] == "validation-failed"
+
+
+def test_exporter_non_object_template_is_unknown_id(store, tmp_path):
+    from kgsm.exporters import godot as godot_mod
+    from kgsm.exporters import phaser as phaser_mod
+
+    with pytest.raises(phaser_mod.ExportError, match="unknown template id"):
+        phaser_mod.stage_export(
+            project_name="x", genre="space-shooter",
+            config={"template": "phaser.space-shooter"},
+            project_dir=tmp_path, out_dir=tmp_path / "out")
+    with pytest.raises(godot_mod.GodotExportError,
+                       match="unknown template id"):
+        godot_mod.stage_export(
+            project_name="x", genre="space-shooter",
+            config={"template": 42}, blueprint={}, project_dir=tmp_path,
+            out_dir=tmp_path / "out")
+
+
+# --------------------------------------------------------------------------
+# audit round 2: secrets cap, story truncation, symlink hardening
+# --------------------------------------------------------------------------
+
+def test_secret_value_length_capped(store):
+    big = "x" * (secrets_mod.MAX_VALUE_CHARS + 1)
+    status, body = call("PUT", "/secrets/k", {"value": big})
+    assert status == 400
+    assert body["error"]["code"] == "bad-request"
+    with pytest.raises(ValueError, match="16"):
+        secrets_mod.set_secret("k", big)
+    ok = "y" * secrets_mod.MAX_VALUE_CHARS
+    secrets_mod.set_secret("k", ok)
+    assert secrets_mod.get_secret("k") == ok
+
+
+def test_story_text_truncated_with_marker():
+    from kgsm import story as story_mod
+
+    class Flood:
+        id = "flood"
+
+        def generate_text(self, prompt, genre=None):
+            return "z" * (story_mod.MAX_TEXT_CHARS + 100)
+
+    text, usage = story_mod.generate_text(Flood(), "prompt")
+    assert len(text) > story_mod.MAX_TEXT_CHARS
+    assert "[truncated:" in text
+    assert usage["textChars"] == len(text)
+
+
+def test_restore_symlink_entry_rejected(store):
+    stem = "link-20260101T000000Z"
+    target = backup_mod.backups_dir() / f"{stem}.zip"
+    with zipfile.ZipFile(target, "w") as zf:
+        zf.writestr("project.json", json.dumps(_record("ab12cd34ef56")))
+        info = zipfile.ZipInfo("evil-link")
+        info.create_system = 3  # unix attrs carry the file-type bits
+        info.external_attr = (0o120777 << 16)  # symlink
+        zf.writestr(info, "target-bytes")
+    with pytest.raises(backup_mod.BackupError, match="[Ss]ymlink"):
+        backup_mod.restore_backup(stem)
+
+
+def test_duplicate_skips_symlinks(store, tmp_path):
+    project = projects_mod.create("Linky", "space-shooter")
+    (project.dir / "assets").mkdir(parents=True)
+    outside = tmp_path / "outside.txt"
+    outside.write_text("secret-bytes", encoding="utf-8")
+    link = project.dir / "assets" / "planted.txt"
+    try:
+        link.symlink_to(outside)
+    except OSError:
+        pytest.skip("symlinks unavailable here")
+    copy = projects_mod.duplicate(project.id, "Linky copy")
+    assert not (copy.dir / "assets" / "planted.txt").exists()
+    assert not (copy.dir / "assets" / "planted.txt").is_symlink()

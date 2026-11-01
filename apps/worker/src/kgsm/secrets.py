@@ -3,6 +3,12 @@
 Keys live in one file under the worker data dir with owner-only permissions.
 Values are never listed, logged, or copied into builds — use list_secret_names()
 for UI display and redact() before writing any text to logs.
+
+Storage note: values are stored plaintext in ``secrets.json``; the 0o600
+chmod is best-effort and a no-op on Windows (no POSIX permission bits),
+so on Windows the file relies on the user's profile ACL alone. A caller
+needing stronger at-rest protection should layer OS keychain/DPAPI file
+encryption on top; this module deliberately stays dependency-free.
 """
 
 from __future__ import annotations
@@ -17,6 +23,10 @@ from urllib.parse import quote
 from . import paths
 
 _FILE = "secrets.json"
+
+# API keys are short; an unbounded value would bloat secrets.json and slow
+# every redact()/secret-scan that walks all values.
+MAX_VALUE_CHARS = 16 * 1024
 
 _NAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 
@@ -86,6 +96,11 @@ def _save(data: dict[str, str]) -> None:
 
 def set_secret(name: str, value: str) -> None:
     name = _normalize_name(name)
+    if not isinstance(value, str):
+        raise ValueError("secret value must be a string")
+    if len(value) > MAX_VALUE_CHARS:
+        raise ValueError(
+            f"secret value must be <= {MAX_VALUE_CHARS} characters")
     data = _load()
     data[name] = value
     _save(data)
