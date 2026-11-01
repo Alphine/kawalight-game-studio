@@ -27,9 +27,11 @@ bump.
 - Unknown JSON fields are ignored; missing/invalid fields → `400 bad-request`.
 - Error code → status map (as implemented): `400` —
   `bad-request`, `bad-transition`, `body-too-large`, `path-escape`,
-  `invalid-name`, `stale-reason-required`, `asset-error`, `audio-error`;
+  `invalid-name`, `stale-reason-required`, `asset-error`, `audio-error`,
+  `unknown-theme`;
   `404` — `project-not-found`, `blueprint-not-found`, `config-not-found`,
-  `asset-not-found`, `backup-not-found`, `unknown-provider`, and `not-found`
+  `asset-not-found`, `backup-not-found`, `unknown-provider`,
+  `playtest-not-found`, and `not-found`
   (no route matches); `unknown-genre` is `404` on `POST /projects` but
   `501` on the config/assemble paths; `402` — `cost-blocked`;
   `409` — `needs-confirmation`; `422` — `validation-failed`,
@@ -286,10 +288,47 @@ ledger label, exactly like §4 asset rows.
   (`404`), `project-not-found` (`404`), `provider-error` (`502`; nothing
   spent, NFR-003).
 
-## Endpoint index (40)
+## 14. Auto mode (one-click game; `auto.py`, `docs/auto-mode.md`)
+
+- `POST /projects/auto` `{"name","genre","prompt"?,"themeId"?}` →
+  creates the project, builds a blueprint (explicit `themeId`,
+  whitespace-trimmed, or a keyword-matched starter theme per genre;
+  `prompt` recorded into blueprint notes, truncated to 4000 chars),
+  assembles, validates, stores the blueprint + config
+  (`blueprint.json` + `config.json` in the project dir), and packages
+  a phaser playable ZIP plus its `-source.zip` sibling — returns `201
+  {"project", "blueprint", "config", "validation", "playable"}` (the
+  `playable` path is the playable ZIP; the source ZIP sits alongside
+  it under `builds/`). Any post-create failure cleans up: no half
+  project is left behind. Errors: `bad-request` (`400`, wrong field
+  type), `invalid-name` (`400`), `unknown-theme` (`400`),
+  `unknown-genre` (`404`), `validation-failed` (`422` with report),
+  `assembly-failed` (`422`, no report), `export-error` (`502`),
+  `internal` (`500`, packaged manifest unreadable). Deterministic
+  offline; no provider spend.
+
+## 15. Playtest serve (real game; `playtest.py`, `docs/playtest.md`)
+
+- `POST /projects/{id}/playtest` → stages the stored config into
+  `builds/playtest/` via the shared exporter (the staged tree is
+  secret-scanned exactly like an export), returns `201 {"url":
+  "/api/v1/projects/{id}/playtest/", "stagedAt"}`. Errors:
+  `project-not-found` (`404`), `config-not-found` (`404`), `internal`
+  (`500`, stored `config.json` is corrupt), `export-error` (`502`).
+- `GET /projects/{id}/playtest[/]` and
+  `GET /projects/{id}/playtest/<path...>` → staged file bytes with
+  the file's MIME type — the ONE non-JSON reply in the API (an
+  iframe points at the `url`; load it WITH the trailing slash so
+  relative asset URLs resolve). Serve failures are JSON `404
+  playtest-not-found` (never 400/500): pre-stage, missing file,
+  directory, or any path-escape/symlink guard violation; unknown
+  project id is `404 project-not-found`.
+
+## Endpoint index (44)
 
 health 1 · projects 8 · blueprints 4 · configs 3 · assets 6 · providers 1 ·
-costs 5 · export 3 · backup/restore 3 · audio 2 · secrets 3 · stories 1.
+costs 5 · export 3 · backup/restore 3 · audio 2 · secrets 3 · stories 1 ·
+auto 1 · playtest 3.
 
 
 ## Revision 1.1 (2026-10-29, additive — route count unchanged at 39)
@@ -388,3 +427,16 @@ Revisions 1.1–1.4 and corrects stale normative text to the implementation
   `phaser.<genre>` template-id pin by re-stamping a copy in memory
   (`docs/godot-exporter.md`). A future migration policy ships as a new
   Revision; until then builders must emit exactly `1.0.0`.
+
+
+## Revision 1.6 (2026-11-01, additive — route count 40 → 44)
+
+- **§14 Auto mode.** New `POST /projects/auto`: one call runs
+  create → blueprint → assemble → validate → store config →
+  package playable. Fully specified in `docs/auto-mode.md`.
+- **§15 Playtest serve.** New `POST /projects/{id}/playtest`
+  (stage) plus two GET serve routes returning RAW BYTES with the
+  staged file's MIME type — the deliberate exception to the
+  JSON-everywhere convention, so a Playtest iframe can load the
+  staged game directly. Serve failures stay JSON `404
+  playtest-not-found`. Fully specified in `docs/playtest.md`.

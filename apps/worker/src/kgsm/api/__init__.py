@@ -2,7 +2,8 @@
 
 Shared request/response plumbing for the route plugins
 (``routes_projects``, ``routes_config``, ``routes_assets``, ``routes_export``,
-``routes_secrets``, ``routes_providers``, ``routes_ops``).
+``routes_secrets``, ``routes_providers``, ``routes_ops``, ``routes_story``,
+``routes_auto``, ``routes_playtest``).
 """
 
 from __future__ import annotations
@@ -35,6 +36,14 @@ class ApiError(Exception):
         body: dict = {"error": {"code": self.code, "message": self.message}}
         body.update(self.extra)
         return body
+
+
+@dataclass(frozen=True)
+class RawBody:
+    """Raw-bytes response (playtest static serve). The only non-JSON reply."""
+
+    data: bytes
+    content_type: str
 
 
 @dataclass

@@ -25,6 +25,7 @@ from . import (
     CONTRACT_VERSION,
     MAX_BODY_BYTES,
     ApiError,
+    RawBody,
     Request,
     bad_request,
     need_bool,
@@ -32,9 +33,9 @@ from . import (
     need_str,
     quote_to_dict,
 )
-from . import (routes_assets, routes_config, routes_export, routes_ops,
-                 routes_projects, routes_providers, routes_secrets,
-                 routes_story)
+from . import (routes_assets, routes_auto, routes_config, routes_export,
+                 routes_ops, routes_playtest, routes_projects,
+                 routes_providers, routes_secrets, routes_story)
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 4317
@@ -165,10 +166,11 @@ CORE_ROUTES = [
 # --------------------------------------------------------------------------
 
 def _collect_routes() -> list:
-    tables = [CORE_ROUTES, routes_projects.ROUTES, routes_config.ROUTES,
-              routes_assets.ROUTES, routes_export.ROUTES,
-              routes_secrets.ROUTES, routes_providers.ROUTES,
-              routes_ops.ROUTES, routes_story.ROUTES]
+    tables = [CORE_ROUTES, routes_projects.ROUTES, routes_auto.ROUTES,
+              routes_config.ROUTES, routes_assets.ROUTES,
+              routes_export.ROUTES, routes_secrets.ROUTES,
+              routes_providers.ROUTES, routes_ops.ROUTES,
+              routes_story.ROUTES, routes_playtest.ROUTES]
     compiled = []
     for table in tables:
         for method, pattern, handler in table:
@@ -179,7 +181,7 @@ def _collect_routes() -> list:
 ROUTES = _collect_routes()
 
 
-def dispatch(req: Request) -> tuple[int, dict]:
+def dispatch(req: Request) -> tuple[int, dict | RawBody]:
     for method, pattern, handler in ROUTES:
         if method != req.method:
             continue
@@ -271,6 +273,19 @@ class Handler(BaseHTTPRequestHandler):
         if self.command != "HEAD":
             self.wfile.write(blob)
 
+    def _send_bytes(self, status: int, blob: bytes,
+                    content_type: str) -> None:
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(blob)))
+        origin = _allowed_origin(self.headers.get("Origin"))
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(blob)
+
     def _send_preflight(self) -> None:
         self.send_response(204)
         origin = _allowed_origin(self.headers.get("Origin"))
@@ -347,7 +362,10 @@ class Handler(BaseHTTPRequestHandler):
                 "message": secrets_mod.redact(
                     str(exc) or "internal error")[:500],
             }}
-        self._send_json(status, response)
+        if isinstance(response, RawBody):
+            self._send_bytes(status, response.data, response.content_type)
+        else:
+            self._send_json(status, response)
 
 
 class Server(ThreadingHTTPServer):

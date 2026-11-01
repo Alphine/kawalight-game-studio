@@ -31,11 +31,14 @@ empty stderr, stable 32 s+, clean kill with zero orphan workers.
    against it. No separate step needed.
 4. API keys (Asset Forge, real providers): Settings view, stored locally only.
 
-Playtest notes: the Playtest view runs a UI-side schematic preview
-(per-genre canvas sim, works offline in the binary) and can also embed a
-staged-game URL. For full-fidelity playtests, stage + serve from a dev
-checkout (root README: `stage-demo.mjs` + `smoke.mjs` commands) or open an
-exported build directly.
+Playtest notes: the Playtest view has two tabs. The Real-game tab
+stages the stored `config.json` with the shared Phaser exporter and
+serves the REAL game over localhost (`POST /projects/{id}/playtest` +
+GET serve, contract §15, `docs/playtest.md`) — the running worker is the
+playtest server. The Schematic tab keeps a UI-side canvas sim for
+offline sketches and can also embed an external staged-game URL. For
+no-worker checks, use the root README `stage-demo.mjs` + `smoke.mjs`
+commands or open an exported build directly.
 
 ## Architecture
 

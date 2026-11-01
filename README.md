@@ -39,7 +39,7 @@ projects/                  local project data root (user content, git-ignored)
 ## Quickstart
 
 ```powershell
-# worker tests (273 passed + 2 skipped; 34 test_api.py socket tests
+# worker tests (359 passed + 4 skipped; 34 test_api.py socket tests
 # error where localhost listen() is blocked — run outside such sandboxes
 # for the full green)
 .\.venv\Scripts\python.exe -m pytest apps\worker\tests -q
@@ -91,6 +91,7 @@ node packages\templates\phaser\tools\smoke.mjs farming
 | M3 | Side-scroller + battle-2D templates (playable, tested, smoke-green, full worker support), Godot 4 exporter (standalone + worker/UI wiring, secret-scanned ZIP) | done — Godot output not yet opened in a real Godot editor (acceptance pass open) |
 | M4 | Farming template (playable, tested, smoke-green, full worker support), UI polish pass, portable binary v0.2.0 | done |
 | AI expansion | Meta/Llama BYOK provider (Together/Groq/OpenRouter/HF presets) for images + story text, POST /stories/generate (40 endpoints), 15 starter themes (3/genre) with wizard picker | done |
+| AUTO + playtest | One-click `POST /projects/auto` pipeline (44 endpoints, contract Rev 1.6) + real-game playtest stage/serve backend (`docs/auto-mode.md`, `docs/playtest.md`) | done |
 
 ## Working agreements
 
@@ -118,6 +119,17 @@ node packages\templates\phaser\tools\smoke.mjs farming
 - First run: dashboard opens in an app window; the worker sidecar
   auto-starts on `127.0.0.1:4317`. API keys stay local (Settings view).
 - Rebuild/runbook/troubleshooting: [docs/RELEASE.md](docs/RELEASE.md).
-- Playtest runs a UI-side schematic preview (per-genre canvas sim) with no
-  server needed; for full-fidelity playtests stage + serve from a dev
-  checkout (stage-demo/smoke commands above) or open an exported build.
+- Playtest: the worker stages the stored config and serves the REAL game
+  over localhost (`POST /projects/{id}/playtest` + GET serve, contract
+  §15, `docs/playtest.md`) — the running worker is the playtest server.
+  The UI also keeps a schematic canvas preview for offline sketches; for
+  no-worker checks use the stage-demo/smoke commands above or open an
+  exported build.
+
+## Web bundle (static hosting)
+
+- `node packages/web/tools/make-web-bundle.mjs` rebuilds the git-ignored
+  `dist-web/` folder (landing page + Studio UI + 5 staged games); never
+  hand-edit that folder, just rebuild it.
+- Deploy/hosting guide (shared Hostinger upload or VPS full-stack):
+  [packages/web/README-DEPLOY.md](packages/web/README-DEPLOY.md).

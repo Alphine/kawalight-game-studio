@@ -173,6 +173,11 @@
       generateStory: function (body) {
         return post(V1 + '/stories/generate', body, { timeoutMs: 120000 });
       },
+      // AUTO one-click pipeline (additive): POST /projects/auto runs
+      // create -> blueprint -> assemble -> validate -> config -> playable ZIP.
+      generateAuto: function (body) {
+        return post(V1 + '/projects/auto', body, { timeoutMs: 300000 });
+      },
     };
   }
 

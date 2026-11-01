@@ -55,6 +55,7 @@
       + '<p>Turn your imagination into playable 2D games</p>'
       + '<p class="sub">Generate assets, build worlds, and create complete games with AI.</p>'
       + '<div class="hero-actions"><button type="button" class="btn primary" data-a="hero-new">' + icon('plus') + 'Create New Game</button> '
+      + '<button type="button" class="btn primary" data-a="hero-auto">' + icon('forge') + 'Auto-Create Game</button> '
       + '<button type="button" class="btn ghost" data-a="hero-demo">' + icon('play') + 'Watch Demo</button></div></div>'
       + '<div class="hero-tag">Where Ideas<br>Become Games</div></header>'
       + '<section><h2>' + icon('gamepad') + 'Choose Game Genre</h2>'
@@ -82,6 +83,10 @@
 
     root.querySelector('[data-a="new"]').addEventListener('click', function () { go('new'); });
     root.querySelector('[data-a="hero-new"]').addEventListener('click', function () { go('new'); });
+    root.querySelector('[data-a="hero-auto"]').addEventListener('click', function () {
+      autoFocusAuto = true;
+      go('new');
+    });
     root.querySelector('[data-a="hero-demo"]').addEventListener('click', function () {
       // No bundled video in wave 1: show an info modal like the HUD mockup
       // instead of a dead-end error toast.
@@ -182,7 +187,8 @@
     if (!slot) return;
     var p = S().current();
     if (!p || !p.id || p.state === '?') {
-      slot.innerHTML = '<p class="muted">Select a project to see its recent builds.</p>';
+      slot.innerHTML = UI().emptyPanel('No project selected',
+        'Select a project to see its recent builds.');
       return;
     }
     if (!S().get('online')) { slot.innerHTML = UI().offlinePanel(); return; }
@@ -191,7 +197,8 @@
       if (!slot.isConnected) return;
       var ex = (res.exports || []).slice(-5).reverse();
       if (!ex.length) {
-        slot.innerHTML = '<p class="muted">No builds yet — run Export Center.</p>';
+        slot.innerHTML = UI().emptyPanel('No builds yet',
+          'Run Export Center to produce playable + source ZIPs.');
         return;
       }
       slot.innerHTML = '<ul class="asset-list">' + ex.map(function (b) {
@@ -331,6 +338,7 @@
     root.innerHTML =
       '<div class="view-head"><div><h2>' + icon('plus') + 'New Game Wizard</h2>'
       + '<p class="muted">Genre, theme, style, runtime → blueprint preview. Nothing is stored until you create the project.</p></div></div>'
+      + autoPanelHtml()
       + '<ol class="steps">' + STEPS.map(function (s, i) {
         return '<li class="' + (i === wiz.step ? 'cur' : i < wiz.step ? 'done' : '') + '"'
           + (i === wiz.step ? ' aria-current="step"' : '') + '>' + (i + 1) + '. ' + s + '</li>';
@@ -339,6 +347,15 @@
       + '<div class="btn-row wizard-nav"><button type="button" class="btn ghost" data-a="prev">← Back</button>'
       + '<button type="button" class="btn primary" data-a="next">Next →</button></div></section>';
     renderStep(root.querySelector('[data-slot="body"]'));
+    wireAutoPanel(root);
+    if (autoFocusAuto) {
+      autoFocusAuto = false;
+      var autoPrompt = root.querySelector('[data-auto="prompt"]');
+      if (autoPrompt) {
+        if (autoPrompt.scrollIntoView) { try { autoPrompt.scrollIntoView(); } catch (e) { /* ignore */ } }
+        autoPrompt.focus();
+      }
+    }
     var prev = root.querySelector('[data-a="prev"]');
     var next = root.querySelector('[data-a="next"]');
     prev.disabled = wiz.step === 0;
@@ -381,7 +398,7 @@
             return '<option' + (w.targetRuntime === s ? ' selected' : '') + '>' + s + '</option>';
           }).join('') + '</select>')
         + '</div><p class="muted small">All five genres assemble into engine-ready configs with per-genre Level Studio editors.</p>'
-        + '<h4>' + icon('forge') + 'Theme presets</h4><div data-slot="themes"><p class="muted">Loading theme presets…</p></div>';
+        + '<h4>' + icon('forge') + 'Theme presets</h4><div data-slot="themes">' + UI().loadingPanel('Loading theme presets…') + '</div>';
       wireThemePicker(body);
     } else if (wiz.step === 1) {
       body.innerHTML = '<div class="form-grid">'
@@ -513,7 +530,8 @@
     if (themeCache) {
       var list = themeCache[genre] || [];
       if (!list.length) {
-        slot.innerHTML = '<p class="muted">No presets for this genre — fill the fields manually.</p>';
+        slot.innerHTML = UI().emptyPanel('No presets for this genre',
+          'Fill the fields manually — every option stays editable.');
         return;
       }
       slot.innerHTML = '<div class="genre-grid">' + list.map(function (t) {
@@ -601,6 +619,146 @@
     if (!keys) return all;
     return all.filter(function (msg) {
       return keys.some(function (k) { return msg.indexOf(k) >= 0; });
+    });
+  }
+
+  // ---------- AUTO mode (one-click pipeline) ----------
+  // Self-contained in this file by design: no shared-file edits allowed, so
+  // the starter theme map mirrors worker kgsm/auto.py STARTERS (id + label).
+  var autoFocusAuto = false;
+
+  var AUTO_THEMES = {
+    'space-shooter': [
+      ['alien-invasion', 'Alien Invasion (default)'],
+      ['neon-swarm', 'Neon Swarm'],
+      ['pirate-belt', 'Pirate Belt'],
+    ],
+    'endless-runner': [
+      ['neon-rooftops', 'Neon Rooftops (default)'],
+      ['desert-dash', 'Desert Dash'],
+      ['ember-caverns', 'Ember Caverns'],
+    ],
+    'side-scroller': [
+      ['mossy-cliffs', 'Mossy Cliffs (default)'],
+      ['lava-caves', 'Lava Caves'],
+      ['sky-ruins', 'Sky Ruins'],
+    ],
+    'battle-2d': [
+      ['monster-arena', 'Monster Arena (default)'],
+      ['robot-foundry', 'Robot Foundry'],
+      ['shadow-crypt', 'Shadow Crypt'],
+    ],
+    farming: [
+      ['sunny-acres', 'Sunny Acres (default)'],
+      ['moonlit-grove', 'Moonlit Grove'],
+      ['tidepool-farm', 'Tidepool Farm'],
+    ],
+  };
+
+  var AUTO_STEPS = ['Create project', 'Build blueprint', 'Assemble', 'Validate', 'Package playable'];
+
+  function autoThemeOptions(genre) {
+    var list = AUTO_THEMES[genre] || [];
+    return '<option value="">Auto (match prompt)</option>' + list.map(function (t) {
+      return '<option value="' + U().esc(t[0]) + '">' + U().esc(t[1]) + '</option>';
+    }).join('');
+  }
+
+  function autoPanelHtml() {
+    var w = wiz.data;
+    return '<section class="panel glass-panel glass-panel-glow auto-panel" data-slot="auto"><div class="panel-head"><h3>'
+      + icon('forge') + 'AUTO — one-click game</h3><span class="pill mini">offline · deterministic</span></div>'
+      + '<p class="muted small">Describe your game, pick a genre, hit Auto — the worker creates the project, '
+      + 'builds and assembles the blueprint, validates it, and packages a playable ZIP. '
+      + 'Success jumps straight to Playtest.</p>'
+      + '<div class="form-grid">'
+      + field('Project name (blank = auto)', '<input data-auto="name" value="' + U().esc(w.name) + '" maxlength="80" placeholder="Auto Space Shooter">')
+      + field('Genre', '<select data-auto="genre">' + U().GENRES.map(function (g) {
+        return '<option value="' + g + '"' + (w.genre === g ? ' selected' : '') + '>'
+          + U().esc(genreName(g)) + '</option>';
+      }).join('') + '</select>')
+      + field('Theme (optional — overrides prompt)', '<select data-auto="theme">' + autoThemeOptions(w.genre) + '</select>')
+      + '</div>'
+      + field('Prompt — theme hint, stored in blueprint notes', '<textarea data-auto="prompt" rows="3" maxlength="4000" '
+        + 'placeholder="e.g. neon alien raid over a ruined city"></textarea>')
+      + '<div class="btn-row"><button type="button" class="btn primary" data-a="auto-run">'
+      + icon('forge') + 'Auto-create &amp; Playtest</button></div>'
+      + '<div data-auto-slot="progress"></div><div data-auto-slot="report"></div></section>';
+  }
+
+  function autoPaintProgress(scope, state) {
+    // state: -1 idle, 0..N-1 running index, N done, -2 failed.
+    var slot = scope.querySelector('[data-auto-slot="progress"]');
+    if (!slot) return;
+    if (state === -1) { slot.innerHTML = ''; return; }
+    slot.innerHTML = '<ol class="steps">' + AUTO_STEPS.map(function (s, i) {
+      var cls = '';
+      if (state === AUTO_STEPS.length || i < state) cls = 'done';
+      else if (i === state) cls = state === -2 ? '' : 'cur';
+      if (state === -2 && i === 0) cls = '';
+      return '<li class="' + cls + '"' + (i === state && state >= 0 ? ' aria-current="step"' : '') + '>'
+        + (i + 1) + '. ' + s + '</li>';
+    }).join('') + '</ol>'
+      + (state === -2 ? '<p class="err-msg" role="alert">AUTO run failed — see the report below.</p>'
+        : state === AUTO_STEPS.length ? '<p class="success-msg small" role="status">Done — opening Playtest…</p>'
+        : '<p class="muted small">Running on the worker (one call)…</p>');
+  }
+
+  function wireAutoPanel(root) {
+    var panel = root.querySelector('[data-slot="auto"]');
+    if (!panel) return;
+    var genreSel = panel.querySelector('[data-auto="genre"]');
+    var themeSel = panel.querySelector('[data-auto="theme"]');
+    genreSel.addEventListener('change', function () {
+      themeSel.innerHTML = autoThemeOptions(genreSel.value);
+    });
+    panel.querySelector('[data-a="auto-run"]').addEventListener('click', function (e) {
+      runAuto(panel, e.target);
+    });
+  }
+
+  function runAuto(panel, btn) {
+    if (!S().get('online')) {
+      UI().toast('Worker offline — start the worker before AUTO mode.', 'error');
+      return;
+    }
+    var genre = panel.querySelector('[data-auto="genre"]').value;
+    var name = panel.querySelector('[data-auto="name"]').value.trim();
+    var prompt = panel.querySelector('[data-auto="prompt"]').value;
+    var themeId = panel.querySelector('[data-auto="theme"]').value;
+    if (U().GENRES.indexOf(genre) < 0) { UI().toast('Unknown genre.', 'error'); return; }
+    if (!name) name = 'Auto ' + genreName(genre);
+    if (!U().isValidProjectName(name)) { UI().toast('Name must be 1..80 characters.', 'error'); return; }
+    var body = { name: name, genre: genre };
+    if (prompt.trim()) body.prompt = prompt;
+    if (themeId) body.themeId = themeId;
+    panel.querySelector('[data-auto-slot="report"]').innerHTML = '';
+    autoPaintProgress(panel, 0);
+    UI().setBusy(btn, true, 'Auto-creating…');
+    api().generateAuto(body).then(function (res) {
+      UI().setBusy(btn, false);
+      if (!panel.isConnected) return;
+      autoPaintProgress(panel, AUTO_STEPS.length);
+      if (res && res.validation) S().rememberReport('auto', 'AUTO validation', res.validation);
+      var p = res && res.project;
+      UI().toast('AUTO created "' + (p ? p.name : name) + '" — playable packaged.', 'success');
+      if (p && p.id) S().set({ currentId: p.id });
+      wiz = null;
+      refreshProjects().then(function () { go('playtest'); });
+    }, function (err) {
+      UI().setBusy(btn, false);
+      if (!panel.isConnected) { UI().toast(UI().errorText(err), 'error'); return; }
+      autoPaintProgress(panel, -2);
+      // Contract: 422s carry the validation report — show it inline.
+      if (err && err.report) {
+        S().rememberReport('auto', 'AUTO validation', err.report);
+        panel.querySelector('[data-auto-slot="report"]').innerHTML =
+          UI().reportHtml(err.report, 'AUTO validation report');
+      } else {
+        panel.querySelector('[data-auto-slot="report"]').innerHTML =
+          UI().errorPanel('AUTO run failed', err, '');
+      }
+      UI().toast(UI().errorText(err), 'error');
     });
   }
 

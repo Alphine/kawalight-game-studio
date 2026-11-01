@@ -27,7 +27,7 @@
     root.innerHTML =
       '<div class="view-head"><div><p class="hero-tag">' + I('forge') + ' ASSET FACTORY</p><h2>' + I('forge') + ' Asset Forge</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · prompt → quote → confirm → generate (FR-009).</p></div></div>'
-      + '<div class="btn-row" role="tablist" aria-label="Forge modes">'
+      + '<div class="btn-row tablist" role="tablist" aria-label="Forge modes">'
       + '<button type="button" class="btn primary" data-a="tab-images" role="tab" aria-selected="true">' + I('forge') + 'Images</button> '
       + '<button type="button" class="btn ghost" data-a="tab-story" role="tab" aria-selected="false">' + I('blueprint') + 'Story</button></div>'
       + '<div data-pane="images" role="tabpanel">'
@@ -211,7 +211,7 @@
           return '<option value="' + U().esc(pr.id) + '"' + (isPreferred(pr) ? ' selected' : '') + '>'
             + U().esc(pr.displayName || pr.id) + ' (' + U().esc(pr.model || '?') + ')</option>';
         }).join('') + '</select></label>'
-        + '<label class="fld"><span>Prompt</span><textarea data-f="story-prompt" rows="4" placeholder="A drifting scavenger crew finds a singing wreck…"></textarea></label>'
+        + '<label class="fld"><span>Prompt (≤ 8000 chars)</span><textarea data-f="story-prompt" rows="4" maxlength="8000" placeholder="A drifting scavenger crew finds a singing wreck…"></textarea></label>'
         + '<label class="fld"><span>Genre voice (optional, ≤ 64 chars)</span><input data-f="story-genre" value="' + U().esc(p.genre || '') + '" maxlength="64"></label>'
         + '<div data-slot="story-quote"></div>'
         + '<div class="btn-row"><button type="button" class="btn ghost" data-a="story-gen">Get quote</button> '

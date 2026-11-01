@@ -184,7 +184,8 @@
   }
 
   function loadingPanel(text) {
-    return '<div class="state loading"><span class="spinner" aria-hidden="true"></span>'
+    return '<div class="state loading" role="status">'
+      + '<span class="spinner" aria-hidden="true"></span>'
       + '<p>' + esc(text || 'Loading…') + '</p></div>';
   }
 
@@ -194,18 +195,29 @@
     return '<div class="empty-art" aria-hidden="true">' + inner + '</div>';
   }
 
+  function actionsRow(actionHtml) {
+    return actionHtml ? '<div class="state-actions">' + actionHtml + '</div>' : '';
+  }
+
   function emptyPanel(title, hint, actionHtml) {
     return '<div class="state empty-state">' + art('folder', '◇')
       + '<h3>' + esc(title) + '</h3>'
       + (hint ? '<p class="muted">' + esc(hint) + '</p>' : '')
-      + (actionHtml || '') + '</div>';
+      + actionsRow(actionHtml) + '</div>';
   }
 
   function errorPanel(title, err, retryHtml) {
     var msg = errorText(err);
     return '<div class="state error-state">' + art('warn', '⚠')
       + '<h3>' + esc(title) + '</h3><p class="err-msg">' + esc(msg) + '</p>'
-      + (retryHtml || '') + '</div>';
+      + actionsRow(retryHtml) + '</div>';
+  }
+
+  function successPanel(title, hint, actionHtml) {
+    return '<div class="state success-state">' + art('check', '✓')
+      + '<h3>' + esc(title) + '</h3>'
+      + (hint ? '<p class="muted">' + esc(hint) + '</p>' : '')
+      + actionsRow(actionHtml) + '</div>';
   }
 
   function offlinePanel() {
@@ -213,7 +225,7 @@
       + '<h3>Worker offline</h3>'
       + '<p class="muted">Start the local worker (default http://127.0.0.1:4317) or fix the '
       + 'Worker URL in Settings. This view needs a live connection.</p>'
-      + '<div class="btn-row"><button type="button" class="btn ghost" data-kgsm-offline-retry>'
+      + '<div class="state-actions"><button type="button" class="btn ghost" data-kgsm-offline-retry>'
       + 'Retry connection</button></div></div>';
   }
 
@@ -280,7 +292,8 @@
     toast: toast, setBusy: setBusy, busy: busy, errorText: errorText,
     confirmModal: confirmModal, promptModal: promptModal,
     loadingPanel: loadingPanel, emptyPanel: emptyPanel,
-    errorPanel: errorPanel, offlinePanel: offlinePanel, issueList: issueList,
+    errorPanel: errorPanel, successPanel: successPanel,
+    offlinePanel: offlinePanel, issueList: issueList,
     reportHtml: reportHtml, pre: pre, kvRows: kvRows,
   };
 })();

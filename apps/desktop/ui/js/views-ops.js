@@ -27,6 +27,10 @@
       '<div class="view-head"><div><p class="hero-tag">' + I('play') + ' WEBGL SANDBOX</p><h2>' + I('play') + ' Playtest</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · '
       + U().esc(p.genre) + ' · auto-stage, run, pause, restart, console.</p></div></div>'
+      + '<div class="btn-row tablist" role="tablist" aria-label="Playtest modes">'
+      + '<button type="button" class="btn primary" data-a="tab-schematic" role="tab" aria-selected="true">' + I('chip') + 'Schematic preview</button> '
+      + '<button type="button" class="btn ghost" data-a="tab-realgame" role="tab" aria-selected="false">' + I('gamepad') + 'Real game</button></div>'
+      + '<div data-pane="schematic" role="tabpanel">'
       + '<section class="panel glass-panel glass-panel-glow"><div class="view-head"><div><h3>' + I('chip') + ' Auto-stage</h3>'
       + '<p class="muted small">Reads the stored config (assembling the blueprint first when needed), '
       + 'validates it, then loads a live schematic preview drawn from your own level data.</p></div>'
@@ -42,13 +46,22 @@
       + '<input data-f="url" value="' + U().esc(savedUrl) + '" placeholder="http://127.0.0.1:1420/index.html"></label>'
       + '<button type="button" class="btn ghost" data-a="load">' + I('folder') + 'Load</button></div></details></section>'
       + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('gamepad') + ' Preview</h3></div>'
-      + '<div data-slot="frame"><p class="muted">No preview loaded — auto-stage to start.</p></div></section>'
+      + '<div data-slot="frame">' + UI().emptyPanel('No preview loaded', 'Auto-stage to start.') + '</div></section>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('info') + ' Console</h3>'
       + '<span class="row"><button type="button" class="btn ghost" data-a="copy" title="Copy console lines to the clipboard">Copy</button> '
       + '<button type="button" class="btn ghost" data-a="dl" title="Download console lines as text">Download</button> '
       + '<button type="button" class="btn ghost" data-a="clear">' + I('close') + 'Clear</button></span></div>'
       + '<div data-slot="console" class="console"></div>'
-      + '<p class="muted small">Previews post <code>{source:"kgsm-game", level, text}</code> messages here.</p></section></div>';
+      + '<p class="muted small">Previews post <code>{source:"kgsm-game", level, text}</code> messages here.</p></section></div>'
+      + '</div>'
+      + '<div data-pane="realgame" role="tabpanel" class="hidden">'
+      + '<section class="panel glass-panel glass-panel-glow"><div class="view-head"><div><h3>' + I('gamepad') + ' Real game</h3>'
+      + '<p class="muted small">Stages the stored <code>config.json</code> with the shared Phaser exporter, '
+      + 'then plays the real build in the frame below. Rebuild after every config change.</p></div>'
+      + '<div><button type="button" class="btn primary" data-a="rg-rebuild">' + I('refresh') + 'Rebuild &amp; play</button></div></div>'
+      + '<div class="rg-status" data-slot="rg-status"></div>'
+      + '<div data-slot="rg-frame">' + UI().emptyPanel('No real-game build staged', 'Press Rebuild & play to stage the stored config and play it here.') + '</div>'
+      + '</section></div>';
     paintConsole(root);
     function frame() { return root.querySelector('[data-slot="frame"] iframe'); }
     function send(cmd) {
@@ -105,6 +118,22 @@
     });
     root.querySelector('[data-a="stage"]').addEventListener('click', function (e) {
       UI().busy(e.target, function () { return autoStage(root, p, loadFrame); }, 'Staging…');
+    });
+    function selectPlaytestTab(which) {
+      var schematic = which === 'schematic';
+      root.querySelector('[data-pane="schematic"]').classList.toggle('hidden', !schematic);
+      root.querySelector('[data-pane="realgame"]').classList.toggle('hidden', schematic);
+      var ts = root.querySelector('[data-a="tab-schematic"]');
+      var tg = root.querySelector('[data-a="tab-realgame"]');
+      ts.className = 'btn ' + (schematic ? 'primary' : 'ghost');
+      tg.className = 'btn ' + (schematic ? 'ghost' : 'primary');
+      ts.setAttribute('aria-selected', schematic ? 'true' : 'false');
+      tg.setAttribute('aria-selected', schematic ? 'false' : 'true');
+    }
+    root.querySelector('[data-a="tab-schematic"]').addEventListener('click', function () { selectPlaytestTab('schematic'); });
+    root.querySelector('[data-a="tab-realgame"]').addEventListener('click', function () { selectPlaytestTab('realgame'); });
+    root.querySelector('[data-a="rg-rebuild"]').addEventListener('click', function (e) {
+      UI().busy(e.target, function () { return rebuildRealGame(root, p); }, 'Staging…');
     });
     root.querySelector('[data-a="clear"]').addEventListener('click', function () {
       consoleLines = [];
@@ -232,6 +261,111 @@
       step('staging failed: ' + UI().errorText(err), 'err');
       UI().toast(UI().errorText(err), 'error');
     });
+  }
+
+  // ---------- Playtest: Real game ----------
+  // Bespoke fetch (api.js has no playtest helper and is owned elsewhere;
+  // same header/timeout shape the shared client uses, errors normalized
+  // with U().parseApiError like the old Forge story-tab postStory was).
+  function playtestPost(projectId) {
+    var base = api().baseUrl();
+    var url = base + '/api/v1/projects/' + encodeURIComponent(projectId) + '/playtest';
+    var timer = null;
+    var init = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    };
+    if (typeof AbortController !== 'undefined') {
+      var ctrl = new AbortController();
+      init.signal = ctrl.signal;
+      timer = setTimeout(function () { ctrl.abort(); }, 120000);
+    }
+    return fetch(url, init).then(function (res) {
+      if (timer) clearTimeout(timer);
+      return res.text().then(function (text) {
+        var payload = null;
+        try { payload = text ? JSON.parse(text) : null; } catch (e) { payload = null; }
+        if (res.ok) return payload == null ? {} : payload;
+        throw U().parseApiError(payload, res.status, 'Request failed');
+      });
+    }).catch(function (err) {
+      if (timer) clearTimeout(timer);
+      if (err && err.code) throw err;
+      var msg = (err && err.name === 'AbortError')
+        ? 'Worker timed out after 120s'
+        : 'Worker unreachable at ' + base + ' (is it running?)';
+      throw { code: 'worker-offline', message: msg, status: 0 };
+    });
+  }
+
+  function rebuildRealGame(root, p) {
+    var status = root.querySelector('[data-slot="rg-status"]');
+    var slot = root.querySelector('[data-slot="rg-frame"]');
+    if (!S().get('online')) {
+      if (slot) slot.innerHTML = UI().offlinePanel();
+      UI().toast('Worker offline.', 'error');
+      return Promise.resolve();
+    }
+    if (slot) slot.innerHTML = UI().loadingPanel('Staging the real-game build…');
+    if (status) status.innerHTML = '';
+    return playtestPost(p.id).then(function (res) {
+      if (!res || typeof res.url !== 'string' || res.url.charAt(0) !== '/') {
+        throw { code: 'internal', message: 'Worker returned an unexpected playtest response.', status: 0 };
+      }
+      if (status) {
+        status.innerHTML = '<p><span class="pill green">staged</span> <span class="muted">'
+          + U().esc(U().fmtDate(res.stagedAt)) + ' · <code>' + U().esc(res.url) + '</code></span></p>';
+      }
+      loadGameFrame(root, api().baseUrl() + res.url);
+      UI().toast('Real-game build staged.', 'success');
+    }).catch(function (err) {
+      var hint = '';
+      if (err && err.code === 'config-not-found') {
+        hint = '<p class="muted">This project has no stored <code>config.json</code> yet — '
+          + 'assemble the stored blueprint first (open Level Studio and save, or auto-stage the '
+          + 'Schematic preview tab), or run the New Game wizard, then press Rebuild &amp; play again.</p>';
+      } else if (err && err.code === 'export-error') {
+        hint = '<p class="muted">The stored config failed validation/staging — fix it in Level Studio, then rebuild.</p>';
+      } else if (err && err.code === 'internal') {
+        hint = '<p class="muted">The stored <code>config.json</code> is corrupt — re-save it in Level Studio (or re-run the New Game wizard), then rebuild.</p>';
+      }
+      if (err && err.code === 'worker-offline') {
+        if (slot) slot.innerHTML = UI().offlinePanel();
+      } else if (slot) {
+        slot.innerHTML = UI().errorPanel('Real-game staging failed', err,
+          '<div class="btn-row"><button type="button" class="btn ghost" data-a="rg-retry">' + I('refresh') + 'Retry</button></div>') + hint;
+        var rb = slot.querySelector('[data-a="rg-retry"]');
+        if (rb) rb.addEventListener('click', function () {
+          var btn = root.querySelector('[data-a="rg-rebuild"]');
+          if (btn) btn.click();
+        });
+      }
+      UI().toast(UI().errorText(err), 'error');
+    });
+  }
+
+  function loadGameFrame(root, src) {
+    var slot = root.querySelector('[data-slot="rg-frame"]');
+    if (!slot) return;
+    // Fresh element per rebuild: drops the previous document and reloads the
+    // staged build cleanly even though the URL itself is unchanged.
+    slot.innerHTML = '';
+    var f = document.createElement('iframe');
+    f.setAttribute('title', 'Real game');
+    // No sandbox: this page is already cross-origin to the shell by URL, and
+    // a sandbox without allow-same-origin would break the game's own
+    // same-origin module/asset loads.
+    f.className = 'game-frame';
+    var t0 = Date.now();
+    f.addEventListener('load', function () {
+      var status = root.querySelector('[data-slot="rg-status"]');
+      if (status) {
+        status.innerHTML += '<p class="muted small">frame loaded in ' + (Date.now() - t0)
+          + ' ms — click the game, then play with the keyboard.</p>';
+      }
+    });
+    f.src = src;
+    slot.appendChild(f);
   }
 
   function consoleErrorCount() {
@@ -801,9 +935,11 @@
       var cur = S().current();
       UI().busy(e.target, function () {
         var jobs = [api().putLimits('global', g === '' ? null : Number(g))];
-        if (pj !== '') {
-          if (!cur) { UI().toast('Select a project on Home before setting a project limit.', 'error'); return Promise.resolve(); }
+        if (cur) {
           jobs.push(api().putLimits('project', pj === '' ? null : Number(pj), cur.id));
+        } else if (pj !== '') {
+          UI().toast('Select a project on Home before setting a project limit.', 'error');
+          return Promise.resolve();
         }
         return Promise.all(jobs).then(function () {
           UI().toast('Limits saved.', 'success');
@@ -880,7 +1016,7 @@
           return '<li><code>' + U().esc(n) + '</code> '
             + '<button type="button" class="btn ghost danger" data-s="' + U().esc(n) + '">Delete</button></li>';
         }).join('') + '</ul>'
-        : '<p class="muted">No secrets stored.</p>';
+        : UI().emptyPanel('No secrets stored', 'Store a name + value above.');
       slot.querySelectorAll('[data-s]').forEach(function (b) {
         b.addEventListener('click', function () {
           UI().confirmModal('Delete secret?', 'Delete "' + b.dataset.s + '" from the local store?', 'Delete', true)

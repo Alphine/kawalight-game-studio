@@ -80,6 +80,7 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   font-size: 14px;
+  line-height: 1.5;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -96,7 +97,7 @@ body {
     radial-gradient(circle at 85% 100%, var(--bg-glow-b) 0%, transparent 50%);
 }
 
-h1, h2, h3 { color: var(--heading); }
+h1, h2, h3 { color: var(--heading); line-height: 1.25; }
 h2 { margin: 20px 0 4px; font-size: 18px; }
 .muted { color: var(--muted); }
 .small { font-size: 12px; }
@@ -357,8 +358,18 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; 
 
 /* ---------- View headers + hero ---------- */
 .view-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-.view-head h2 { margin: 0; font-size: 20px; }
+.view-head h2 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 8px; }
 .view-head p { margin: 4px 0 0; }
+/* Eyebrow kickers reuse .hero-tag in views; inside a view-head they read as
+ * a left-aligned mono label, not the hero's italic side tag. */
+.view-head .hero-tag {
+  margin: 0 0 2px;
+  display: flex; align-items: center; gap: 6px;
+  font-style: normal; text-align: left;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px;
+  color: var(--accent);
+}
+.view-head .hero-tag .k-icon { width: 14px; height: 14px; }
 
 .hero {
   background:
@@ -381,8 +392,10 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; 
 
 /* ---------- Buttons ---------- */
 .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border: 1px solid var(--border-strong); border-radius: 10px;
   padding: 9px 16px; font-size: 13px; font-family: inherit; font-weight: 600;
+  line-height: 1.3;
   cursor: pointer; color: var(--text);
   background: var(--panel-solid);
 }
@@ -393,14 +406,44 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; 
 .btn.danger { border-color: var(--red); color: var(--red-ink); }
 .btn.primary.danger { background: var(--red); border-color: var(--red); color: #fff; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.btn-col { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
-.btn-col .btn { width: 100%; text-align: left; }
+.btn-col { display: flex; flex-direction: column; gap: 8px; align-items: stretch; }
+.btn-col .btn { width: 100%; justify-content: flex-start; }
 
 .icon-btn {
   background: none; border: none; cursor: pointer;
   color: var(--muted); font-size: 16px; padding: 4px 8px; border-radius: 8px;
 }
 .icon-btn:hover { color: var(--heading); background: var(--accent-soft); }
+
+/* ---------- Tabs (segmented HUD control) ---------- */
+/* Both tab bars (Forge modes, Playtest modes) share this: the container is
+ * one pill, the selected tab reads as the filled segment. The [role]
+ * selector keeps the look even where the tablist class is missing. */
+.tablist, [role="tablist"] {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  width: fit-content; max-width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  margin-top: 12px;
+}
+.tablist .btn, [role="tablist"] .btn {
+  background: transparent;
+  border-color: transparent;
+  border-radius: 8px;
+  color: var(--muted);
+}
+.tablist .btn:hover:not(:disabled), [role="tablist"] .btn:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: transparent;
+  color: var(--heading);
+}
+.tablist .btn.primary, [role="tablist"] .btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
 
 /* ---------- Genre grid ---------- */
 .genre-grid {
@@ -446,7 +489,7 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; 
   box-shadow: var(--shadow);
 }
 .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.panel h3 { margin: 0 0 10px; font-size: 13px; }
+.panel h3 { margin: 0 0 10px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
 .panel-head h3 { margin: 0; }
 .panel h4 { margin: 14px 0 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
@@ -553,10 +596,18 @@ code {
 
 /* ---------- States ---------- */
 .state { text-align: center; padding: 28px 16px; }
-.state h3 { margin: 8px 0 4px; }
+.state h3 { margin: 8px 0 4px; justify-content: center; }
+.state p { margin: 4px 0; }
 .empty-art { font-size: 28px; color: var(--muted); display: flex; justify-content: center; }
 .error-state .empty-art { color: var(--red); }
+.success-state .empty-art { color: var(--green); }
 .err-msg { color: var(--red-ink); }
+.success-msg { color: var(--green-ink); }
+/* Shared action row for loading/empty/error/success panels (ui.js). A
+ * caller-supplied .btn-row nested inside keeps its buttons, minus the
+ * extra top margin. */
+.state-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px; }
+.state-actions .btn-row { margin-top: 0; }
 .spinner {
   display: inline-block; width: 22px; height: 22px; border-radius: 50%;
   border: 3px solid var(--border-strong); border-top-color: var(--accent);
@@ -587,7 +638,8 @@ code {
   padding: 6px 14px; font-size: 12px; color: var(--muted);
 }
 .steps li.cur { border-color: var(--accent); color: var(--heading); }
-.steps li.done { color: var(--green); }
+.steps li.done { color: var(--green); border-color: var(--green); }
+.steps li.done::before { content: "✓ "; font-weight: 700; }
 .wizard-nav { justify-content: space-between; }
 .enemy-row { margin: 6px 0; }
 
@@ -629,6 +681,19 @@ details.advanced .row { margin-top: 10px; }
 
 [data-slot="frame"] iframe { min-height: 420px; }
 [data-slot="frame"] canvas { max-width: 100%; }
+
+/* ---------- AUTO panel + real-game frame ---------- */
+.auto-panel { margin-bottom: 4px; }
+[data-auto-slot="progress"] { margin-top: 12px; }
+[data-auto-slot="progress"] .steps { margin-bottom: 8px; }
+[data-auto-slot="progress"] p { margin: 4px 0; }
+[data-auto-slot="report"] .report { margin-top: 12px; }
+[data-auto-slot="report"] .state { padding: 20px 12px; }
+.rg-status p { margin: 8px 0; }
+.game-frame {
+  width: 100%; height: auto;
+  aspect-ratio: 16 / 9; min-height: 360px;
+}
 
 /* ---------- Toasts ---------- */
 .toasts {
@@ -711,4 +776,8 @@ textarea:focus-visible, summary:focus-visible, a:focus-visible {
   .hero-tag { text-align: left; }
   .hud-header, .hud-footer { padding-left: 12px; padding-right: 12px; }
   .theme-toggle #themeText { display: none; }
+  .tablist, [role="tablist"] { width: 100%; }
+  .tablist .btn, [role="tablist"] .btn { flex: 1 1 auto; }
+  .game-frame { min-height: 280px; }
+  .state { padding: 20px 12px; }
 }
