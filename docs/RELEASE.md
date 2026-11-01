@@ -15,11 +15,11 @@ installer is retired from the release process — note
 `targets: ["nsis"]`, but release builds pass `--no-bundle` in step 3, so
 no installer is produced).
 
-Launch-verified 2026-10-31 (v0.2.0, exact shipped bytes by SHA-256):
+Launch-verified 2026-11-01 (v0.2.0, exact shipped bytes by SHA-256):
 app window appears (title "Kawalight Game Studio Maker"), sidecar spawns
 from the exe folder, health 200 with `version: 0.2.0` on 127.0.0.1:4317
 (first boot ~30 s while the onefile bundle extracts, then instant),
-empty stderr, stable 32 s+, clean kill with zero orphan workers.
+empty stderr, stable 10 s+, clean kill with zero orphan workers.
 
 ## First run
 
@@ -74,7 +74,7 @@ commands or open an exported build directly.
   `externalBin` still match the portable-folder process above (step 3
   passes `--no-bundle`; the declared `nsis` target stays dormant).
 
-## Rebuild from source (Windows, verified 2026-10-30)
+## Rebuild from source (Windows, verified 2026-11-01)
 
 Prerequisites: VS 2022 Build Tools (MSVC x64 linker), WebView2 Runtime,
 Rust (repo pins nightly via `apps/desktop/rust-toolchain.toml` because the
