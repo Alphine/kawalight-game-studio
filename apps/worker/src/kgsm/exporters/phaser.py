@@ -179,7 +179,17 @@ def stage_export(
     staged_assets = out_dir / "assets"
     template_assets = template_dir / "assets"
     if template_assets.is_dir():
-        _copy_tree(template_assets, staged_assets)
+        # Ship only the template art the config loads. Placeholders that generated
+        # art replaced stay out of the export. Project assets win on a clash.
+        sprites = (config.get("assets") or {}).get("sprites") or {}
+        for rel in sorted({str(v).replace("\\", "/") for v in sprites.values()}):
+            if rel.startswith("/") or ".." in rel.split("/") or ":" in rel:
+                continue
+            src_file = template_dir / rel
+            if src_file.is_file() and not (project_dir / rel).is_file():
+                target = out_dir / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src_file, target)
     project_assets = project_dir / "assets"
     if project_assets.is_dir():
         for item in sorted(project_assets.rglob("*")):
