@@ -96,6 +96,19 @@ body {
     radial-gradient(circle at 50% 0%, var(--bg-glow-a) 0%, transparent 50%),
     radial-gradient(circle at 85% 100%, var(--bg-glow-b) 0%, transparent 50%);
 }
+html:not(.dark) .bg-fx {
+  background-image:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.85), rgba(248, 250, 252, 0.95)),
+    url("img/backdrop-light.webp");
+  background-size: cover;
+  background-position: center top;
+}
+html:not(.dark) .hero {
+  background:
+    linear-gradient(90deg, rgba(248, 250, 252, 0.96) 0%, rgba(248, 250, 252, 0.78) 55%, rgba(248, 250, 252, 0.5) 100%),
+    url("img/backdrop-light.webp") center / cover,
+    var(--panel);
+}
 html.dark .bg-fx {
   background-image:
     linear-gradient(180deg, rgba(8, 11, 28, 0.8), rgba(8, 11, 28, 0.94)),

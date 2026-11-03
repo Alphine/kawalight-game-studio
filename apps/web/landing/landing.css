@@ -239,6 +239,32 @@ section { padding: 56px 0; }
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px;
 }
 .feature p { color: var(--muted); margin: 0; }
+.feature-art {
+  display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
+  border-radius: 12px; border: 1px solid var(--line); margin-bottom: 16px;
+}
+
+/* Light mode: the dark backdrops and mockup stage switch to light surfaces. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .genres {
+    background: linear-gradient(180deg, rgba(245, 243, 255, .72), rgba(245, 243, 255, .94)),
+      url("img/backdrop-light.webp") center / cover;
+  }
+  :root:not([data-theme="dark"]) .stage {
+    background: linear-gradient(rgba(255, 255, 255, .72), rgba(255, 255, 255, .8)),
+      url("img/backdrop-light.webp") center / cover;
+  }
+  :root:not([data-theme="dark"]) .side { background: rgba(255, 255, 255, .7); color: var(--muted); }
+  :root:not([data-theme="dark"]) .side li.on { color: #fff; }
+  :root:not([data-theme="dark"]) .screen {
+    border-color: rgba(168, 85, 247, .35);
+    box-shadow: 0 30px 80px rgba(168, 85, 247, .18), 0 0 0 6px rgba(255, 255, 255, .9);
+  }
+  :root:not([data-theme="dark"]) .base { background: linear-gradient(180deg, #d9d4ff, #bfb6f5); }
+  :root:not([data-theme="dark"]) .pill {
+    color: #6b21a8; background: rgba(168, 85, 247, .12); border-color: rgba(168, 85, 247, .35);
+  }
+}
 
 /* ---- account card ---- */
 .account { display: flex; justify-content: center; padding-bottom: 72px; }
