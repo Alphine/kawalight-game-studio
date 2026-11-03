@@ -126,7 +126,8 @@ def test_routes_table_shape():
 def test_story_route_mounted_in_server_dispatch(store):
     from kgsm.api.server import dispatch
     status, body = dispatch(Request(method="POST", path="/stories/generate",
-                                    body={"prompt": "a brave pilot"}))
+                                    body={"prompt": "a brave pilot",
+                                          "providerId": "mock"}))
     assert status == 201, body
     assert body["text"]
     assert body["provider"] == "mock"
@@ -137,7 +138,7 @@ def test_story_route_mounted_in_server_dispatch(store):
 # --------------------------------------------------------------------------
 
 def test_mock_story_default_provider(store):
-    status, body = call({"prompt": "a lost starship"})
+    status, body = call({"providerId": "mock", "prompt": "a lost starship"})
     assert status == 201, body
     assert set(body) == {"text", "provider", "model", "usage", "quote",
                          "spentCents"}
@@ -172,7 +173,8 @@ def test_mock_placeholder_is_deterministic():
 
 def test_mock_spend_scoped_to_project(store):
     pid = make_project_id()
-    status, _ = call({"prompt": "scoped tale", "projectId": pid})
+    status, _ = call({"providerId": "mock", "prompt": "scoped tale",
+                      "projectId": pid})
     assert status == 201
     conn_entries = costs_mod.spent_this_month(pid)
     assert conn_entries == 0  # free mock records 0 actual
@@ -218,7 +220,8 @@ def test_bad_genre_project_and_provider_ids(store):
 
 
 def test_unknown_fields_ignored(store):
-    status, body = call({"prompt": "tolerated", "future": 1})
+    status, body = call({"providerId": "mock", "prompt": "tolerated",
+                         "future": 1})
     assert status == 201, body
     assert "tolerated" in body["text"]
 

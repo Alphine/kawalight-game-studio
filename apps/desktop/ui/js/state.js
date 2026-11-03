@@ -6,7 +6,14 @@
   var LS_URL = 'kgsm.workerUrl';
   var LS_PROJECT = 'kgsm.currentProjectId';
   var LS_PLAYTEST = 'kgsm.playtestUrl';
-  var DEFAULT_URL = 'http://127.0.0.1:4317';
+  // Desktop shell and local dev talk to the loopback worker. The web build is
+  // served under /kgsm/, which nginx proxies to the worker on the same origin.
+  var DEFAULT_URL = (function () {
+    try {
+      if (window.location.pathname.indexOf('/kgsm') === 0) return window.location.origin + '/kgsm';
+    } catch (e) { /* no window in a non-browser test env */ }
+    return 'http://127.0.0.1:4317';
+  })();
 
   function lsGet(k, fallback) {
     try {

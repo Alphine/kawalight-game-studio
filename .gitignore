@@ -25,3 +25,7 @@ Thumbs.db
 apps/desktop/src-tauri/binaries/
 apps/desktop/src-tauri/gen/
 
+
+# local API credentials (never commit)
+metaapi.txt
+*.env

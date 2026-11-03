@@ -17,8 +17,8 @@
   // Known single-modality provider ids (docs/providers.md). The worker is the
   // source of truth and fails cleanly either way; these only drive hints so
   // users do not burn a quote round-trip on the wrong tab.
-  var TEXT_ONLY_PROVIDERS = ['llama-text'];
-  var IMAGE_ONLY_PROVIDERS = ['openai-compat', 'llama-image'];
+  var TEXT_ONLY_PROVIDERS = ['meta-text', 'llama-text'];
+  var IMAGE_ONLY_PROVIDERS = ['meta-image', 'openai-compat', 'llama-image'];
 
   // ---------- Asset Forge ----------
   function renderForge(root) {
@@ -77,7 +77,8 @@
       slot.innerHTML =
         '<label class="fld"><span>Provider</span><select data-f="provider">'
         + providers.map(function (pr) {
-          return '<option value="' + U().esc(pr.id) + '">' + U().esc(pr.displayName || pr.id)
+          var preferred = pr.id === 'meta-image' || (pr.id === 'mock' && !providers.some(function (q) { return q.id === 'meta-image'; }));
+          return '<option value="' + U().esc(pr.id) + '"' + (preferred ? ' selected' : '') + '>' + U().esc(pr.displayName || pr.id)
             + ' (' + U().esc(pr.model || '?') + ')</option>';
         }).join('') + '</select></label>'
         + '<label class="fld"><span>Prompt</span><textarea data-f="prompt" rows="3" placeholder="Pixel-art player spaceship, side view, 32x32"></textarea></label>'
@@ -203,7 +204,7 @@
         return;
       }
       function isPreferred(pr) {
-        return pr.id === 'llama-text' || (pr.id === 'mock' && !providers.some(function (q) { return q.id === 'llama-text'; }));
+        return pr.id === 'meta-text' || (pr.id === 'mock' && !providers.some(function (q) { return q.id === 'meta-text'; }));
       }
       slot.innerHTML =
         '<label class="fld"><span>Provider</span><select data-f="story-provider">'
@@ -261,7 +262,7 @@
     function attempt(confirmed, btn, label) {
       var b = storyBody(slot, p);
       if (IMAGE_ONLY_PROVIDERS.indexOf(b.providerId) >= 0) {
-        UI().toast(b.providerId + ' is image-only — pick a text provider (mock, llama-text).', 'error');
+        UI().toast(b.providerId + ' is image-only — pick a text provider (meta-text, mock).', 'error');
         return Promise.resolve();
       }
       if (!b.prompt) { UI().toast('Prompt is required.', 'error'); return Promise.resolve(); }

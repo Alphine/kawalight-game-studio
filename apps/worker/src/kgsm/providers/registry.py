@@ -53,6 +53,15 @@ def _ensure_builtins() -> None:
             _PROVIDERS.setdefault("llama-text", LlamaTextProvider())
         except Exception:  # noqa: BLE001 - optional adapter stays unregistered
             pass
+    # Meta AI (Muse) is the default text and image backend.
+    if "meta-text" not in _PROVIDERS or "meta-image" not in _PROVIDERS:
+        try:
+            from .meta import MetaImageProvider, MetaTextProvider
+
+            _PROVIDERS.setdefault("meta-text", MetaTextProvider())
+            _PROVIDERS.setdefault("meta-image", MetaImageProvider())
+        except Exception:  # noqa: BLE001 - optional adapter stays unregistered
+            pass
 
 
 def get_provider(provider_id: str) -> ImageProvider:

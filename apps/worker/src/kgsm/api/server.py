@@ -9,6 +9,7 @@ Health and cost endpoints (§0, §6) are core routes implemented here.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -209,8 +210,19 @@ def _is_json_content(content_type: str | None) -> bool:
     return media == "application/json"
 
 
+def _extra_origins() -> set[str]:
+    """Operator-added origins, e.g. ``https://basyid.dev`` for the web build.
+
+    Read from ``KGSM_ALLOWED_ORIGINS`` (comma-separated, exact scheme+host
+    +port match) on every request so a deploy can change it without code.
+    """
+    raw = os.environ.get("KGSM_ALLOWED_ORIGINS", "")
+    return {item.strip().rstrip("/") for item in raw.split(",") if item.strip()}
+
+
 def _allowed_origin(origin: str | None) -> str | None:
-    """Echo back only localhost-class origins (contract §11).
+    """Echo back only localhost-class origins (contract §11) plus any
+    operator-listed origin.
 
     The opaque Origin 'null' (sandboxed iframes, file:// pages) is never
     allowed: echoing it would grant any local file read access to the
@@ -227,6 +239,8 @@ def _allowed_origin(origin: str | None) -> str | None:
                                                       "localhost"):
         return origin
     if parts.scheme == "tauri" or host in ("tauri.localhost",):
+        return origin
+    if origin.rstrip("/") in _extra_origins():
         return origin
     return None
 

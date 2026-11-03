@@ -145,6 +145,8 @@ class LlamaTextProvider(ImageProvider, TextProvider):
     secret_model = SECRET_TEXT_MODEL
     default_base_url = DEFAULT_BASE_URL
     default_model = DEFAULT_TEXT_MODEL
+    # Extra top-level chat fields a preset needs (e.g. reasoning controls).
+    extra_payload: dict[str, object] = {}
 
     def __init__(
         self,
@@ -242,6 +244,7 @@ class LlamaTextProvider(ImageProvider, TextProvider):
             "messages": messages,
             "max_tokens": max_tokens,
             "temperature": temperature,
+            **self.extra_payload,
         }
         url = base_url.rstrip("/") + "/chat/completions"
         self.calls.append({

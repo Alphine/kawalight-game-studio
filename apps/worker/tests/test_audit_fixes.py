@@ -340,14 +340,19 @@ def test_optional_adapter_failure_keeps_mock_default(monkeypatch):
 
     real_import = __import__
 
+    # Relative imports (``from .llama import``) pass the bare module name, so
+    # match the last path segment rather than a dotted suffix.
+    blocked = {"openai_compat", "llama", "meta"}
+
     def boom_import(name, *args, **kwargs):
-        if name.endswith("openai_compat") or name.endswith("providers.llama"):
+        if name.split(".")[-1] in blocked:
             raise RuntimeError("simulated adapter blowup")
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr("builtins.__import__", boom_import)
     monkeypatch.setattr(registry_mod, "_PROVIDERS", {})
-    for mod in ("kgsm.providers.openai_compat", "kgsm.providers.llama"):
+    for mod in ("kgsm.providers.openai_compat", "kgsm.providers.llama",
+                "kgsm.providers.meta"):
         monkeypatch.delitem(sys.modules, mod, raising=False)
     # Must not raise: mock default stands, whatever adapters do.
     assert get_provider("mock").id == "mock"

@@ -171,6 +171,23 @@ def test_simple_cross_origin_post_is_refused_without_json_type(api):
     assert body["error"]["code"] == "unsupported-media-type"
 
 
+def test_operator_listed_origin_is_allowed(api, monkeypatch):
+    # The web build is served from basyid.dev, so the operator lists it.
+    monkeypatch.setenv("KGSM_ALLOWED_ORIGINS", "https://basyid.dev/")
+    status, _ = _raw_request(
+        api, "POST", "/projects",
+        json.dumps({"name": "Web Origin", "genre": "space-shooter"}).encode(),
+        {"Content-Type": "application/json", "Origin": "https://basyid.dev"})
+    assert status == 201
+    # ...but a look-alike host is still refused.
+    status, _ = _raw_request(
+        api, "POST", "/projects",
+        json.dumps({"name": "Lookalike", "genre": "space-shooter"}).encode(),
+        {"Content-Type": "application/json",
+         "Origin": "https://basyid.dev.evil.example"})
+    assert status == 403
+
+
 def test_local_dev_origin_is_still_allowed(api):
     status, _ = _raw_request(
         api, "POST", "/projects",

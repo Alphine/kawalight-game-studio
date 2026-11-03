@@ -5,9 +5,10 @@ text-capable provider. Cost-guarded exactly like asset generation (§4):
 the handler re-quotes (one story = one billable unit), enforces
 ``authorize`` (unconfirmed paid/unknown cost → ``409 needs-confirmation``
 or ``402 cost-blocked`` with the quote attached), then generates and
-``record_spend``s actuals. ``providerId`` defaults to ``mock`` for
-deterministic offline placeholders; any registered provider exposing
-``generate_text`` works as a real backend (see ``story.py``).
+``record_spend``s actuals. ``providerId`` defaults to ``meta-text`` (Meta
+AI / Muse). Pass ``mock`` explicitly for deterministic offline placeholders;
+any registered provider exposing ``generate_text`` works as a real backend
+(see ``story.py``).
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ _GENERATE_LOCK = costs_mod.spend_lock
 
 def generate_story(req: Request) -> tuple[int, dict]:
     body = req.body
-    provider_id = body.get("providerId", "mock")
+    provider_id = body.get("providerId", "meta-text")
     if not isinstance(provider_id, str) or not provider_id:
         raise bad_request("providerId must be a non-empty string")
     prompt = need_str(body, "prompt")
