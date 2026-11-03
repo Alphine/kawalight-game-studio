@@ -42,7 +42,7 @@ def request(base, method, path, body=None, cookie=None):
     data = None if body is None else json.dumps(body).encode("utf-8")
     headers = {"Content-Type": "application/json", "Accept": "application/json"}
     if cookie:
-        headers["Cookie"] = f"kgsm_session={cookie}"
+        headers["Cookie"] = f"{auth.SESSION_COOKIE}={cookie}"
     req = urllib.request.Request(base + path, data=data, method=method,
                                  headers=headers)
     try:
@@ -55,7 +55,7 @@ def request(base, method, path, body=None, cookie=None):
 
 
 def session_token(set_cookie):
-    assert set_cookie and set_cookie.startswith("kgsm_session=")
+    assert set_cookie and set_cookie.startswith(f"{auth.SESSION_COOKIE}=")
     return set_cookie.split(";", 1)[0].split("=", 1)[1]
 
 
@@ -136,6 +136,34 @@ def test_logout_revokes_the_session(live):
     status, _, cookie = request(live, "POST", "/auth/logout", {}, cookie=token)
     assert status == 200 and "Max-Age=0" in cookie
     assert request(live, "GET", "/projects", cookie=token)[0] == 401
+
+
+def test_session_cookie_uses_host_prefix_and_strict_flags(live):
+    status, _, cookie = request(live, "POST", "/auth/register",
+                                {"email": ALICE, "password": PASSWORD})
+    assert status == 201
+    assert cookie.startswith("__Host-kgsm_session=")
+    assert "Path=/" in cookie and "Secure" in cookie and "Domain" not in cookie
+
+
+def test_signups_are_throttled_per_ip(live, monkeypatch):
+    monkeypatch.setattr(auth, "REGISTER_MAX", 3)
+    for n in range(3):
+        status, _, _ = request(live, "POST", "/auth/register",
+                               {"email": f"user{n}@example.com",
+                                "password": PASSWORD})
+        assert status == 201
+    status, body, _ = request(live, "POST", "/auth/register",
+                              {"email": "user9@example.com",
+                               "password": PASSWORD})
+    assert status == 429 and body["error"]["code"] == "too-many-attempts"
+
+
+def test_head_requests_are_answered_not_501(live):
+    root = live.rsplit("/api/v1", 1)[0]
+    req = urllib.request.Request(root + "/health", method="HEAD")
+    with urllib.request.urlopen(req) as resp:
+        assert resp.status == 200
 
 
 def test_password_hash_roundtrip_and_salting():
@@ -257,3 +285,52 @@ def test_quota_does_nothing_without_enforcement(store, monkeypatch):
     monkeypatch.delenv("KGSM_REQUIRE_AUTH", raising=False)
     monkeypatch.setenv("KGSM_QUOTA_STORY_PER_DAY", "0")
     auth.consume_quota("story")  # desktop/tests: unscoped, never blocked
+
+
+def test_throttle_is_per_real_client_ip_behind_proxy(live, monkeypatch):
+    # nginx forwards the client address in X-Real-IP; each client gets its own bucket.
+    monkeypatch.setattr(auth, "REGISTER_MAX", 2)
+
+    def register_from(ip, email):
+        req = urllib.request.Request(
+            live + "/auth/register", method="POST",
+            data=json.dumps({"email": email, "password": PASSWORD}).encode(),
+            headers={"Content-Type": "application/json", "X-Real-IP": ip})
+        try:
+            with urllib.request.urlopen(req) as resp:
+                return resp.status
+        except urllib.error.HTTPError as exc:
+            return exc.code
+
+    assert register_from("203.0.113.1", "a1@example.com") == 201
+    assert register_from("203.0.113.1", "a2@example.com") == 201
+    assert register_from("203.0.113.1", "a3@example.com") == 429
+    # A different client is not stalled by the first one.
+    assert register_from("203.0.113.2", "b1@example.com") == 201
+
+
+def test_failed_logins_do_not_lock_an_account_for_other_ips(live):
+    signup(live, ALICE)
+    for _ in range(auth.LOGIN_MAX):
+        request(live, "POST", "/auth/login",
+                {"email": ALICE, "password": "wrong-password-1"})
+    # The legitimate owner (same email, different client) can still sign in.
+    req = urllib.request.Request(
+        live + "/auth/login", method="POST",
+        data=json.dumps({"email": ALICE, "password": PASSWORD}).encode(),
+        headers={"Content-Type": "application/json", "X-Real-IP": "198.51.100.9"})
+    with urllib.request.urlopen(req) as resp:
+        assert resp.status == 200
+
+
+def test_mock_generation_is_metered_for_non_admins(store, monkeypatch):
+    monkeypatch.setenv("KGSM_REQUIRE_AUTH", "1")
+    monkeypatch.setenv("KGSM_QUOTA_IMAGE_PER_DAY", "1")
+    ctx = auth.AuthContext(user_id="u1", email=ALICE, is_admin=False)
+    token = auth.bind(ctx)
+    try:
+        auth.consume_quota("image")
+        with pytest.raises(auth.AuthError):
+            auth.consume_quota("image")
+    finally:
+        auth.unbind(token)

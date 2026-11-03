@@ -220,6 +220,11 @@
       + actionsRow(actionHtml) + '</div>';
   }
 
+  // The studio at /kgsm is the hosted build; the desktop shell runs a local worker.
+  function isWebBuild() {
+    return typeof location !== 'undefined' && location.pathname.indexOf('/kgsm') === 0;
+  }
+
   function offlinePanel() {
     return '<div class="state error-state">' + art('error', '⌁')
       + '<h3>Worker offline</h3>'

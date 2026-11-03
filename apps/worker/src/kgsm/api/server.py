@@ -21,6 +21,7 @@ from kgsm import __version__
 from .. import auth as auth_mod
 from .. import costs as costs_mod
 from .. import db as db_mod
+from .. import projects as projects_mod
 from .. import secrets as secrets_mod
 from ..providers import ProviderError
 from . import (
@@ -60,6 +61,13 @@ def _quote_or_raise(body: dict):
     project_id = body.get("projectId")
     if project_id is not None and not isinstance(project_id, str):
         raise bad_request("projectId must be a string")
+    if project_id is not None:
+        # A quote reveals that project's spend state, so it must be visible to the caller.
+        try:
+            projects_mod.get_visible(project_id)
+        except projects_mod.ProjectError:
+            raise ApiError("project-not-found",
+                           f"project {project_id!r} not found", 404) from None
     try:
         return costs_mod.quote(provider_id, n_images, project_id=project_id)
     except ProviderError as exc:
@@ -202,8 +210,10 @@ ROUTES = _collect_routes()
 
 
 def dispatch(req: Request) -> tuple[int, dict | RawBody]:
+    # HEAD takes the GET route; the body is dropped by the HTTP layer.
+    wanted = "GET" if req.method == "HEAD" else req.method
     for method, pattern, handler in ROUTES:
-        if method != req.method:
+        if method != wanted:
             continue
         match = pattern.fullmatch(req.path)
         if match is not None:
@@ -306,8 +316,36 @@ class Handler(BaseHTTPRequestHandler):
     def do_DELETE(self) -> None:  # noqa: N802
         self._handle()
 
+    def do_HEAD(self) -> None:  # noqa: N802
+        self._handle()
+
     def do_OPTIONS(self) -> None:  # noqa: N802
         self._send_preflight()
+
+    def _client_ip(self) -> str:
+        """Real client address. Only the local nginx proxy can reach this
+        worker (it binds loopback), and it sets X-Real-IP, so trust that
+        header only when the TCP peer is loopback."""
+        peer = self.client_address[0]
+        if peer in ("127.0.0.1", "::1"):
+            real = (self.headers.get("X-Real-IP") or "").strip()
+            if real:
+                return real[:64]
+        return peer
+
+    def _drain_body(self) -> None:
+        """Read and discard a small request body before an early reply.
+
+        Answering without reading leaves unread bytes in the socket, and the
+        OS then resets the connection, so the client sees a network error
+        instead of the 403/415 JSON. Oversized bodies are not read at all.
+        """
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            return
+        if 0 < length <= MAX_BODY_BYTES:
+            self.rfile.read(length)
 
     def _send_json(self, status: int, obj: dict,
                    extra: dict[str, str] | None = None) -> None:
@@ -376,12 +414,14 @@ class Handler(BaseHTTPRequestHandler):
         # which a simple request cannot set without a preflight.
         origin = self.headers.get("Origin")
         if origin and _allowed_origin(origin) is None:
+            self._drain_body()
             self._send_json(403, ApiError(
                 "forbidden-origin",
                 "request origin is not allowed", 403).to_body())
             return
         if self.command in _MUTATING_METHODS and not _is_json_content(
                 self.headers.get("Content-Type")):
+            self._drain_body()
             self._send_json(415, ApiError(
                 "unsupported-media-type",
                 "mutating requests must use Content-Type: application/json",
@@ -423,7 +463,7 @@ class Handler(BaseHTTPRequestHandler):
         query = {key: values[0] for key, values in query_list.items()}
         req = Request(method=self.command, path=api_path, query=query,
                       query_list=query_list, body=body,
-                      client_ip=self.client_address[0])
+                      client_ip=self._client_ip())
         if auth_mod.auth_required():
             req.enforce_auth = True
             req.session_token = auth_mod.token_from_cookie_header(
@@ -433,11 +473,13 @@ class Handler(BaseHTTPRequestHandler):
             status, response = dispatch(req)
         except ApiError as exc:
             status, response = exc.status, exc.to_body()
-        except Exception as exc:  # noqa: BLE001 - 500 envelope, never a crash
+        except Exception:  # noqa: BLE001 - 500 envelope, never a crash
+            # Log the detail server-side; never send paths or internals back.
+            import traceback
+            traceback.print_exc()
             status, response = 500, {"error": {
                 "code": "internal",
-                "message": secrets_mod.redact(
-                    str(exc) or "internal error")[:500],
+                "message": "internal error; the worker logged the details",
             }}
         if isinstance(response, RawBody):
             self._send_bytes(status, response.data, response.content_type)

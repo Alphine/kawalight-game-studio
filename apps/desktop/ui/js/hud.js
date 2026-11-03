@@ -54,14 +54,18 @@
     setText('footLatency', s.online ? fmtLatency(s.latencyMs) : '—');
     var h = s.health || {};
     var ver = el('footVersion');
-    if (ver) ver.textContent = s.online ? ('v' + (h.version || '?') + ' · contract ' + (h.contractVersion || '?')) : 'worker unreachable';
+    if (ver) ver.textContent = s.online ? ('v' + (h.version || '?') + ' · contract ' + (h.contractVersion || '?')) : (isWeb() ? 'server unreachable' : 'worker unreachable');
+  }
+
+  function isWeb() {
+    return typeof location !== 'undefined' && location.pathname.indexOf('/kgsm') === 0;
   }
 
   function paintCore(s) {
     setText('coreStatus', s.online ? 'STATUS: ONLINE' : 'STATUS: OFFLINE');
     setText('coreSub', s.online
       ? ('LATENCY ' + fmtLatency(s.latencyMs).toUpperCase())
-      : 'START THE LOCAL WORKER');
+      : (isWeb() ? 'SERVER OFFLINE · TRY AGAIN SHORTLY' : 'START THE LOCAL WORKER'));
     var bar = el('coreBar');
     if (bar) {
       bar.classList.toggle('off', !s.online);

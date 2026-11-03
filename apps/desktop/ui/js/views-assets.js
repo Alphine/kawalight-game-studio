@@ -382,7 +382,7 @@
       '<div class="view-head"><div><p class="hero-tag">' + I('lab') + ' ASSET FACTORY</p><h2>' + I('lab') + ' Asset Lab</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · import, inspect, slice, diagnose.</p></div>'
       + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh assets</button></div></div>'
-      + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('plus') + ' Import local file</h3></div>'
+      + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow" data-admin-only><div class="panel-head"><h3>' + I('plus') + ' Import local file</h3></div>'
       + '<div class="row"><label class="fld grow"><span>Absolute path on this machine</span>'
       + '<input data-f="src" placeholder="C:\\art\\ship.png (.png/.jpg/.jpeg/.webp)"></label>'
       + '<button type="button" class="btn ghost" data-a="browse" title="Open the native file picker when available">Browse…</button></div>'

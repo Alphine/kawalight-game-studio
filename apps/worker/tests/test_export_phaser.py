@@ -178,3 +178,17 @@ def test_package_new_genres_with_real_template(store, tmp_path):
             assert "index.html" in names
             assert "config.json" in names
             assert manifest["template"]["id"] == template_id
+
+
+def test_export_ships_demo_stylesheet(store, tmp_path):
+    # The entry page links style.css; the export must carry it or the game is unstyled.
+    from kgsm import projects
+    from kgsm.playtest import stage_playtest, staged_dir
+    from test_config_validator import make_config
+
+    project = projects.create("Styled", "space-shooter")
+    stage_playtest(project_name=project.name, genre=project.genre,
+                   config=make_config(), project_dir=project.dir)
+    staged = staged_dir(project.dir)
+    assert (staged / "index.html").is_file()
+    assert (staged / "style.css").is_file()

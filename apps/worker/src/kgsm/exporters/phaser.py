@@ -157,6 +157,10 @@ def stage_export(
     if not index_src.is_file():
         raise ExportError(f"template entry missing: {index_src}")
     shutil.copy2(index_src, out_dir / "index.html")
+    # The entry page links demo/style.css; without it the game ships unstyled.
+    style_src = template_dir / "demo" / "style.css"
+    if style_src.is_file():
+        shutil.copy2(style_src, out_dir / "style.css")
     _copy_tree(runtime_dir, out_dir / "js" / "runtime")
     _copy_tree(template_dir / "src", out_dir / "js" / "game")
 

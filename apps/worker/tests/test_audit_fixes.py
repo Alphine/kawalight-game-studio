@@ -152,6 +152,8 @@ def test_put_blueprint_genre_mismatch_is_422(store):
 # --------------------------------------------------------------------------
 
 def test_quote_block_flag_and_authorize(store):
+    from kgsm import projects as projects_mod
+    pid = projects_mod.create("Cost Probe", "space-shooter").id
     secrets_mod.set_secret("openai_compat_price_cents_per_image", "10")
     costs_mod.set_limit("global", 5)
     quote = costs_mod.quote("openai-compat", 2, project_id="p1")
@@ -161,7 +163,7 @@ def test_quote_block_flag_and_authorize(store):
         costs_mod.authorize(quote, confirmed=True)  # blocked beats confirm
     status, body = call("POST", "/costs/authorize",
                         {"providerId": "openai-compat", "nImages": 2,
-                         "projectId": "p1", "confirmed": True})
+                         "projectId": pid, "confirmed": True})
     assert status == 402
     assert body["error"]["code"] == "cost-blocked"
 

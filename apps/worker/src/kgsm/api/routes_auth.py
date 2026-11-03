@@ -23,7 +23,7 @@ def register(req: Request) -> tuple[int, dict]:
     email = req.body.get("email")
     password = req.body.get("password")
     try:
-        ctx = auth_mod.register(email, password)
+        ctx = auth_mod.register(email, password, req.client_ip)
         token, _ = auth_mod.login(email, password, req.client_ip)
     except auth_mod.AuthError as exc:
         raise _raise(exc) from None

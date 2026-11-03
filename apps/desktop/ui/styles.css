@@ -784,3 +784,6 @@ textarea:focus-visible, summary:focus-visible, a:focus-visible {
 
 /* Language switch (EN / ID) in the header */
 .lang-toggle { min-height: 34px; min-width: 44px; padding: 6px 10px; font-weight: 700; letter-spacing: .04em; }
+
+/* Hide admin-only controls for signed-in non-admin users on the web build */
+body.not-admin [data-admin-only] { display: none !important; }

@@ -573,11 +573,12 @@ def test_asset_generate_confirmation_gates(api):
 # --------------------------------------------------------------------------
 
 def test_costs_quote_and_authorize(api):
+    pid = make_project(api)["id"]
     status, body = call(api, "POST", "/costs/quote",
                         {"providerId": "mock", "nImages": 4,
-                         "projectId": "p1"})
+                         "projectId": pid})
     assert status == 200
-    assert body == {"providerId": "mock", "projectId": "p1", "nImages": 4,
+    assert body == {"providerId": "mock", "projectId": pid, "nImages": 4,
                     "cents": 0, "needsConfirmation": False, "reason": "free"}
 
     status, body = call(api, "POST", "/costs/authorize",

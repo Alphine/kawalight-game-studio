@@ -283,6 +283,8 @@
       return res.ok ? res.json() : null;
     }).then(function (me) {
       if (!me || !me.authRequired) return;
+      // Admin-only controls (secrets, backups, path imports, auto-create) stay hidden for everyone else.
+      document.body.classList.toggle('not-admin', !(me.user && me.user.isAdmin));
       renderAccount(me.user);
     }, function () { /* worker offline: the normal banner explains it */ });
   }
@@ -299,7 +301,7 @@
     out.type = 'button';
     out.className = 'btn ghost small';
     out.setAttribute('data-f', 'signout');
-    out.textContent = 'Keluar';
+    out.textContent = 'Sign out';
     out.addEventListener('click', function () {
       fetch(store.get('workerUrl') + '/api/v1/auth/logout', {
         method: 'POST', credentials: 'same-origin',

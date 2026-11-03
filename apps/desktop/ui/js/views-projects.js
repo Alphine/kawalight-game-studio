@@ -55,7 +55,7 @@
       + '<p>Turn your imagination into playable 2D games</p>'
       + '<p class="sub">Generate assets, build worlds, and create complete games with AI.</p>'
       + '<div class="hero-actions"><button type="button" class="btn primary" data-a="hero-new">' + icon('plus') + 'Create New Game</button> '
-      + '<button type="button" class="btn primary" data-a="hero-auto">' + icon('forge') + 'Auto-Create Game</button> '
+      + '<button type="button" class="btn primary" data-a="hero-auto" data-admin-only>' + icon('forge') + 'Auto-Create Game</button> '
       + '<button type="button" class="btn ghost" data-a="hero-demo">' + icon('play') + 'Watch Demo</button></div></div>'
       + '<div class="hero-tag">Where Ideas<br>Become Games</div></header>'
       + '<section><h2>' + icon('gamepad') + 'Choose Game Genre</h2>'

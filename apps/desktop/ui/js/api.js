@@ -53,7 +53,9 @@
         if (err && err.name === 'ApiError') throw err;
         var msg = (err && err.name === 'AbortError')
           ? 'Worker timed out after ' + Math.round(timeoutMs / 1000) + 's'
-          : 'Worker unreachable at ' + base() + ' (is it running?)';
+          : (typeof location !== 'undefined' && location.pathname.indexOf('/kgsm') === 0)
+            ? 'Server unreachable. Check your connection and try again.'
+            : 'Worker unreachable at ' + base() + ' (is it running?)';
         throw new ApiError({ code: 'worker-offline', message: msg, status: 0 });
       });
     }

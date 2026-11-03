@@ -82,8 +82,7 @@ def generate_story(req: Request) -> tuple[int, dict]:
                 raise ApiError("cost-blocked", message, 402, quoted) from None
             raise ApiError("needs-confirmation", message, 409,
                            quoted) from None
-        if provider_id != "mock":
-            spend_ai_quota("story")
+        spend_ai_quota("story")
 
         # Text backends resolve through the registry's capability view;
         # ``mock`` keeps its offline placeholder (it exposes no

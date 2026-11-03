@@ -30,7 +30,8 @@ from datetime import datetime, timedelta, timezone
 
 from . import db as db_mod
 
-SESSION_COOKIE = "kgsm_session"
+# __Host- prefix: browsers only accept it with Secure, Path=/, and no Domain.
+SESSION_COOKIE = "__Host-kgsm_session"
 SESSION_DAYS = 30
 MIN_PASSWORD = 10
 MAX_PASSWORD = 200
@@ -39,6 +40,9 @@ _EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]+\.[^@\s]{2,}$")
 # Login throttling: at most LOGIN_MAX failures per window, per email and per IP.
 LOGIN_MAX = 10
 LOGIN_WINDOW_S = 900
+# Account creation is cheap to script, so cap sign-ups per client IP.
+REGISTER_MAX = 20
+REGISTER_WINDOW_S = 3600
 
 _SCRYPT_N = 2 ** 14
 _SCRYPT_R = 8
@@ -169,13 +173,18 @@ _fail_lock = threading.Lock()
 _failures: dict[str, list[float]] = {}
 
 
-def _throttled(keys: list[str]) -> bool:
-    cutoff = time.monotonic() - LOGIN_WINDOW_S
+def _throttled(keys: list[str], limit: int = LOGIN_MAX,
+               window: float = LOGIN_WINDOW_S) -> bool:
+    cutoff = time.monotonic() - window
     with _fail_lock:
         for key in keys:
             recent = [t for t in _failures.get(key, []) if t > cutoff]
-            _failures[key] = recent
-            if len(recent) >= LOGIN_MAX:
+            if recent:
+                _failures[key] = recent
+            else:
+                # Drop idle keys so the table cannot grow without bound.
+                _failures.pop(key, None)
+            if len(recent) >= limit:
                 return True
     return False
 
@@ -220,9 +229,14 @@ def _check_password(password: object) -> str:
     return password
 
 
-def register(email: object, password: object) -> AuthContext:
+def register(email: object, password: object, client_ip: str = "") -> AuthContext:
     email_n = normalize_email(email)
     password_s = _check_password(password)
+    ip_key = f"register:{client_ip}"
+    if _throttled([ip_key], REGISTER_MAX, REGISTER_WINDOW_S):
+        raise AuthError("too-many-attempts",
+                        "too many sign-ups from this network; try again later", 429)
+    _record_failure([ip_key])
     conn = _conn()
     try:
         exists = conn.execute("SELECT 1 FROM users WHERE email = ?",
@@ -247,7 +261,9 @@ def login(email: object, password: object, client_ip: str) -> tuple[str, AuthCon
     email_n = normalize_email(email)
     if not isinstance(password, str):
         raise AuthError("bad-request", "password must be a string", 400)
-    keys = [f"email:{email_n}", f"ip:{client_ip}"]
+    # Keyed by email AND client IP: one attacker cannot lock a victim's account
+    # from anywhere, and one IP cannot stall every other user.
+    keys = [f"login:{email_n}|{client_ip}", f"ip:{client_ip}"]
     if _throttled(keys):
         raise AuthError("too-many-attempts",
                         "too many failed logins; wait 15 minutes", 429)
