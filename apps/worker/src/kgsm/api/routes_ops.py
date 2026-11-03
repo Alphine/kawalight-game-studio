@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .. import audio as audio_mod
 from .. import backup as backup_mod
+from .. import sfx as sfx_mod
 from . import (
     ApiError,
     Request,
@@ -64,10 +65,34 @@ def list_audio(req: Request) -> tuple[int, dict]:
     return 200, {"audio": audio_mod.list_audio(project.dir)}
 
 
+def list_sfx_presets(req: Request) -> tuple[int, dict]:
+    return 200, {"presets": list(sfx_mod.PRESETS),
+                 "provider": sfx_mod.PROVIDER_ID}
+
+
+def generate_sfx(req: Request) -> tuple[int, dict]:
+    project = require_project(req.group("id"))
+    body = req.body
+    preset = need_str(body, "preset")
+    role = body.get("role") or preset
+    role = check_segment(role, "role")
+    entity = body.get("entity")
+    if entity is not None:
+        entity = check_segment(entity, "entity")
+    try:
+        return 201, sfx_mod.generate(
+            project.dir, preset, role=role, entity=entity,
+            seed=body.get("seed", 0))
+    except audio_mod.AudioError as exc:
+        raise ApiError("audio-error", str(exc), 400) from None
+
+
 ROUTES = [
     ("POST", r"/projects/(?P<id>[^/]+)/backup", create_backup),
     ("GET", r"/backups", list_backups),
     ("POST", r"/projects/restore", restore_backup),
     ("POST", r"/projects/(?P<id>[^/]+)/audio/import", import_audio),
     ("GET", r"/projects/(?P<id>[^/]+)/audio", list_audio),
+    ("POST", r"/projects/(?P<id>[^/]+)/audio/generate", generate_sfx),
+    ("GET", r"/audio/sfx-presets", list_sfx_presets),
 ]

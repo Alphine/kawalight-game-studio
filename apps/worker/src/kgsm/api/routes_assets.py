@@ -73,7 +73,10 @@ def import_asset_route(req: Request) -> tuple[int, dict]:
 def generate_assets(req: Request) -> tuple[int, dict]:
     project = require_project(req.group("id"))
     body = req.body
-    provider_id = need_str(body, "providerId")
+    # Muse is the default image backend, matching the story route's meta-text.
+    provider_id = body.get("providerId") or "meta-image"
+    if not isinstance(provider_id, str):
+        raise bad_request("providerId must be a string")
     prompt = need_str(body, "prompt")
     if not prompt.strip():
         raise bad_request("prompt must not be empty")
