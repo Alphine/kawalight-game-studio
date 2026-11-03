@@ -32,6 +32,9 @@
   ];
 
   var store = globalThis.KgsmStore;
+  var i18n = globalThis.KgsmI18n;
+  i18n.init();
+  wireLanguage();
   var api = globalThis.KgsmApi.createApi(function () { return store.get('workerUrl'); });
   var currentView = null;
 
@@ -254,6 +257,22 @@
   }
 
   globalThis.KgsmApp = { api: api, go: go, checkHealth: checkHealth, renderRail: renderRail };
+
+  // English by default; the header button switches to Indonesian and back.
+  function wireLanguage() {
+    var btn = document.getElementById('langToggle');
+    if (!btn) return;
+    function paint() {
+      var on = i18n.lang();
+      btn.textContent = on === 'id' ? 'ID' : 'EN';
+      btn.setAttribute('aria-pressed', on === 'id' ? 'true' : 'false');
+    }
+    paint();
+    btn.addEventListener('click', function () {
+      i18n.setLang(i18n.lang() === 'id' ? 'en' : 'id');
+      paint();
+    });
+  }
 
   // Web build (/kgsm/app): require a signed-in account and offer sign-out.
   // Desktop and local dev report authRequired=false and skip all of this.

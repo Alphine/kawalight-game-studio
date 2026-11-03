@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'">
 <title>Kawalight Game Studio Maker</title>
-<meta name="description" content="Bikin game 2D dari tema dan genre. Cerita dan asset dibantu AI, dirakit jadi game yang bisa dimainkan, lalu diekspor.">
+<meta name="description" content="Make 2D games from a theme and a genre. AI helps with story and assets, you assemble a playable game, then export it.">
 <link rel="stylesheet" href="landing.css">
 </head>
 <body>
@@ -14,51 +14,52 @@
     <span class="mark" aria-hidden="true">K</span>
     <span>Kawalight <strong>Game Studio Maker</strong></span>
   </a>
-  <nav aria-label="Utama">
-    <a href="#fitur">Fitur</a>
-    <a href="#akun" class="pill-link">Masuk</a>
+  <nav aria-label="Main">
+    <a href="#fitur">Features</a>
+    <a href="#akun" class="pill-link" data-tab-target="login">Sign in</a>
+    <button type="button" id="langToggle" class="lang-toggle" aria-label="Language" title="Language">EN</button>
   </nav>
 </header>
 
 <main>
   <section class="hero">
-    <p class="eyebrow">Studio game 2D untuk semua orang</p>
-    <h1>Dari ide tema ke game yang bisa dimainkan, dalam satu alur.</h1>
-    <p class="lead">Pilih tema dan genre, biarkan AI membantu cerita dan asset, rakit jadi game yang bisa langsung dimainkan, uji, lalu ekspor ke Phaser atau Godot.</p>
+    <p class="eyebrow">A 2D game studio for everyone</p>
+    <h1>From a theme to a playable game, in one workflow.</h1>
+    <p class="lead">Pick a theme and genre, let AI help with the story and assets, assemble a game you can play right away, test it, then export to Phaser or Godot.</p>
     <div class="cta">
-      <a class="btn primary" href="#akun" data-tab-target="register">Daftar gratis</a>
-      <a class="btn ghost" href="#akun" data-tab-target="login">Sudah punya akun</a>
+      <a class="btn primary" href="#akun" data-tab-target="register">Sign up free</a>
+      <a class="btn ghost" href="#akun" data-tab-target="login">I already have an account</a>
     </div>
   </section>
 
   <section id="fitur" class="features" aria-labelledby="fitur-judul">
-    <h2 id="fitur-judul">Yang bisa kamu lakukan</h2>
+    <h2 id="fitur-judul">What you can do</h2>
     <div class="grid">
       <article class="card">
         <h3>5 genre siap pakai</h3>
-        <p>Space shooter, endless runner, side-scroller, battle 2D, dan farming. Setiap genre sudah teruji dan bisa dimainkan.</p>
+        <p>Space shooter, endless runner, side-scroller, battle 2D, and farming. Each genre is tested and playable.</p>
       </article>
       <article class="card">
-        <h3>Cerita dan asset dengan AI</h3>
-        <p>Tulis pembuka cerita dan hasilkan gambar pixel-art dengan model Meta AI. Setiap akun mendapat kuota harian.</p>
+        <h3>AI story and assets</h3>
+        <p>Write story openings and generate pixel-art images with Meta AI. Each account gets a daily quota.</p>
       </article>
       <article class="card">
-        <h3>Uji langsung di browser</h3>
-        <p>Mainkan hasil rakitan di playtest tanpa instalasi, lalu atur balance dan konfigurasi sampai pas.</p>
+        <h3>Test in your browser</h3>
+        <p>Play the built game in the playtest view without installing anything, then tune balance and config until it feels right.</p>
       </article>
       <article class="card">
-        <h3>Ekspor ke Phaser atau Godot</h3>
-        <p>Unduh proyek sebagai ZIP. Kamu memegang hasil kerjamu sepenuhnya.</p>
+        <h3>Export to Phaser or Godot</h3>
+        <p>Download the project as a ZIP. You keep full ownership of your work.</p>
       </article>
     </div>
   </section>
 
   <section id="akun" class="account" aria-labelledby="akun-judul">
     <div class="auth-card">
-      <h2 id="akun-judul">Masuk ke studio</h2>
-      <div class="tabs" role="tablist" aria-label="Pilih masuk atau daftar">
-        <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="form-login" data-tab="login">Masuk</button>
-        <button type="button" role="tab" id="tab-register" aria-selected="false" aria-controls="form-register" data-tab="register" tabindex="-1">Daftar</button>
+      <h2 id="akun-judul">Sign in to the studio</h2>
+      <div class="tabs" role="tablist" aria-label="Sign in or sign up">
+        <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="form-login" data-tab="login">Sign in</button>
+        <button type="button" role="tab" id="tab-register" aria-selected="false" aria-controls="form-register" data-tab="register" tabindex="-1">Sign up</button>
       </div>
 
       <form id="form-login" role="tabpanel" aria-labelledby="tab-login" novalidate>
@@ -67,10 +68,10 @@
           <input name="email" type="email" autocomplete="email" required maxlength="254">
         </label>
         <label class="fld">
-          <span>Kata sandi</span>
+          <span>Password</span>
           <input name="password" type="password" autocomplete="current-password" required maxlength="200">
         </label>
-        <button type="submit" class="btn primary wide">Masuk</button>
+        <button type="submit" class="btn primary wide">Sign in</button>
       </form>
 
       <form id="form-register" role="tabpanel" aria-labelledby="tab-register" novalidate hidden>
@@ -79,11 +80,11 @@
           <input name="email" type="email" autocomplete="email" required maxlength="254">
         </label>
         <label class="fld">
-          <span>Kata sandi (minimal 10 karakter)</span>
+          <span>Password (at least 10 characters)</span>
           <input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200">
         </label>
-        <button type="submit" class="btn primary wide">Buat akun</button>
-        <p class="fine">Kuota AI harian berlaku per akun. Email dipakai hanya untuk masuk.</p>
+        <button type="submit" class="btn primary wide">Create account</button>
+        <p class="fine">Daily AI quotas apply per account. Your email is only used to sign in.</p>
       </form>
 
       <p id="status" class="status" role="status" aria-live="polite"></p>
@@ -93,9 +94,11 @@
 
 <footer class="foot">
   <span>Kawalight Game Studio Maker · KGSM v0.2.0</span>
-  <span>Dibuat di Indonesia</span>
+  <span>Made in Indonesia</span>
 </footer>
 
+<script src="/kgsm/app/js/i18n-dict.js"></script>
+<script src="/kgsm/app/js/i18n.js"></script>
 <script src="landing.js"></script>
 </body>
 </html>
