@@ -153,7 +153,8 @@ def test_generate_posts_openai_shape_and_parses_b64(store, monkeypatch):
     assert len(images) == 2
     for image in images:
         assert image.png_bytes[:8] == b"\x89PNG\r\n\x1a\n"
-        assert (image.width, image.height) == (4, 3)  # actual dims reported
+        # Provider returned 4x3; the worker resizes to the requested 64x64.
+        assert (image.width, image.height) == (64, 64)
         assert image.model == DEFAULT_MODEL
         assert image.seed == 9
     assert provider.calls and provider.calls[0]["n_images"] == 2
@@ -224,6 +225,38 @@ def test_generate_jpeg_normalized_to_png(store, monkeypatch):
         "x", style="pixel-art", width=6, height=5)
     assert image.png_bytes[:8] == b"\x89PNG\r\n\x1a\n"
     assert (image.width, image.height) == (6, 5)
+
+
+def test_generate_resizes_oversized_provider_image_to_request(store, monkeypatch):
+    # Muse returns a fixed 1600x1600 canvas; the worker must honour the request.
+    secrets.set_secret("openai_compat_api_key", TEST_KEY)
+    install_fake(monkeypatch, lambda req: FakeResponse(
+        b64_images_body(make_png_bytes(width=1600, height=1600))))
+    (image,) = OpenAICompatProvider().generate(
+        "x", style="pixel-art", width=64, height=64)
+    assert (image.width, image.height) == (64, 64)
+    from PIL import Image
+    import io
+    with Image.open(io.BytesIO(image.png_bytes)) as out:
+        assert out.size == (64, 64)
+
+
+def test_pixel_art_resize_keeps_hard_edges(store, monkeypatch):
+    # Nearest-neighbour: a 2-colour split stays exactly two colours after scaling.
+    from PIL import Image
+    import io
+    src = Image.new("RGBA", (1600, 1600), (255, 0, 0, 255))
+    src.paste((0, 0, 255, 255), (0, 0, 800, 1600))
+    buf = io.BytesIO()
+    src.save(buf, format="PNG")
+    secrets.set_secret("openai_compat_api_key", TEST_KEY)
+    install_fake(monkeypatch, lambda req: FakeResponse(
+        b64_images_body(buf.getvalue())))
+    (image,) = OpenAICompatProvider().generate(
+        "x", style="pixel-art", width=8, height=8)
+    with Image.open(io.BytesIO(image.png_bytes)) as out:
+        colours = {out.getpixel((x, 4))[:3] for x in range(8)}
+    assert colours == {(0, 0, 255), (255, 0, 0)}
 
 
 def test_generate_url_fallback_fetches_without_auth(store, monkeypatch):

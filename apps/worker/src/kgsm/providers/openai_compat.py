@@ -188,6 +188,7 @@ class OpenAICompatProvider(ImageProvider):
         for index in range(n_images):
             blob = _decode_item(self, items[index], index)
             png = _to_png(self, blob, index)
+            png = _fit_png(png, width, height, style)
             actual_w, actual_h = _png_size(png, (width, height))
             images.append(GeneratedImage(
                 png_bytes=png, width=actual_w, height=actual_h,
@@ -284,6 +285,28 @@ def _to_png(provider: OpenAICompatProvider, blob: bytes, index: int) -> bytes:
         raise ProviderError(
             f"{provider.id}: image {index} is not a readable image: {exc}"
         ) from None
+
+
+def _fit_png(png: bytes, width: int, height: int, style: str) -> bytes:
+    """Resize a provider PNG to the requested size.
+
+    Hosted models often return a fixed large canvas (Muse returns 1600x1600
+    whatever size was asked for). Pixel-art must stay crisp, so it uses
+    nearest-neighbour; other styles use Lanczos. Already-correct sizes pass
+    through untouched.
+    """
+    try:
+        with Image.open(io.BytesIO(png)) as img:
+            if img.size == (width, height):
+                return png
+            resample = (Image.Resampling.NEAREST if style == "pixel-art"
+                        else Image.Resampling.LANCZOS)
+            out = img.convert("RGBA").resize((width, height), resample)
+            buf = io.BytesIO()
+            out.save(buf, format="PNG")
+            return buf.getvalue()
+    except Exception:  # noqa: BLE001 - unreadable PNG keeps the provider bytes
+        return png
 
 
 def _png_size(png: bytes, fallback: tuple[int, int]) -> tuple[int, int]:

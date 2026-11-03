@@ -137,7 +137,7 @@ def test_llama_image_posts_openai_shape(store, monkeypatch):
         "size": "64x64",
     }
     assert image.png_bytes[:8] == b"\x89PNG\r\n\x1a\n"
-    assert (image.width, image.height) == (4, 3)
+    assert (image.width, image.height) == (64, 64)  # resized to request
     assert image.model == DEFAULT_IMAGE_MODEL
     assert image.seed == 9
     assert provider.calls and provider.calls[0]["model"] == DEFAULT_IMAGE_MODEL
