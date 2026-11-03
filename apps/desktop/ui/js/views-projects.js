@@ -64,8 +64,8 @@
       + '<p class="muted">Select a genre to prefill the New Game wizard.</p>'
       + '<div class="genre-grid">' + U().GENRES.map(function (g) {
         var m = GENRE_META[g];
-        return '<div class="genre-card glass-panel"><div class="genre-art">'
-          + ICONS[m.icon].split('COLOR').join(m.color) + '</div>'
+        return '<div class="genre-card glass-panel"><div class="genre-art" style="background-image:url(\'img/genre-' + g + '.webp\')">'
+          + '<span class="genre-chip">' + ICONS[m.icon].split('COLOR').join(m.color) + '</span></div>'
           + '<h3>' + U().esc(m.name) + '</h3>'
           + '<p>' + U().esc(m.blurb) + '</p>'
           + '<div class="tags">' + m.tags.map(function (t) { return '<span>' + t + '</span>'; }).join('') + '</div>'

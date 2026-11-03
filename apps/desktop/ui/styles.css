@@ -96,6 +96,13 @@ body {
     radial-gradient(circle at 50% 0%, var(--bg-glow-a) 0%, transparent 50%),
     radial-gradient(circle at 85% 100%, var(--bg-glow-b) 0%, transparent 50%);
 }
+html.dark .bg-fx {
+  background-image:
+    linear-gradient(180deg, rgba(8, 11, 28, 0.8), rgba(8, 11, 28, 0.94)),
+    url("img/studio-backdrop.webp");
+  background-size: cover;
+  background-position: center top;
+}
 
 h1, h2, h3 { color: var(--heading); line-height: 1.25; }
 h2 { margin: 20px 0 4px; font-size: 18px; }
@@ -304,32 +311,6 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; 
 .nav-icon { display: inline-flex; }
 .nav-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Engine core widget */
-.engine-core {
-  margin-top: auto;
-  padding: 14px 12px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-.core-ring {
-  position: absolute; right: -26px; bottom: -26px;
-  width: 84px; height: 84px; border-radius: 50%;
-  border: 1px solid var(--border-strong);
-  animation: spin-cw 40s linear infinite;
-  pointer-events: none;
-}
-.core-label { font-size: 10px; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 4px; }
-.core-status { font-family: var(--font-mono); font-size: 12px; font-weight: 700; color: var(--green); }
-.engine-core.is-offline .core-status { color: var(--red-ink); }
-.core-track {
-  height: 6px; border-radius: 6px; margin-top: 8px; overflow: hidden;
-  background: var(--card); border: 1px solid var(--border);
-}
-.core-bar { height: 100%; background: var(--accent); border-radius: 6px; transition: width 0.4s ease; }
-.core-bar.off { background: var(--red); }
-.core-sub { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 6px; letter-spacing: 0.5px; }
-
 /* ---------- Footer ---------- */
 .hud-footer {
   display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
@@ -376,6 +357,14 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; 
     radial-gradient(600px 200px at 85% 20%, var(--accent-soft), transparent),
     radial-gradient(400px 160px at 10% 90%, var(--bg-glow-b), transparent),
     var(--panel);
+}
+html.dark .hero {
+  background:
+    linear-gradient(90deg, rgba(8, 11, 28, 0.94) 0%, rgba(8, 11, 28, 0.7) 55%, rgba(8, 11, 28, 0.4) 100%),
+    url("img/hero-key-art.webp") center / cover,
+    var(--panel);
+}
+.hero {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 28px;
@@ -461,11 +450,17 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; 
 }
 .genre-card:hover { border-color: var(--accent); }
 .genre-art {
-  height: 84px; border-radius: 10px;
-  display: grid; place-items: center;
-  background: var(--card);
+  height: 112px; border-radius: 10px; position: relative; overflow: hidden;
+  background: var(--card) center / cover no-repeat;
   border: 1px solid var(--border);
 }
+.genre-chip {
+  position: absolute; top: 8px; left: 8px;
+  display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px;
+  background: rgba(8, 11, 28, 0.7); border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.genre-chip .k-icon { width: 16px; height: 16px; }
 .genre-card h3 { margin: 0; font-size: 14px; }
 .genre-card p { margin: 0; color: var(--muted); font-size: 12px; min-height: 32px; }
 .tags { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -756,8 +751,8 @@ textarea:focus-visible, summary:focus-visible, a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   #viewRoot > *, .toast { animation: none; }
   .spinner { animation-duration: 2s; }
-  .core-logo .ring-a, .core-logo .ring-b, .core-ring { animation: none; }
-  .core-bar, .glass-nav-item, .btn { transition: none; }
+  .core-logo .ring-a, .core-logo .ring-b { animation: none; }
+  .glass-nav-item, .btn { transition: none; }
   body { transition: none; }
 }
 
@@ -769,8 +764,7 @@ textarea:focus-visible, summary:focus-visible, a:focus-visible {
   #app { flex-direction: column; }
   .sidebar { width: 100%; position: static; max-height: none; }
   .nav-toggle { display: block; }
-  .sidebar.nav-collapsed #nav,
-  .sidebar.nav-collapsed #engineCore { display: none; }
+  .sidebar.nav-collapsed #nav { display: none; }
   #nav { gap: 12px; }
   .hero { flex-direction: column; padding: 20px; }
   .hero-tag { text-align: left; }

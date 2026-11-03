@@ -1,4 +1,4 @@
-// KGSM HUD live chrome: header metrics, engine-core widget, footer, modal.
+// KGSM HUD live chrome: header metrics, footer, modal.
 // All values are REAL (store health/latency/selection) or honestly blank —
 // never fake numbers. Self-subscribes to KgsmStore; exposes globalThis.KgsmHud.
 (function () {
@@ -61,26 +61,11 @@
     return typeof location !== 'undefined' && location.pathname.indexOf('/kgsm') === 0;
   }
 
-  function paintCore(s) {
-    setText('coreStatus', s.online ? 'STATUS: ONLINE' : 'STATUS: OFFLINE');
-    setText('coreSub', s.online
-      ? ('LATENCY ' + fmtLatency(s.latencyMs).toUpperCase())
-      : (isWeb() ? 'SERVER OFFLINE · TRY AGAIN SHORTLY' : 'START THE LOCAL WORKER'));
-    var bar = el('coreBar');
-    if (bar) {
-      bar.classList.toggle('off', !s.online);
-      bar.style.width = s.online ? '100%' : '12%';
-    }
-    var wrap = el('engineCore');
-    if (wrap) wrap.classList.toggle('is-offline', !s.online);
-  }
-
   function refresh() {
     var s = snapshot();
     if (!s) return;
     paintHeader(s);
     paintFooter(s);
-    paintCore(s);
   }
 
   // HUD notification modal (title + message + confirm). Not a confirm dialog —
