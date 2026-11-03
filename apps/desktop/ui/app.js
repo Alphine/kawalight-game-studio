@@ -252,7 +252,8 @@
         });
       }
     } catch (e) { /* fall through */ }
-    document.getElementById('appVersion').textContent = 'v0.2.0 (browser dev)';
+    var webBuild = location.pathname.indexOf('/kgsm') === 0;
+    document.getElementById('appVersion').textContent = webBuild ? 'v0.2.0' : 'v0.2.0 (browser dev)';
     return Promise.resolve();
   }
 
@@ -317,10 +318,13 @@
   buildNav();
   window.addEventListener('hashchange', render);
   store.subscribe(function () { paintBanner(); });
-  render();
-  renderRail();
   detectShell();
-  authGate();
+  // Render only after the session check, so admin-only views never request
+  // data for a signed-in non-admin user.
+  authGate().then(function () {
+    render();
+    renderRail();
+  });
   checkHealth().then(function () {
     if (store.get('online') && globalThis.KgsmViews.refreshProjects) {
       globalThis.KgsmViews.refreshProjects().then(renderRail, function () { /* quiet */ });

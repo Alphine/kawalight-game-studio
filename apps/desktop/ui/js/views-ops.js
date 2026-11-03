@@ -716,6 +716,7 @@
   }
 
   function loadBackups(root) {
+    if (document.body.classList.contains('not-admin')) return;
     var slot = root.querySelector('[data-slot="backups"]');
     if (!slot) return;
     if (!S().get('online')) { slot.innerHTML = UI().offlinePanel(); return; }
@@ -1005,6 +1006,7 @@
   }
 
   function loadSecrets(root) {
+    if (document.body.classList.contains('not-admin')) return;
     var slot = root.querySelector('[data-slot="secrets"]');
     if (!slot) return;
     if (!S().get('online')) { slot.innerHTML = UI().offlinePanel(); return; }
@@ -1036,6 +1038,7 @@
   }
 
   function loadLimits(root) {
+    if (document.body.classList.contains('not-admin')) return;
     var slot = root.querySelector('[data-slot="limits"]');
     if (!slot) return;
     if (!S().get('online')) { slot.innerHTML = UI().offlinePanel(); return; }

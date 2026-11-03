@@ -787,3 +787,13 @@ textarea:focus-visible, summary:focus-visible, a:focus-visible {
 
 /* Hide admin-only controls for signed-in non-admin users on the web build */
 body.not-admin [data-admin-only] { display: none !important; }
+
+/* Phone header: keep the brand, the language/theme controls, and sign-out on screen */
+@media (max-width: 700px) {
+  .hud-header { flex-wrap: wrap; row-gap: 10px; }
+  .hud-title .ver-badge, .hud-sub { display: none; }
+  .hud-top-right { flex-wrap: wrap; justify-content: flex-end; gap: 8px; width: 100%; }
+  .hud-metrics { display: none; }
+  .account-chip { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+  .account-chip .muted { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
