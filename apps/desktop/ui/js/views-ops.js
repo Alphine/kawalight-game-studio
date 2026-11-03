@@ -52,7 +52,7 @@
       + '<button type="button" class="btn ghost small" data-a="c-pause">' + I('dot') + 'Pause</button> '
       + '<button type="button" class="btn ghost small" data-a="c-restart">' + I('refresh') + 'Restart</button> '
       + '<button type="button" class="btn ghost small" data-a="console-off">' + I('close') + 'Exit</button></span></div>'
-      + '<div data-slot="frame">' + UI().emptyPanel('No preview loaded', 'Auto-stage to start.', '', 'empty-preview-light.webp') + '</div></div></section>'
+      + '<div class="console-frame" data-slot="frame">' + UI().emptyPanel('No preview loaded', 'Auto-stage to start.', '', 'empty-preview-light.webp') + '</div></div></section>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('info') + ' Console</h3>'
       + '<span class="row"><button type="button" class="btn ghost" data-a="copy" title="Copy console lines to the clipboard">Copy</button> '
       + '<button type="button" class="btn ghost" data-a="dl" title="Download console lines as text">Download</button> '
@@ -64,9 +64,14 @@
       + '<section class="panel glass-panel glass-panel-glow"><div class="view-head"><div><h3>' + I('gamepad') + ' Real game</h3>'
       + '<p class="muted small">Stages the stored <code>config.json</code> with the shared Phaser exporter, '
       + 'then plays the real build in the frame below. Rebuild after every config change.</p></div>'
-      + '<div><button type="button" class="btn primary" data-a="rg-rebuild">' + I('refresh') + 'Rebuild &amp; play</button></div></div>'
+      + '<div class="row"><button type="button" class="btn ghost" data-a="rg-console-on" title="Show the game full screen inside a console frame">' + I('gamepad') + 'Console mode</button> '
+      + '<button type="button" class="btn primary" data-a="rg-rebuild">' + I('refresh') + 'Rebuild &amp; play</button></div></div>'
       + '<div class="rg-status" data-slot="rg-status"></div>'
-      + '<div data-slot="rg-frame">' + UI().emptyPanel('No real-game build staged', 'Press Rebuild & play to stage the stored config and play it here.') + '</div>'
+      + '<div class="console-stage" data-slot="rg-stage">'
+      + '<div class="console-bar"><span class="console-title">' + I('gamepad') + ' KGSM CONSOLE</span>'
+      + '<span class="row"><button type="button" class="btn ghost small" data-a="rg-console-off">' + I('close') + 'Exit</button></span></div>'
+      + '<div class="console-frame" data-slot="rg-frame">' + UI().emptyPanel('No real-game build staged', 'Press Rebuild & play to stage the stored config and play it here.') + '</div>'
+      + '</div>'
       + '</section></div>';
     paintConsole(root);
     function frame() { return root.querySelector('[data-slot="frame"] iframe'); }
@@ -152,6 +157,16 @@
     }
     root.querySelector('[data-a="tab-schematic"]').addEventListener('click', function () { selectPlaytestTab('schematic'); });
     root.querySelector('[data-a="tab-realgame"]').addEventListener('click', function () { selectPlaytestTab('realgame'); });
+    // Real-game console mode: same overlay as the schematic console, on its own stage.
+    var rgStage = root.querySelector('[data-slot="rg-stage"]');
+    function setRgConsole(on) {
+      rgStage.classList.toggle('is-console', on);
+      if (on) document.addEventListener('keydown', onRgConsoleKey);
+      else document.removeEventListener('keydown', onRgConsoleKey);
+    }
+    function onRgConsoleKey(e) { if (e.key === 'Escape') setRgConsole(false); }
+    root.querySelector('[data-a="rg-console-on"]').addEventListener('click', function () { setRgConsole(true); });
+    root.querySelector('[data-a="rg-console-off"]').addEventListener('click', function () { setRgConsole(false); });
     root.querySelector('[data-a="rg-rebuild"]').addEventListener('click', function (e) {
       UI().busy(e.target, function () { return rebuildRealGame(root, p); }, 'Staging…');
     });
