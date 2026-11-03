@@ -29,3 +29,7 @@ apps/desktop/src-tauri/gen/
 # local API credentials (never commit)
 metaapi.txt
 *.env
+
+# Local Gmail credential file (never commit)
+kgsm-gmail.txt
+*gmail*.txt
