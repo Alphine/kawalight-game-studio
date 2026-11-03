@@ -217,15 +217,106 @@ def build(genre: str, *, dry_run: bool = False) -> Path:
     return out
 
 
+def add_assets(genre: str, extra_path: Path, *, dry_run: bool = False) -> list[dict]:
+    """Generate extra sprites for an existing example, without rebuilding it.
+
+    Each entry in ``extra_path`` (a JSON list, same shape as prompts.json) becomes one
+    new Meta image. Its sprite key is added to the example config, so the template
+    loads it automatically. Existing assets are left alone. Costs one paid call per entry.
+    Set "opaque": true for full-frame backgrounds, so the edge is not keyed out.
+    """
+    from .exporters.phaser import package_all
+    from .providers import get_provider
+
+    ex = example_dir(genre)
+    project = ex / "project"
+    config_path = project / "config.json"
+    if not config_path.is_file():
+        raise SystemExit(f"{genre}: no example to extend (run the full build first)")
+    extra = json.loads(Path(extra_path).read_text(encoding="utf-8"))
+    if not isinstance(extra, list) or not extra:
+        raise SystemExit(f"{extra_path}: expected a non-empty list")
+    required = ("sprite", "entity", "role", "width", "height", "style", "prompt")
+    for i, item in enumerate(extra):
+        missing = [k for k in required if k not in item]
+        if missing:
+            raise SystemExit(f"{extra_path}[{i}]: missing {', '.join(missing)}")
+    if dry_run:
+        print(f"{genre}: {len(extra)} extra prompts ok")
+        return []
+
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    sprites = config["assets"]["sprites"]
+    provider = get_provider(PROVIDER)
+    manifest_path = ex / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    added = []
+    for item in extra:
+        if item["sprite"] in sprites and not item.get("replace", False):
+            raise SystemExit(f"{genre}: sprite {item['sprite']!r} already exists; set replace to overwrite")
+        images = provider.generate(
+            item["prompt"], style=item["style"], width=item["width"], height=item["height"],
+            seed=None, n_images=1)
+        image = images[0]
+        rel = f"assets/{item['entity']}/{item['role']}-gen-000.png"
+        target = project / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(image.png_bytes)
+        import hashlib
+        sha = hashlib.sha256(image.png_bytes).hexdigest()
+        meta = {"source": "generated", "entity": item["entity"], "role": item["role"],
+                "prompt": item["prompt"], "provider": PROVIDER, "model": image.model,
+                "seed": None, "width": image.width, "height": image.height,
+                "mode": "RGBA", "sha256": sha}
+        target.with_suffix(target.suffix + ".meta.json").write_text(
+            json.dumps(meta, indent=2), encoding="utf-8")
+        if not item.get("opaque", False):
+            finalize_asset(project, rel)
+        meta = json.loads(target.with_suffix(target.suffix + ".meta.json").read_text(encoding="utf-8"))
+        sprites[item["sprite"]] = rel
+        entry = {"sprite": item["sprite"], "file": rel, "provider": PROVIDER,
+                 "model": meta.get("model"), "sha256": meta.get("sha256"),
+                 "providerSha256": meta.get("providerSha256"), "postProcess": meta.get("postProcess")}
+        manifest["assets"].append(entry)
+        added.append(entry)
+        print(f"  added {item['sprite']} -> {rel}")
+
+    config_path.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    prompts_path = ex / "prompts.json"
+    prompts = json.loads(prompts_path.read_text(encoding="utf-8"))
+    prompts.extend(extra)
+    prompts_path.write_text(json.dumps(prompts, indent=2), encoding="utf-8")
+
+    # Re-export the playable build so the zip carries the new art.
+    blueprint = json.loads((project / "blueprint.json").read_text(encoding="utf-8"))
+    out_dir = Path(tempfile.mkdtemp(prefix="kgsm-example-export-"))
+    result = package_all(project_name=blueprint["projectName"], genre=genre, config=config,
+                         project_dir=project, builds_dir=out_dir)
+    zip_src = Path(result["playable"]) if Path(result["playable"]).is_absolute() else out_dir / result["playable"]
+    for old in ex.glob("*-playable.zip"):
+        old.unlink()
+    shutil.copy2(zip_src, ex / zip_src.name)
+    manifest["playable"] = zip_src.name
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    print(f"{genre}: {len(added)} asset(s) added, playable re-exported")
+    return added
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="kgsm-examples",
                                      description="Build a genre's complete example game.")
     parser.add_argument("genre")
+    parser.add_argument("--add", metavar="PROMPTS_JSON", default=None,
+                        help="generate extra sprites into the existing example (no rebuild)")
     parser.add_argument("--dry-run", action="store_true",
                         help="validate the art direction without calling the provider")
     args = parser.parse_args(argv)
     try:
-        build(args.genre, dry_run=args.dry_run)
+        if args.add:
+            add_assets(args.genre, Path(args.add), dry_run=args.dry_run)
+        else:
+            build(args.genre, dry_run=args.dry_run)
     except SystemExit as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
