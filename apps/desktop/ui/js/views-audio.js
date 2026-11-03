@@ -139,7 +139,7 @@
       var items = res.audio || [];
       if (!items.length) {
         slot.innerHTML = UI().emptyPanel('No audio yet',
-          'Import a .wav, .mp3, or .ogg file to add music or SFX to this project.');
+          'Import a .wav, .mp3, or .ogg file, or generate one above.', '', 'empty-audio-light.webp');
         return;
       }
       slot.innerHTML = '<ul class="asset-list">' + items.map(function (a) {

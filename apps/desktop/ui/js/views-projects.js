@@ -144,7 +144,7 @@
       if (!projects.length) {
         slot.innerHTML = UI().emptyPanel('No projects yet',
           'Create your first game to see it here.',
-          '<button type="button" class="btn primary" data-a="empty-new">' + icon('plus') + 'Create New Game</button>');
+          '<button type="button" class="btn primary" data-a="empty-new">' + icon('plus') + 'Create New Game</button>', 'empty-projects-light.webp');
         var b = slot.querySelector('[data-a="empty-new"]');
         if (b) b.addEventListener('click', function () { go('new'); });
         return;

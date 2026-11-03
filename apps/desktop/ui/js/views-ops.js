@@ -45,8 +45,15 @@
       + '<div class="row"><label class="fld grow"><span>Staged-game URL (serve an export or the template dev build, then paste its URL)</span>'
       + '<input data-f="url" value="' + U().esc(savedUrl) + '" placeholder="http://127.0.0.1:1420/index.html"></label>'
       + '<button type="button" class="btn ghost" data-a="load">' + I('folder') + 'Load</button></div></details></section>'
-      + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('gamepad') + ' Preview</h3></div>'
-      + '<div data-slot="frame">' + UI().emptyPanel('No preview loaded', 'Auto-stage to start.') + '</div></section>'
+      + '<div class="grid-2"><section class="panel glass-panel"><div class="panel-head"><h3>' + I('gamepad') + ' Preview</h3>'
+      + '<button type="button" class="btn ghost small" data-a="console-on" title="Show the game full screen inside a console frame">' + I('gamepad') + 'Console mode</button></div>'
+      + '<div class="console-stage" data-slot="stage">'
+      + '<div class="console-bar"><span class="console-title">' + I('gamepad') + ' KGSM CONSOLE</span>'
+      + '<span class="row"><button type="button" class="btn primary small" data-a="c-run">' + I('play') + 'Run</button> '
+      + '<button type="button" class="btn ghost small" data-a="c-pause">' + I('dot') + 'Pause</button> '
+      + '<button type="button" class="btn ghost small" data-a="c-restart">' + I('refresh') + 'Restart</button> '
+      + '<button type="button" class="btn ghost small" data-a="console-off">' + I('close') + 'Exit</button></span></div>'
+      + '<div data-slot="frame">' + UI().emptyPanel('No preview loaded', 'Auto-stage to start.', '', 'empty-preview-light.webp') + '</div></div></section>'
       + '<section class="panel glass-panel"><div class="panel-head"><h3>' + I('info') + ' Console</h3>'
       + '<span class="row"><button type="button" class="btn ghost" data-a="copy" title="Copy console lines to the clipboard">Copy</button> '
       + '<button type="button" class="btn ghost" data-a="dl" title="Download console lines as text">Download</button> '
@@ -105,6 +112,20 @@
       paintConsole(root);
       loadFrame(url, 'Staged game preview');
     });
+    // Console mode: the stage becomes a full-screen console; the frame itself is
+    // never moved, so the preview keeps running while the layout changes.
+    var stage = root.querySelector('[data-slot="stage"]');
+    function setConsole(on) {
+      stage.classList.toggle('is-console', on);
+      if (on) document.addEventListener('keydown', onConsoleKey);
+      else document.removeEventListener('keydown', onConsoleKey);
+    }
+    function onConsoleKey(e) { if (e.key === 'Escape') setConsole(false); }
+    root.querySelector('[data-a="console-on"]').addEventListener('click', function () { setConsole(true); });
+    root.querySelector('[data-a="console-off"]').addEventListener('click', function () { setConsole(false); });
+    root.querySelector('[data-a="c-run"]').addEventListener('click', function () { root.querySelector('[data-a="run"]').click(); });
+    root.querySelector('[data-a="c-pause"]').addEventListener('click', function () { root.querySelector('[data-a="pause"]').click(); });
+    root.querySelector('[data-a="c-restart"]').addEventListener('click', function () { root.querySelector('[data-a="restart"]').click(); });
     root.querySelector('[data-a="run"]').addEventListener('click', function () { send('run'); });
     root.querySelector('[data-a="pause"]').addEventListener('click', function () { send('pause'); });
     root.querySelector('[data-a="restart"]').addEventListener('click', function () {

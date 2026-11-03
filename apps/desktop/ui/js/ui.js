@@ -199,8 +199,13 @@
     return actionHtml ? '<div class="state-actions">' + actionHtml + '</div>' : '';
   }
 
-  function emptyPanel(title, hint, actionHtml) {
-    return '<div class="state empty-state">' + art('folder', '◇')
+  // imageFile: optional file name under img/ (e.g. "empty-audio-light.webp")
+  // shown instead of the line icon.
+  function emptyPanel(title, hint, actionHtml, imageFile) {
+    var visual = imageFile
+      ? '<img class="empty-img" src="img/' + esc(imageFile) + '" alt="" width="640" height="400" loading="lazy">'
+      : art('folder', '◇');
+    return '<div class="state empty-state">' + visual
       + '<h3>' + esc(title) + '</h3>'
       + (hint ? '<p class="muted">' + esc(hint) + '</p>' : '')
       + actionsRow(actionHtml) + '</div>';
