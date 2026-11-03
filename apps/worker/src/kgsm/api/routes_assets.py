@@ -116,9 +116,14 @@ def generate_assets(req: Request) -> tuple[int, dict]:
         spend_ai_quota("image", n_images)
 
         provider = get_provider(provider_id)
+        # Free-genre projects add their genre text as theme context for the
+        # image prompt; the saved record keeps the user's own prompt.
+        provider_prompt = prompt
+        if project.custom_genre:
+            provider_prompt = f"{prompt}\n\nGenre: {project.custom_genre}"
         try:
             images = provider.generate(
-                prompt, style=style, width=width, height=height, seed=seed,
+                provider_prompt, style=style, width=width, height=height, seed=seed,
                 n_images=n_images)
         except ProviderError as exc:
             raise ApiError("provider-error", str(exc), 502) from None

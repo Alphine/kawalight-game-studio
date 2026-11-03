@@ -59,10 +59,14 @@ def generate_story(req: Request) -> tuple[int, dict]:
         if not isinstance(project_id, str) or not project_id:
             raise bad_request("projectId must be a non-empty string")
         try:
-            projects_mod.get_visible(project_id)
+            project = projects_mod.get_visible(project_id)
         except projects_mod.ProjectError:
             raise ApiError("project-not-found",
                            f"project {project_id!r} not found", 404) from None
+        # A free-genre project supplies its own genre text as story context
+        # unless the request names a genre explicitly.
+        if genre is None and project.custom_genre:
+            genre = project.custom_genre
     confirmed = opt_bool(body, "confirmed", False)
 
     with _GENERATE_LOCK:

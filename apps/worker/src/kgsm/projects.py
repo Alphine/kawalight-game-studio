@@ -32,11 +32,33 @@ STATES = (
     "exported",
 )
 
+# Free-genre text: the user's own genre description, used as theme context for
+# Muse story and asset prompts. The project still builds from a preset genre.
+MAX_CUSTOM_GENRE_CHARS = 120
+
 _NEXT = {STATES[i]: STATES[i + 1] for i in range(len(STATES) - 1)}
 
 
 class ProjectError(Exception):
     pass
+
+
+def normalize_custom_genre(value: object) -> str:
+    """Validate a free-text genre: trimmed, <= 120 chars, no control characters.
+
+    ``None`` and blank strings mean "no custom genre" and return ``""``.
+    """
+    if value is None:
+        return ""
+    if not isinstance(value, str):
+        raise ProjectError("customGenre must be a string")
+    text = value.strip()
+    if len(text) > MAX_CUSTOM_GENRE_CHARS:
+        raise ProjectError(
+            f"customGenre must be <= {MAX_CUSTOM_GENRE_CHARS} characters")
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in text):
+        raise ProjectError("customGenre must not contain control characters")
+    return text
 
 
 @dataclass
@@ -50,6 +72,7 @@ class Project:
     created_at: str
     updated_at: str
     owner_id: str | None = None
+    custom_genre: str = ""
 
     @property
     def dir(self) -> Path:
@@ -71,6 +94,7 @@ def _row_to_project(row: sqlite3.Row) -> Project:
         created_at=row["created_at"],
         updated_at=row["updated_at"],
         owner_id=row["owner_id"],
+        custom_genre=(row["custom_genre"] or "") if "custom_genre" in row.keys() else "",
     )
 
 
@@ -86,15 +110,19 @@ def _write_record(project: Project) -> None:
         "createdAt": project.created_at,
         "updatedAt": project.updated_at,
     }
+    if project.custom_genre:
+        record["customGenre"] = project.custom_genre
     (project.dir / "project.json").write_text(json.dumps(record, indent=2), encoding="utf-8")
 
 
-def create(name: str, genre: str, conn: sqlite3.Connection | None = None) -> Project:
+def create(name: str, genre: str, conn: sqlite3.Connection | None = None,
+           custom_genre: str = "") -> Project:
     name = name.strip()
     if not (1 <= len(name) <= 80):
         raise ProjectError("project name must be 1..80 characters")
     if genre not in GENRES:
         raise ProjectError(f"unknown genre {genre!r}; expected one of {', '.join(GENRES)}")
+    custom_genre = normalize_custom_genre(custom_genre)
     own = conn is None
     conn = conn or dbmod.connect()
     try:
@@ -110,15 +138,17 @@ def create(name: str, genre: str, conn: sqlite3.Connection | None = None) -> Pro
                 archived=False,
                 created_at=_now(),
                 updated_at=_now(),
+                custom_genre=custom_genre,
             )
             try:
                 conn.execute(
                     "INSERT INTO projects (id, name, genre, state, state_reason,"
-                    " archived, created_at, updated_at, owner_id)"
-                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    " archived, created_at, updated_at, owner_id, custom_genre)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (project.id, project.name, project.genre, project.state,
                      "", 0, project.created_at, project.updated_at,
-                     auth_mod.current().user_id if auth_mod.current() else None),
+                     auth_mod.current().user_id if auth_mod.current() else None,
+                     project.custom_genre),
                 )
             except sqlite3.IntegrityError:
                 continue
@@ -186,9 +216,10 @@ def _save(project: Project, conn: sqlite3.Connection) -> Project:
     project.updated_at = _now()
     conn.execute(
         "UPDATE projects SET name = ?, genre = ?, state = ?, state_reason = ?,"
-        " archived = ?, updated_at = ? WHERE id = ?",
+        " archived = ?, updated_at = ?, custom_genre = ? WHERE id = ?",
         (project.name, project.genre, project.state, project.state_reason,
-         int(project.archived), project.updated_at, project.id),
+         int(project.archived), project.updated_at, project.custom_genre,
+         project.id),
     )
     conn.commit()
     _write_record(project)
@@ -282,7 +313,7 @@ def duplicate(
     conn = conn or dbmod.connect()
     try:
         source = get(project_id, conn)
-        copy = create(new_name, source.genre, conn)
+        copy = create(new_name, source.genre, conn, source.custom_genre)
         if source.dir.is_dir():
             for item in source.dir.iterdir():
                 if item.name == "project.json":

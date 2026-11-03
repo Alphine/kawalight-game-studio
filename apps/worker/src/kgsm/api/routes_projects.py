@@ -36,7 +36,12 @@ def create_project(req: Request) -> tuple[int, dict]:
         raise bad_request("genre must be a string")
     if genre not in projects_mod.GENRES:
         raise ApiError("unknown-genre", f"unknown genre {genre!r}", 404)
-    project = projects_mod.create(name, genre)
+    try:
+        custom_genre = projects_mod.normalize_custom_genre(
+            req.body.get("customGenre"))
+    except projects_mod.ProjectError as exc:
+        raise bad_request(str(exc)) from None
+    project = projects_mod.create(name, genre, custom_genre=custom_genre)
     return 201, project_to_dict(project)
 
 

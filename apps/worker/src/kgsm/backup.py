@@ -179,7 +179,13 @@ def _validate_record(record: dict, backup_id: str) -> dict:
     created_at = record.get("createdAt") or _now()
     if not isinstance(created_at, str):
         created_at = _now()
+    try:
+        custom_genre = projects_mod.normalize_custom_genre(
+            record.get("customGenre"))
+    except projects_mod.ProjectError as exc:
+        raise BackupError(f"backup {backup_id!r} is corrupt: {exc}") from None
     return {
+        "custom_genre": custom_genre,
         "name": name.strip(),
         "genre": genre,
         "state": state,
@@ -296,15 +302,17 @@ def restore_backup(backup_id: str,
                 id=final_id, name=fields["name"], genre=fields["genre"],
                 state=fields["state"], state_reason=fields["state_reason"],
                 archived=fields["archived"],
-                created_at=fields["created_at"], updated_at=_now())
+                created_at=fields["created_at"], updated_at=_now(),
+                custom_genre=fields["custom_genre"])
             projects_mod._write_record(project)  # noqa: SLF001 (same package)
             conn.execute(
                 "INSERT INTO projects (id, name, genre, state, state_reason,"
-                " archived, created_at, updated_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                " archived, created_at, updated_at, custom_genre)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (project.id, project.name, project.genre, project.state,
                  project.state_reason, int(project.archived),
-                 project.created_at, project.updated_at))
+                 project.created_at, project.updated_at,
+                 project.custom_genre))
             conn.commit()
             return {"project": project, "reassignedId": reassigned}
         finally:

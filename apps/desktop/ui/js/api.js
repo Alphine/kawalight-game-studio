@@ -95,7 +95,12 @@
       listProjects: function (includeArchived) {
         return get(V1 + '/projects?includeArchived=' + (includeArchived ? 'true' : 'false'));
       },
-      createProject: function (name, genre) { return post(V1 + '/projects', { name: name, genre: genre }); },
+      createProject: function (name, genre, customGenre) {
+        var body = { name: name, genre: genre };
+        // Free genre only: omit the key for preset projects.
+        if (customGenre) body.customGenre = customGenre;
+        return post(V1 + '/projects', body);
+      },
       getProject: function (id) { return get(V1 + '/projects/' + encodeURIComponent(id)); },
       patchProject: function (id, patchBody) { return patch(V1 + '/projects/' + encodeURIComponent(id), patchBody); },
       duplicateProject: function (id, name) {

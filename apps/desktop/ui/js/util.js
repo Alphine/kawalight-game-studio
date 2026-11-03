@@ -227,7 +227,28 @@
       winCondition: 'Defeat the boss.',
       loseCondition: 'Lose all lives.',
       seed: '', notes: '',
+      // Free genre: the user's own genre text on top of a base mechanic
+      // (`genre`). Not part of the blueprint; sent as customGenre on create.
+      freeGenre: false, customGenre: '',
     };
+  }
+
+  var CUSTOM_GENRE_MAX = 120;
+
+  // Free-genre text rule (mirrors worker projects.normalize_custom_genre):
+  // trimmed, 1..120 chars, no control characters. Returns an error or null.
+  function validateCustomGenre(text) {
+    var t = String(text == null ? '' : text).trim();
+    if (!t) return 'Free genre description is required.';
+    if (t.length > CUSTOM_GENRE_MAX) return 'Free genre must be ≤ ' + CUSTOM_GENRE_MAX + ' characters.';
+    if (/[\x00-\x1f\x7f]/.test(t)) return 'Free genre must not contain control characters.';
+    return null;
+  }
+
+  // customGenre to send on create: the trimmed text when free genre is on,
+  // otherwise '' (preset genre, key omitted by the API client).
+  function customGenreFor(w) {
+    return w && w.freeGenre ? String(w.customGenre || '').trim() : '';
   }
 
   // Foe-list key per genre (mirrors blueprint.schema.json allOf):
@@ -281,6 +302,10 @@
     var errs = [];
     if (!isValidProjectName(w.name)) errs.push('Project name must be 1..80 characters.');
     if (GENRES.indexOf(w.genre) < 0) errs.push('Unknown genre.');
+    if (w.freeGenre) {
+      var customErr = validateCustomGenre(w.customGenre);
+      if (customErr) errs.push(customErr);
+    }
     if (!w.theme || !w.theme.trim()) errs.push('Theme is required.');
     else if (w.theme.trim().length > 120) errs.push('Theme must be ≤ 120 characters.');
     if (!(w.width >= 480 && w.width <= 1920)) errs.push('Width must be 480..1920.');
@@ -439,6 +464,7 @@
       allowedTransitions: allowedTransitions, isValidProjectName: isValidProjectName,
       defaultWizard: defaultWizard, buildWizardBlueprint: buildWizardBlueprint,
       validateWizardLocal: validateWizardLocal, foeKeyFor: foeKeyFor,
+      validateCustomGenre: validateCustomGenre, customGenreFor: customGenreFor,
       foeWordFor: foeWordFor, themeFoes: themeFoes,
       applyThemeToWizard: applyThemeToWizard, appendStoryToNotes: appendStoryToNotes,
       parseApiError: parseApiError,

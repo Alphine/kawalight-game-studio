@@ -15,8 +15,23 @@
   --err: #ff8c8c;
   --grad: linear-gradient(90deg, var(--violet), var(--magenta));
   --radius: 16px;
+  /* Scenery and surfaces that differ by theme. */
+  --scene-hero: linear-gradient(180deg, rgba(7, 10, 26, .5), rgba(7, 10, 26, .4) 50%, rgba(7, 10, 26, .75)),
+    linear-gradient(90deg, rgba(7, 10, 26, .85) 0%, rgba(7, 10, 26, .4) 55%, rgba(7, 10, 26, .15) 100%),
+    url("img/world-dark.webp") center top / cover no-repeat;
+  --scene-genres: linear-gradient(180deg, rgba(7, 10, 26, .55), rgba(7, 10, 26, .92)), url("img/studio-backdrop.webp") center / cover;
+  --scene-stage: rgba(10, 13, 38, .55) url("img/studio-backdrop.webp") center / cover;
+  --side-bg: rgba(10, 13, 38, .62);
+  --screen-border: rgba(168, 85, 247, .45);
+  --screen-shadow: 0 30px 80px rgba(168, 85, 247, .3), 0 0 0 6px rgba(20, 24, 56, .9);
+  --base-bg: linear-gradient(180deg, #2a2f5c, #151a38);
+  --pill-ink: #f5d0fe;
+  --pill-bg: rgba(168, 85, 247, .16);
+  --pill-line: rgba(232, 121, 249, .35);
   color-scheme: dark;
 }
+/* Light tokens apply when the OS prefers light and no choice is stored, and when the user picks Light.
+   The two blocks below must stay identical. Dark is the base, so data-theme="dark" needs no rule. */
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
     --bg-0: #f5f3ff;
@@ -28,8 +43,44 @@
     --line: rgba(90, 80, 200, 0.2);
     --ok: #0b7a55;
     --err: #b3261e;
+    --scene-hero: linear-gradient(180deg, rgba(245, 243, 255, .55), rgba(245, 243, 255, .45) 50%, rgba(245, 243, 255, .8)),
+      linear-gradient(90deg, rgba(245, 243, 255, .85) 0%, rgba(245, 243, 255, .4) 55%, rgba(245, 243, 255, .15) 100%),
+      url("img/world-light.webp") center top / cover no-repeat;
+    --scene-genres: linear-gradient(180deg, rgba(245, 243, 255, .72), rgba(245, 243, 255, .94)), url("img/backdrop-light.webp") center / cover;
+    --scene-stage: linear-gradient(rgba(255, 255, 255, .72), rgba(255, 255, 255, .8)), url("img/backdrop-light.webp") center / cover;
+    --side-bg: rgba(255, 255, 255, .7);
+    --screen-border: rgba(168, 85, 247, .35);
+    --screen-shadow: 0 30px 80px rgba(168, 85, 247, .18), 0 0 0 6px rgba(255, 255, 255, .9);
+    --base-bg: linear-gradient(180deg, #d9d4ff, #bfb6f5);
+    --pill-ink: #6b21a8;
+    --pill-bg: rgba(168, 85, 247, .12);
+    --pill-line: rgba(168, 85, 247, .35);
     color-scheme: light;
   }
+}
+:root[data-theme="light"] {
+  --bg-0: #f5f3ff;
+  --bg-1: #e9e4ff;
+  --panel: rgba(255, 255, 255, 0.86);
+  --panel-solid: #ffffff;
+  --ink: #161a33;
+  --muted: #55608a;
+  --line: rgba(90, 80, 200, 0.2);
+  --ok: #0b7a55;
+  --err: #b3261e;
+  --scene-hero: linear-gradient(180deg, rgba(245, 243, 255, .55), rgba(245, 243, 255, .45) 50%, rgba(245, 243, 255, .8)),
+    linear-gradient(90deg, rgba(245, 243, 255, .85) 0%, rgba(245, 243, 255, .4) 55%, rgba(245, 243, 255, .15) 100%),
+    url("img/world-light.webp") center top / cover no-repeat;
+  --scene-genres: linear-gradient(180deg, rgba(245, 243, 255, .72), rgba(245, 243, 255, .94)), url("img/backdrop-light.webp") center / cover;
+  --scene-stage: linear-gradient(rgba(255, 255, 255, .72), rgba(255, 255, 255, .8)), url("img/backdrop-light.webp") center / cover;
+  --side-bg: rgba(255, 255, 255, .7);
+  --screen-border: rgba(168, 85, 247, .35);
+  --screen-shadow: 0 30px 80px rgba(168, 85, 247, .18), 0 0 0 6px rgba(255, 255, 255, .9);
+  --base-bg: linear-gradient(180deg, #d9d4ff, #bfb6f5);
+  --pill-ink: #6b21a8;
+  --pill-bg: rgba(168, 85, 247, .12);
+  --pill-line: rgba(168, 85, 247, .35);
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -83,7 +134,7 @@ p { margin: 0 0 1em; }
 .nav > a:not(.btn):hover { color: var(--ink); }
 .nav-signin { border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; color: var(--ink) !important; }
 
-.lang-toggle {
+.lang-toggle, .theme-toggle {
   min-height: 36px; min-width: 48px; padding: 6px 12px; border-radius: 999px;
   border: 1px solid var(--line); background: transparent; color: var(--ink);
   font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer;
@@ -105,7 +156,7 @@ p { margin: 0 0 1em; }
 .btn.wide { width: 100%; }
 .btn:disabled { opacity: .6; cursor: default; transform: none; }
 .btn:focus-visible, .tabs button:focus-visible, .nav a:focus-visible, .inline-links a:focus-visible,
-input:focus-visible, .lang-toggle:focus-visible, .skip:focus-visible {
+input:focus-visible, .lang-toggle:focus-visible, .theme-toggle:focus-visible, .skip:focus-visible {
   outline: 3px solid var(--cyan); outline-offset: 2px;
 }
 
@@ -120,18 +171,15 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 .hero::before {
   content: ""; position: absolute; z-index: -1; top: -40px; bottom: 0;
   left: 50%; width: 100vw; transform: translateX(-50%); pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(7, 10, 26, .5), rgba(7, 10, 26, .4) 50%, rgba(7, 10, 26, .75)),
-    linear-gradient(90deg, rgba(7, 10, 26, .85) 0%, rgba(7, 10, 26, .4) 55%, rgba(7, 10, 26, .15) 100%),
-    url("img/world-dark.webp") center top / cover no-repeat;
+  background: var(--scene-hero);
   -webkit-mask-image: linear-gradient(#000 62%, transparent);
   mask-image: linear-gradient(#000 62%, transparent);
 }
 .pill {
   display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px;
   padding: 7px 14px; border-radius: 999px; font-size: .9rem; font-weight: 600;
-  background: rgba(168, 85, 247, 0.16); border: 1px solid rgba(232, 121, 249, 0.35);
-  color: #f5d0fe;
+  background: var(--pill-bg); border: 1px solid var(--pill-line);
+  color: var(--pill-ink);
 }
 .hero h1 { margin: 0 0 14px; }
 .kgsm {
@@ -155,8 +203,8 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 .laptop { position: relative; width: 100%; max-width: 620px; margin: 0 auto; }
 .screen {
   border-radius: 16px 16px 6px 6px; background: #0b0f26 url("img/hero-key-art.webp") center / cover; padding: 12px;
-  border: 1px solid rgba(168, 85, 247, 0.45);
-  box-shadow: 0 30px 80px rgba(168, 85, 247, 0.3), 0 0 0 6px rgba(20, 24, 56, .9);
+  border: 1px solid var(--screen-border);
+  box-shadow: var(--screen-shadow);
   aspect-ratio: 16 / 10;
   display: flex; flex-direction: column;
 }
@@ -164,14 +212,14 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 .screen-body { flex: 1; display: grid; grid-template-columns: 30% 1fr; gap: 10px; min-height: 0; }
 .side {
   list-style: none; margin: 0; padding: 10px 8px; border-radius: 10px;
-  background: rgba(10, 13, 38, .62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  background: var(--side-bg); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   display: flex; flex-direction: column; gap: 4px; font-size: .72rem; color: var(--muted);
 }
 .side li { padding: 6px 8px; border-radius: 7px; }
 .side li.on { background: var(--grad); color: #fff; font-weight: 600; }
 .stage {
   border-radius: 10px; padding: 12px;
-  background: rgba(10, 13, 38, .55) url("img/studio-backdrop.webp") center / cover;
+  background: var(--scene-stage);
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .stage-title { margin: 0; font-size: .8rem; font-weight: 600; }
 .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; flex: 1; min-height: 0; }
@@ -188,7 +236,7 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 }
 .base {
   height: 14px; margin: 0 -6%; border-radius: 0 0 18px 18px;
-  background: linear-gradient(180deg, #2a2f5c, #151a38);
+  background: var(--base-bg);
   box-shadow: 0 18px 40px rgba(34, 211, 238, 0.18);
 }
 
@@ -218,8 +266,7 @@ section { padding: 56px 0; }
 
 .genres {
   margin: 0 -20px; padding: 56px 20px; border-radius: 0;
-  background: linear-gradient(180deg, rgba(7, 10, 26, .55), rgba(7, 10, 26, .92)),
-    url("img/studio-backdrop.webp") center / cover;
+  background: var(--scene-genres);
 }
 .genre-grid {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 26px;
@@ -256,34 +303,6 @@ section { padding: 56px 0; }
 .feature-art {
   display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover;
   border-radius: 12px; border: 1px solid var(--line); margin-bottom: 16px;
-}
-
-/* Light mode: the dark backdrops and mockup stage switch to light surfaces. */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) .genres {
-    background: linear-gradient(180deg, rgba(245, 243, 255, .72), rgba(245, 243, 255, .94)),
-      url("img/backdrop-light.webp") center / cover;
-  }
-  :root:not([data-theme="dark"]) .stage {
-    background: linear-gradient(rgba(255, 255, 255, .72), rgba(255, 255, 255, .8)),
-      url("img/backdrop-light.webp") center / cover;
-  }
-  :root:not([data-theme="dark"]) .side { background: rgba(255, 255, 255, .7); color: var(--muted); }
-  :root:not([data-theme="dark"]) .side li.on { color: #fff; }
-  :root:not([data-theme="dark"]) .screen {
-    border-color: rgba(168, 85, 247, .35);
-    box-shadow: 0 30px 80px rgba(168, 85, 247, .18), 0 0 0 6px rgba(255, 255, 255, .9);
-  }
-  :root:not([data-theme="dark"]) .base { background: linear-gradient(180deg, #d9d4ff, #bfb6f5); }
-  :root:not([data-theme="dark"]) .hero::before {
-    background:
-      linear-gradient(180deg, rgba(245, 243, 255, .55), rgba(245, 243, 255, .45) 50%, rgba(245, 243, 255, .8)),
-      linear-gradient(90deg, rgba(245, 243, 255, .85) 0%, rgba(245, 243, 255, .4) 55%, rgba(245, 243, 255, .15) 100%),
-      url("img/world-light.webp") center top / cover no-repeat;
-  }
-  :root:not([data-theme="dark"]) .pill {
-    color: #6b21a8; background: rgba(168, 85, 247, .12); border-color: rgba(168, 85, 247, .35);
-  }
 }
 
 /* ---- account card ---- */
@@ -345,6 +364,8 @@ section { padding: 56px 0; }
   .step::after { display: none; }
   main { padding: 0 16px; }
   section { padding: 40px 0; }
+  .genres { margin: 0 -16px; padding: 40px 16px; }
+  .base { margin: 0 -2%; }
   .cta .btn { flex: 1 1 100%; }
   .screen-body { grid-template-columns: 1fr; }
   .side { display: none; }

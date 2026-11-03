@@ -85,6 +85,60 @@
     });
   }
 
+  // Theme: follows the OS until the user clicks. The choice is stored under
+  // kgsm.landingTheme. Storage can be blocked, so every access is guarded.
+  var THEME_KEY = 'kgsm.landingTheme';
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeToggle');
+  var osLight = globalThis.matchMedia ? globalThis.matchMedia('(prefers-color-scheme: light)') : null;
+
+  function readTheme() {
+    try {
+      var v = globalThis.localStorage.getItem(THEME_KEY);
+      return v === 'dark' || v === 'light' ? v : '';
+    } catch (e) { return ''; }
+  }
+
+  function writeTheme(value) {
+    try { globalThis.localStorage.setItem(THEME_KEY, value); } catch (e) { /* blocked: the choice lasts for this page view */ }
+  }
+
+  function currentTheme() {
+    var set = root.getAttribute('data-theme');
+    if (set === 'dark' || set === 'light') return set;
+    return osLight && osLight.matches ? 'light' : 'dark';
+  }
+
+  function paintTheme() {
+    var now = currentTheme();
+    if (themeBtn) {
+      themeBtn.textContent = now === 'dark' ? 'Dark' : 'Light';
+      themeBtn.setAttribute('aria-pressed', now === 'dark' ? 'true' : 'false');
+    }
+    // The feature screenshots pick their light version with <source media>. Follow the forced theme, or the OS when auto.
+    var forced = root.getAttribute('data-theme');
+    document.querySelectorAll('.feature picture source').forEach(function (src) {
+      if (!src.hasAttribute('data-os-media')) src.setAttribute('data-os-media', src.getAttribute('media') || '');
+      var media = forced === 'light' ? 'all' : forced === 'dark' ? 'not all' : src.getAttribute('data-os-media');
+      src.setAttribute('media', media);
+    });
+  }
+
+  var savedTheme = readTheme();
+  if (savedTheme) root.setAttribute('data-theme', savedTheme);
+  paintTheme();
+  if (themeBtn) {
+    themeBtn.hidden = false;
+    themeBtn.addEventListener('click', function () {
+      var next = currentTheme() === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      writeTheme(next);
+      paintTheme();
+    });
+  }
+  // With no stored choice, the page keeps following the OS when it changes.
+  if (osLight && osLight.addEventListener) osLight.addEventListener('change', paintTheme);
+
   function readError(res) {
     return res.json().then(function (body) {
       return { code: body && body.error && body.error.code, message: (body && body.error && body.error.message) || 'Request failed.' };

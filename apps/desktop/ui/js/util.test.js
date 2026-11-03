@@ -283,3 +283,46 @@ describe('appendStoryToNotes', () => {
     assert.deepEqual(U.appendStoryToNotes({ notes: 'x' }, '   '), { notes: 'x' });
   });
 });
+
+describe('free genre (custom genre text)', () => {
+  const ready = (over) => Object.assign(U.defaultWizard(), { name: 'Cat Game', theme: 'Cats' }, over || {});
+
+  it('defaultWizard starts with free genre off and empty text', () => {
+    const w = U.defaultWizard();
+    assert.equal(w.freeGenre, false);
+    assert.equal(w.customGenre, '');
+  });
+
+  it('validateCustomGenre accepts trimmed text up to 120 characters', () => {
+    assert.equal(U.validateCustomGenre('  tower defense with cats  '), null);
+    assert.equal(U.validateCustomGenre('x'.repeat(120)), null);
+  });
+
+  it('validateCustomGenre rejects empty, oversize and control-character text', () => {
+    assert.match(U.validateCustomGenre('   '), /required/);
+    assert.match(U.validateCustomGenre(undefined), /required/);
+    assert.match(U.validateCustomGenre('x'.repeat(121)), /120/);
+    assert.match(U.validateCustomGenre('cats\nmice'), /control/);
+    assert.match(U.validateCustomGenre('cats\tmice'), /control/);
+    assert.match(U.validateCustomGenre('cats\u007f'), /control/);
+  });
+
+  it('customGenreFor returns text only when free genre is on', () => {
+    assert.equal(U.customGenreFor(ready({ freeGenre: true, customGenre: '  visual novel mystery ' })), 'visual novel mystery');
+    assert.equal(U.customGenreFor(ready({ freeGenre: false, customGenre: 'ignored' })), '');
+    assert.equal(U.customGenreFor(null), '');
+  });
+
+  it('validateWizardLocal requires a description only in free-genre mode', () => {
+    assert.deepEqual(U.validateWizardLocal(ready({ freeGenre: false })), []);
+    const errs = U.validateWizardLocal(ready({ freeGenre: true, customGenre: '  ' }));
+    assert.ok(errs.some((e) => /Free genre/.test(e)), errs.join('|'));
+    assert.deepEqual(U.validateWizardLocal(ready({ freeGenre: true, customGenre: 'cats in space' })), []);
+  });
+
+  it('free genre keeps the base mechanic as the blueprint genre', () => {
+    const bp = U.buildWizardBlueprint(ready({ genre: 'farming', freeGenre: true, customGenre: 'cozy cafe' }));
+    assert.equal(bp.genre, 'farming');
+    assert.equal(Object.prototype.hasOwnProperty.call(bp, 'customGenre'), false);
+  });
+});

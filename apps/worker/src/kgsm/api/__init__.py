@@ -132,7 +132,7 @@ def query_bool(query: dict[str, str], name: str, default: bool = False) -> bool:
 
 
 def project_to_dict(project: projects_mod.Project) -> dict:
-    return {
+    data = {
         "id": project.id,
         "name": project.name,
         "genre": project.genre,
@@ -142,6 +142,11 @@ def project_to_dict(project: projects_mod.Project) -> dict:
         "createdAt": project.created_at,
         "updatedAt": project.updated_at,
     }
+    # Only free-genre projects carry the key, so preset projects keep their
+    # exact existing shape.
+    if project.custom_genre:
+        data["customGenre"] = project.custom_genre
+    return data
 
 
 def quote_to_dict(quote) -> dict:

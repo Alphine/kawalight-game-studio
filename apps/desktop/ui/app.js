@@ -213,7 +213,19 @@
         b.dataset.view = n[0];
         b.className = 'glass-nav-item';
         b.innerHTML = '<span class="nav-icon"></span><span class="nav-label"></span>';
-        b.querySelector('.nav-icon').innerHTML = icon(n[2]);
+        var slot = b.querySelector('.nav-icon');
+        var art = document.createElement('img');
+        art.className = 'nav-art';
+        art.src = 'img/menu/' + n[0] + '.webp';
+        art.alt = '';
+        art.loading = 'lazy';
+        art.width = 32;
+        art.height = 32;
+        art.addEventListener('error', function () {
+          // Missing or failed art: fall back to the line icon (no inline handlers under CSP).
+          slot.innerHTML = icon(n[2]);
+        });
+        slot.appendChild(art);
         b.querySelector('.nav-label').textContent = n[1];
         b.addEventListener('click', function () { go(n[0]); });
         group.appendChild(b);

@@ -64,3 +64,6 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "owner_id" not in columns:
         conn.execute("ALTER TABLE projects ADD COLUMN owner_id TEXT NULL")
         conn.commit()
+    if "custom_genre" not in columns:
+        conn.execute("ALTER TABLE projects ADD COLUMN custom_genre TEXT NOT NULL DEFAULT ''")
+        conn.commit()
