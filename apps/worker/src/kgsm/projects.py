@@ -18,7 +18,8 @@ from . import auth as auth_mod
 from . import db as dbmod
 from . import paths
 
-GENRES = ("space-shooter", "endless-runner", "side-scroller", "battle-2d", "farming")
+GENRES = ("space-shooter", "endless-runner", "side-scroller", "battle-2d", "farming",
+          "puzzle-match")
 
 STATES = (
     "draft",

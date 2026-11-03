@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kawalight.studio/schemas/puzzle-match.config.v1.json",
+  "title": "KGSM puzzle-match template config v1",
+  "description": "Engine-ready config for template phaser.puzzle-match (match-3). Assembled from a validated blueprint; every field is consumed by the template or its assembler.",
+  "type": "object",
+  "required": ["schemaVersion", "template", "world", "board", "gems", "scoring", "moves", "difficulty", "controls"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "template": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "const": "phaser.puzzle-match" },
+        "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+      },
+      "additionalProperties": false
+    },
+    "seed": { "type": ["integer", "null"], "minimum": 0, "default": null },
+    "world": {
+      "type": "object",
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "minimum": 480, "maximum": 1920 },
+        "height": { "type": "integer", "minimum": 270, "maximum": 1080 }
+      },
+      "additionalProperties": false
+    },
+    "board": {
+      "type": "object",
+      "required": ["cols", "rows", "tileSize", "originX", "originY"],
+      "properties": {
+        "cols": { "type": "integer", "minimum": 4, "maximum": 10 },
+        "rows": { "type": "integer", "minimum": 4, "maximum": 10 },
+        "tileSize": { "type": "number", "minimum": 24, "maximum": 128 },
+        "originX": { "type": "number" },
+        "originY": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "gems": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "sprite"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]{1,40}$" },
+          "name": { "type": "string", "minLength": 1 },
+          "sprite": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "required": ["targetScore", "pointsPerGem", "cascadeBonusPercent"],
+      "properties": {
+        "targetScore": { "type": "integer", "minimum": 1, "maximum": 10000000 },
+        "pointsPerGem": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "cascadeBonusPercent": { "type": "integer", "minimum": 0, "maximum": 200 }
+      },
+      "additionalProperties": false
+    },
+    "moves": {
+      "type": "object",
+      "required": ["limit"],
+      "properties": {
+        "limit": { "type": "integer", "minimum": 1, "maximum": 999 }
+      },
+      "additionalProperties": false
+    },
+    "difficulty": {
+      "type": "object",
+      "required": ["preset"],
+      "properties": {
+        "preset": { "type": "string", "enum": ["easy", "normal", "hard"] }
+      },
+      "additionalProperties": false
+    },
+    "controls": {
+      "type": "object",
+      "required": ["hint", "reshuffle", "pause"],
+      "properties": {
+        "hint": { "type": "string", "minLength": 1 },
+        "reshuffle": { "type": "string", "minLength": 1 },
+        "pause": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "assets": {
+      "type": "object",
+      "required": ["sprites"],
+      "properties": {
+        "sprites": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -7,6 +7,7 @@ from ..blueprint import (
     assemble_battle_2d,
     assemble_endless_runner,
     assemble_farming,
+    assemble_puzzle_match,
     assemble_side_scroller,
     assemble_space_shooter,
 )
@@ -15,6 +16,7 @@ from ..validation import (
     validate_blueprint,
     validate_endless_runner_config,
     validate_farming_config,
+    validate_puzzle_match_config,
     validate_side_scroller_config,
     validate_space_shooter_config,
 )
@@ -30,7 +32,7 @@ from . import (
 )
 
 SUPPORTED_GENRES = ("space-shooter", "endless-runner", "side-scroller",
-                    "battle-2d", "farming")
+                    "battle-2d", "farming", "puzzle-match")
 
 
 def _for_genre(genre: str):
@@ -52,6 +54,8 @@ def _for_genre(genre: str):
         return assemble_battle_2d, validate_battle_2d_config
     if genre == "farming":
         return assemble_farming, validate_farming_config
+    if genre == "puzzle-match":
+        return assemble_puzzle_match, validate_puzzle_match_config
     raise ApiError(
         "unknown-genre",
         f"genre {genre!r} is not served"

@@ -505,3 +505,62 @@ def assemble_farming(blueprint: dict) -> dict:
                      "toolHarvest": "THREE", "nextDay": "N", "pause": "P"},
         "assets": {"sprites": sprites},
     }
+
+
+_PUZZLE_PRESETS = {
+    "easy": (6, 6, 4, 30, 800),
+    "normal": (7, 7, 5, 25, 1300),
+    "hard": (8, 8, 6, 24, 1400),
+}
+_PUZZLE_GEMS = [
+    {"id": "ruby", "name": "Ruby"},
+    {"id": "sapphire", "name": "Sapphire"},
+    {"id": "emerald", "name": "Emerald"},
+    {"id": "topaz", "name": "Topaz"},
+    {"id": "amethyst", "name": "Amethyst"},
+]
+
+
+def assemble_puzzle_match(blueprint: dict) -> dict:
+    report = validate_blueprint(blueprint)
+    if not report.ok:
+        raise AssemblyError(f"invalid blueprint: {report.summary()}")
+    if blueprint["genre"] != "puzzle-match":
+        raise AssemblyError(
+            f"blueprint genre is {blueprint['genre']!r}, not 'puzzle-match'"
+        )
+    preset = blueprint["difficulty"]["preset"]
+    width = blueprint["resolution"]["width"]
+    height = blueprint["resolution"]["height"]
+    cols, rows, gem_count, moves, target = _PUZZLE_PRESETS[preset]
+
+    gems = []
+    sprites = {}
+    for entry in _PUZZLE_GEMS[:gem_count]:
+        key = f"gem-{entry['id']}"
+        sprites[key] = f"assets/{key}.png"
+        gems.append({"id": entry["id"], "name": entry["name"], "sprite": key})
+
+    # Fit the board inside the world, keeping a strip at the top for the HUD.
+    tile = int(min(64, (width - 64) / cols, (height - 96) / rows))
+    tile = max(24, tile)
+    return {
+        "schemaVersion": "1.0.0",
+        "template": {"id": "phaser.puzzle-match", "version": "1.0.0"},
+        "seed": blueprint.get("seed"),
+        "world": {"width": width, "height": height},
+        "board": {
+            "cols": cols,
+            "rows": rows,
+            "tileSize": tile,
+            "originX": (width - cols * tile) / 2,
+            "originY": (height - rows * tile) / 2 + 16,
+        },
+        "gems": gems,
+        "scoring": {"targetScore": target, "pointsPerGem": 10,
+                    "cascadeBonusPercent": 50},
+        "moves": {"limit": moves},
+        "difficulty": {"preset": preset},
+        "controls": {"hint": "H", "reshuffle": "R", "pause": "P"},
+        "assets": {"sprites": sprites},
+    }

@@ -50,6 +50,9 @@ def cmd_validate(args: argparse.Namespace) -> int:
         elif template_id == "phaser.farming":
             from .validation import validate_farming_config
             report = validate_farming_config(data)
+        elif template_id == "phaser.puzzle-match":
+            from .validation import validate_puzzle_match_config
+            report = validate_puzzle_match_config(data)
         else:
             report = validate_space_shooter_config(data)
     else:
@@ -66,6 +69,7 @@ def cmd_assemble(args: argparse.Namespace) -> int:
         assemble_battle_2d,
         assemble_endless_runner,
         assemble_farming,
+        assemble_puzzle_match,
         assemble_side_scroller,
         assemble_space_shooter,
     )
@@ -86,6 +90,8 @@ def cmd_assemble(args: argparse.Namespace) -> int:
         assemble = assemble_battle_2d
     elif genre == "farming":
         assemble = assemble_farming
+    elif genre == "puzzle-match":
+        assemble = assemble_puzzle_match
     else:
         print(f"error: no assembler for genre {genre!r}", file=sys.stderr)
         return 1

@@ -14,6 +14,7 @@ from ..validation import (
     validate_battle_2d_config,
     validate_endless_runner_config,
     validate_farming_config,
+    validate_puzzle_match_config,
     validate_side_scroller_config,
     validate_space_shooter_config,
 )
@@ -25,12 +26,19 @@ from . import (
     require_project,
 )
 
+# Genres with a Godot 4 exporter (puzzle-match ships Phaser only for now).
+_GODOT_TEMPLATES = {
+    "phaser.space-shooter", "phaser.endless-runner", "phaser.side-scroller",
+    "phaser.battle-2d", "phaser.farming",
+}
+
 _VALIDATORS_BY_TEMPLATE = {
     "phaser.space-shooter": validate_space_shooter_config,
     "phaser.endless-runner": validate_endless_runner_config,
     "phaser.side-scroller": validate_side_scroller_config,
     "phaser.battle-2d": validate_battle_2d_config,
     "phaser.farming": validate_farming_config,
+    "phaser.puzzle-match": validate_puzzle_match_config,
 }
 
 
@@ -138,6 +146,10 @@ def export_godot(req: Request) -> tuple[int, dict]:
         raise ApiError("validation-failed",
                        f"config template {template_id!r} does not match"
                        f" project genre {project.genre!r}", 422)
+    if template_id not in _GODOT_TEMPLATES:
+        raise ApiError("godot-not-supported",
+                       "Godot export is not available for this genre yet;"
+                       " export the Phaser ZIP instead", 422)
     report = validate(config)
     if not report.ok:
         errors = report.errors()

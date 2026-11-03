@@ -1,0 +1,9 @@
+{
+  "id": "phaser.puzzle-match",
+  "version": "1.0.0",
+  "genre": "puzzle-match",
+  "runtime": { "name": "phaser", "version": "3.80.1" },
+  "configSchema": "puzzle-match.config.schema.json",
+  "entry": "demo/index.html",
+  "screens": ["title", "board", "hud", "pause-overlay", "end-overlay"]
+}

@@ -26,6 +26,20 @@ def call(method, path, body=None, query=None):
                             query=query or {}))
 
 
+def make_puzzle_blueprint():
+    """The template's own demo blueprint, so the test and the shipped game agree."""
+    import json
+
+    from kgsm import paths
+    path = paths.templates_dir() / "phaser" / "puzzle-match" / "blueprint.demo.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def make_puzzle_config():
+    from kgsm.blueprint import assemble_puzzle_match
+    return assemble_puzzle_match(make_puzzle_blueprint())
+
+
 CASES = [
     ("side-scroller", "phaser.side-scroller",
      make_side_blueprint, make_side_config),
@@ -33,6 +47,8 @@ CASES = [
      make_battle_blueprint, make_battle_config),
     ("farming", "phaser.farming",
      make_farm_blueprint, make_farm_config),
+    ("puzzle-match", "phaser.puzzle-match",
+     make_puzzle_blueprint, make_puzzle_config),
 ]
 
 
@@ -112,7 +128,11 @@ def test_export_unknown_template_id_is_422(store):
     assert body["error"]["code"] == "validation-failed"
 
 
-@pytest.mark.parametrize("genre,template_id,make_bp,make_cfg", CASES)
+# Godot 4 export covers the genres that have a Godot adapter; puzzle-match is Phaser-only for now.
+GODOT_CASES = [c for c in CASES if c[0] != "puzzle-match"]
+
+
+@pytest.mark.parametrize("genre,template_id,make_bp,make_cfg", GODOT_CASES)
 def test_genre_export_godot(store, genre, template_id, make_bp, make_cfg):
     pid = projects_mod.create(f"Demo {genre}", genre).id
     status, body = call("PUT", f"/projects/{pid}/blueprint",
@@ -157,3 +177,16 @@ def test_export_godot_unknown_template_is_422(store):
                                                 "version": "1.0.0"}}})
     assert status == 422
     assert body["error"]["code"] == "validation-failed"
+
+
+def test_puzzle_match_godot_export_is_refused_clearly(store):
+    pid = projects_mod.create("Gem Demo", "puzzle-match").id
+    status, _ = call("PUT", f"/projects/{pid}/blueprint",
+                     {"blueprint": make_puzzle_blueprint()})
+    assert status == 200
+    status, _ = call("PUT", f"/projects/{pid}/config",
+                     {"config": make_puzzle_config()})
+    assert status == 200
+    status, body = call("POST", f"/projects/{pid}/exports/godot", {})
+    assert status == 422
+    assert body["error"]["code"] == "godot-not-supported"

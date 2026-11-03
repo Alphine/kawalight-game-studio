@@ -15,7 +15,7 @@
     "projectName": { "type": "string", "minLength": 1, "maxLength": 80 },
     "genre": {
       "type": "string",
-      "enum": ["space-shooter", "endless-runner", "side-scroller", "battle-2d", "farming"]
+      "enum": ["space-shooter", "endless-runner", "side-scroller", "battle-2d", "farming", "puzzle-match"]
     },
     "theme": { "type": "string", "minLength": 1, "maxLength": 120 },
     "visualStyle": { "type": "string", "enum": ["pixel-art", "illustrated-2d"] },
@@ -118,6 +118,10 @@
     },
     {
       "if": { "properties": { "genre": { "const": "farming" } }, "required": ["genre"] },
+      "then": { "required": ["obstacles"] }
+    },
+    {
+      "if": { "properties": { "genre": { "const": "puzzle-match" } }, "required": ["genre"] },
       "then": { "required": ["obstacles"] }
     }
   ],

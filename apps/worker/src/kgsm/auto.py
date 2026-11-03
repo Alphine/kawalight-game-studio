@@ -23,6 +23,7 @@ from .blueprint import (
     assemble_battle_2d,
     assemble_endless_runner,
     assemble_farming,
+    assemble_puzzle_match,
     assemble_side_scroller,
     assemble_space_shooter,
 )
@@ -33,6 +34,7 @@ from .validation import (
     validate_blueprint,
     validate_endless_runner_config,
     validate_farming_config,
+    validate_puzzle_match_config,
     validate_side_scroller_config,
     validate_space_shooter_config,
 )
@@ -175,6 +177,29 @@ STARTERS: dict[str, dict[str, dict]] = {
             ],
         },
     },
+    "puzzle-match": {
+        "gem-rush": {
+            "theme": "Gem Rush",
+            "foes": [
+                {"id": "move-limit", "role": "every swap costs one of 25 moves"},
+                {"id": "dead-board", "role": "a locked board reshuffles and breaks plans"},
+            ],
+        },
+        "crystal-caverns": {
+            "theme": "Crystal Caverns",
+            "foes": [
+                {"id": "dim-light", "role": "gems glow faintly and are hard to spot"},
+                {"id": "echo-moves", "role": "cascades reward long chains"},
+            ],
+        },
+        "sunset-bazaar": {
+            "theme": "Sunset Bazaar",
+            "foes": [
+                {"id": "haggling", "role": "every swap costs a move in the market"},
+                {"id": "rush-hour", "role": "stalls empty fast and the board tightens"},
+            ],
+        },
+    },
 }
 
 # Keyword -> themeId per genre, in match priority order. A keyword matches
@@ -234,6 +259,13 @@ KEYWORDS: dict[str, tuple[tuple[str, str], ...]] = {
         ("sun", "sunny-acres"),
         ("acre", "sunny-acres"),
         ("field", "sunny-acres"),
+    ),
+    "puzzle-match": (
+        ("crystal", "crystal-caverns"),
+        ("cave", "crystal-caverns"),
+        ("sunset", "sunset-bazaar"),
+        ("bazaar", "sunset-bazaar"),
+        ("market", "sunset-bazaar"),
     ),
 }
 
@@ -315,6 +347,21 @@ _BASE: dict[str, dict] = {
         "winCondition": "bank 500 coins",
         "loseCondition": "none; cozy until the goal is banked",
     },
+    "puzzle-match": {
+        "visualStyle": "pixel-art",
+        "targetRuntime": "phaser3-html5",
+        "resolution": {"width": 960, "height": 540},
+        "controls": {"scheme": "mouse-keyboard",
+                     "actions": ["swap", "hint", "reshuffle"]},
+        "difficulty": {"preset": "normal", "ramp": "gradual"},
+        "gameLoop": "swap neighbouring gems to match three or more, then cascade",
+        "player": {"abilities": ["swap"], "health": 1, "lives": 1},
+        "collectibles": "gems score points",
+        "progression": "more gem kinds and a tighter board on harder presets",
+        "scoring": "points per cleared gem with a cascade bonus",
+        "winCondition": "reach the target score within the move limit",
+        "loseCondition": "run out of moves below the target",
+    },
 }
 
 
@@ -330,6 +377,8 @@ def _dispatch(genre: str):
         return assemble_battle_2d, validate_battle_2d_config
     if genre == "farming":
         return assemble_farming, validate_farming_config
+    if genre == "puzzle-match":
+        return assemble_puzzle_match, validate_puzzle_match_config
     raise AutoError("unknown-genre", f"unknown genre {genre!r}", 404)
 
 

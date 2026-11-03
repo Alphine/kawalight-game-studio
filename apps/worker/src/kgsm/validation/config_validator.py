@@ -265,6 +265,29 @@ def validate_farming_config(data: dict) -> Report:
     return report
 
 
+def validate_puzzle_match_config(data: dict) -> Report:
+    report = Report()
+    if _schema_errors(report, data, "puzzle-match.config.schema.json"):
+        return report
+    gems = data["gems"]
+    _unique(report, gems, "id", "gems")
+    sprites = (data.get("assets") or {}).get("sprites", {})
+    if sprites:
+        for g in gems:
+            if g["sprite"] not in sprites:
+                report.error("unknown-sprite",
+                             f"gem {g['id']!r} sprite {g['sprite']!r}"
+                             " missing from assets.sprites",
+                             f"gems/{g['id']}")
+    board = data["board"]
+    world = data["world"]
+    right = board["originX"] + board["cols"] * board["tileSize"]
+    bottom = board["originY"] + board["rows"] * board["tileSize"]
+    if not (board["originX"] >= 0 and board["originY"] >= 0
+            and right <= world["width"] and bottom <= world["height"]):
+        report.error("bad-board", "board must sit inside the world", "board")
+    return report
+
 def validate_manifest(data: dict) -> Report:
     report = Report()
     _schema_errors(report, data, "export-manifest.schema.json")

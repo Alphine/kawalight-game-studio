@@ -19,6 +19,7 @@ from ..validation import (
     validate_battle_2d_config,
     validate_endless_runner_config,
     validate_farming_config,
+    validate_puzzle_match_config,
     validate_side_scroller_config,
     validate_space_shooter_config,
 )
@@ -132,6 +133,9 @@ def stage_export(
     elif template_id == "phaser.farming":
         validate = validate_farming_config
         default_template = "farming"
+    elif template_id == "phaser.puzzle-match":
+        validate = validate_puzzle_match_config
+        default_template = "puzzle-match"
     else:
         raise ExportError(f"unknown template id {template_id!r}")
     template_dir = Path(template_dir or
