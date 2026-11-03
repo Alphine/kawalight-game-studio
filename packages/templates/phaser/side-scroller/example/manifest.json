@@ -43,6 +43,24 @@
       "provider": "meta-image",
       "model": "muse-image-1.0",
       "sha256": "7418e05639a5791b096dde03f0616ba7f65465ce3be77929722670067430fb2c"
+    },
+    {
+      "sprite": "bg-night-canyon",
+      "file": "assets/background/canyon-backdrop-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "0e1be4a4eb378f8810dfb855855f2d9ebb53b02da536b13f1639db671b84a573",
+      "providerSha256": null,
+      "postProcess": null
+    },
+    {
+      "sprite": "ground-stone-tile",
+      "file": "assets/terrain/stone-tile-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "75ad2411e2c4119d63d3019b52867065ad7299d1c744be1a1fc071fe0f73c6fd",
+      "providerSha256": null,
+      "postProcess": null
     }
   ],
   "playable": "pixel-pass-playable.zip"

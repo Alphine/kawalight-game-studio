@@ -70,7 +70,9 @@
       "coin": "assets/coin/pickup-gen-000.png",
       "obstacle-spike": "assets/spike/hazard-gen-000.png",
       "obstacle-block": "assets/crate/hazard-gen-000.png",
-      "obstacle-drone": "assets/drone/hazard-gen-000.png"
+      "obstacle-drone": "assets/drone/hazard-gen-000.png",
+      "bg-skyline": "assets/skyline/background-gen-000.png",
+      "ground-roof": "assets/ground/roof-gen-000.png"
     }
   }
 }

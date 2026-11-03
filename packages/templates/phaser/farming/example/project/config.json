@@ -57,7 +57,9 @@
       "coin": "assets/coin/gold-gen-000.png",
       "farmer": "assets/farmer/hero-gen-000.png",
       "crop-turnip": "assets/crop/turnip-gen-000.png",
-      "crop-pumpkin": "assets/crop/pumpkin-gen-000.png"
+      "crop-pumpkin": "assets/crop/pumpkin-gen-000.png",
+      "farm-landscape": "assets/landscape/backdrop-gen-000.png",
+      "fence-decor": "assets/decor/fence-gen-000.png"
     }
   }
 }

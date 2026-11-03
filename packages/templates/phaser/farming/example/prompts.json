@@ -43,5 +43,25 @@
     "height": 128,
     "style": "illustrated-2d",
     "prompt": "A cheerful farmer character, full body, standing front view, centered. Wide-brimmed straw hat in straw gold #E9B44C, sky aqua #7FC8C0 overalls over a cream shirt with rolled sleeves, moss green #4F8A3C neckerchief, warm tan skin, earth brown #5A3A22 hair and boots, friendly small smile. Clean 2px dark-brown outline, flat cel shading with one soft highlight, light from the upper-left. Isolated on a fully transparent background. No ground shadow, no text, no border."
+  },
+  {
+    "sprite": "farm-landscape",
+    "entity": "landscape",
+    "role": "backdrop",
+    "width": 960,
+    "height": 540,
+    "style": "illustrated-2d",
+    "opaque": true,
+    "prompt": "Full-frame wide landscape painting of a sunny countryside farm, seen from a gentle elevated view, filling the entire image edge to edge. Warm late-morning light from the upper-right, soft aqua sky gradient at the top with a few fluffy white clouds, a pale gold sun glow near the upper-right corner. Rolling hills in layered moss green #4F8A3C, light green #7DB35A and aqua-tinted distant hills #A6D1BD, a few round broccoli-shaped trees with earth brown #5A3A22 trunks, a soft grassy foreground in deep green #2F5A2A. Gentle painterly flat cel shading, clean and cheerful, mid-tone values so it sits behind a bright playfield. Leave the central 60 percent of the image calm and low in detail, with no large objects. No text, no logos, no border, no vignette, no people, no animals."
+  },
+  {
+    "sprite": "fence-decor",
+    "entity": "decor",
+    "role": "fence",
+    "width": 384,
+    "height": 128,
+    "style": "illustrated-2d",
+    "opaque": false,
+    "prompt": "A short horizontal segment of a rustic wooden picket fence with a round green hedge bush at its left end, side view, centered. Weathered warm wood in earth brown #5A3A22 and soft tan #9A6A3F with straw-gold #E9B44C highlight on the top rail, moss green #4F8A3C and light green #7DB35A for the hedge with a few tiny cream flower dots. Clean 2px dark-brown outline, flat cel shading, light from the upper-left. Isolated on a fully transparent background. No ground shadow, no text, no label, no border."
   }
 ]

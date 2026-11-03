@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "skyline",
+  "role": "background",
+  "prompt": "full-frame night city skyline background for a side-scrolling parkour runner, deep navy to midnight blue vertical gradient sky, a soft cyan neon haze glowing near the horizon, distant silhouetted rooftops and towers in muted steel blue with a few small warm amber lit windows, subtle atmospheric depth with the far layers paler, lower third is quiet and dark so the foreground ground can sit on it, no characters, no vehicles, no text, no signs, no logos, no border, palette of deep navy, midnight blue, steel grey-blue, cyan haze and amber accents, flat composition with no heavy detail in the bottom 120 pixels",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 960,
+  "height": 540,
+  "mode": "RGBA",
+  "sha256": "0ae9ff3f73cc4b1bc6ff1caf89251108ebf4c3ed05fa7c5b8a70ffb38023002d"
+}

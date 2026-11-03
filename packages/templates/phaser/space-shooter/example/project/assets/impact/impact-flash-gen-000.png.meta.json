@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "impact",
+  "role": "impact-flash",
+  "prompt": "small bright energy impact flash, a four-point starburst with a hot white core, cyan and gold rays radiating outward, short soft glow falloff, palette of white, cyan and gold only, crisp pixel art, single centered effect on a fully transparent background, no text, no border, no background",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 64,
+  "mode": "RGBA",
+  "sha256": "bc8080e09a996839d788c41aae257c6b7cff52dfdcd6b38df6c36e4a679f6c71",
+  "postProcess": "background removed: dark backdrop flood-filled from image edges to alpha 0 (local key, no provider call)"
+}

@@ -213,7 +213,9 @@
       "pickup": "assets/pickup/loot-gen-000.png",
       "enemy-grunt": "assets/enemy/grunt-gen-000.png",
       "enemy-skitter": "assets/enemy/skitter-gen-000.png",
-      "enemy-stinger": "assets/enemy/stinger-gen-000.png"
+      "enemy-stinger": "assets/enemy/stinger-gen-000.png",
+      "floor-tile": "assets/floor/floor-tile-gen-000.png",
+      "hit-spark": "assets/fx/hit-spark-gen-000.png"
     }
   }
 }

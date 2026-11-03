@@ -43,5 +43,25 @@
     "height": 52,
     "style": "pixel-art",
     "prompt": "pixel art hovering security drone seen from the side, compact navy hull with a single coral red glowing sensor eye, two small steel rotor arms with blurred blades, cyan underglow beneath the hull, light from the upper-left, dark outline, centered, transparent background, no text, no logo, no border, palette of deep navy, steel grey, coral red and cyan"
+  },
+  {
+    "sprite": "bg-skyline",
+    "entity": "skyline",
+    "role": "background",
+    "width": 960,
+    "height": 540,
+    "style": "illustrated-2d",
+    "opaque": true,
+    "prompt": "full-frame night city skyline background for a side-scrolling parkour runner, deep navy to midnight blue vertical gradient sky, a soft cyan neon haze glowing near the horizon, distant silhouetted rooftops and towers in muted steel blue with a few small warm amber lit windows, subtle atmospheric depth with the far layers paler, lower third is quiet and dark so the foreground ground can sit on it, no characters, no vehicles, no text, no signs, no logos, no border, palette of deep navy, midnight blue, steel grey-blue, cyan haze and amber accents, flat composition with no heavy detail in the bottom 120 pixels"
+  },
+  {
+    "sprite": "ground-roof",
+    "entity": "ground",
+    "role": "roof",
+    "width": 512,
+    "height": 96,
+    "style": "illustrated-2d",
+    "opaque": true,
+    "prompt": "horizontally seamless rooftop ground strip for a side-scrolling runner game, dark navy concrete roof slab filling the whole frame, a bright thin cyan neon edge line along the top, a steel grey lip beneath it, small amber rivets and faint panel seams spaced evenly, subtle light from the upper-left with darker lower band, the left and right edges must match so the strip tiles seamlessly, full-frame opaque, no characters, no text, no signs, no logos, no border, palette of deep navy, steel grey, cyan and amber"
   }
 ]

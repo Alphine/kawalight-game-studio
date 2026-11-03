@@ -64,8 +64,14 @@ export function bar(scene, x, y, w, h, color = PALETTE.gold) {
 
 // Painted landscape: sky gradient, sun, layered hills and round trees. All
 // positions are derived from W/H so it fits any world size. Depth is set so
-// the whole backdrop sits behind gameplay (-20).
+// the whole backdrop sits behind gameplay (-20). When the generated
+// 'farm-landscape' art is loaded it replaces the procedural painting, since an
+// opaque full-frame image would hide anything drawn behind it.
 export function drawBackdrop(scene, W, H) {
+  if (scene.textures.exists('farm-landscape')) {
+    return scene.add.image(W / 2, H / 2, 'farm-landscape')
+      .setDisplaySize(W, H).setDepth(-20);
+  }
   const g = scene.add.graphics().setDepth(-20);
   g.fillGradientStyle(PALETTE.sky, PALETTE.sky, PALETTE.skyLight, PALETTE.skyLight, 1);
   g.fillRect(0, 0, W, H);

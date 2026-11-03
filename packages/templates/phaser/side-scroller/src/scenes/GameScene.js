@@ -34,6 +34,12 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#0d1626');
     this.cameras.main.setBounds(0, 0, config.world.levelWidth, config.world.levelHeight);
 
+    // Generated night-canyon backdrop: opaque, full frame, fixed behind all layers.
+    if (this.textures.exists('bg-night-canyon')) {
+      this.add.image(0, 0, 'bg-night-canyon')
+        .setOrigin(0, 0).setDisplaySize(W, H).setScrollFactor(0);
+    }
+
     // Parallax backdrop, far to near: haze, ridge, hills.
     this.clouds = this.add.tileSprite(0, 0, W, H, 'clouds')
       .setOrigin(0, 0).setAlpha(0.7).setScrollFactor(0.1);
@@ -42,9 +48,11 @@ export class GameScene extends Phaser.Scene {
     this.hills = this.add.tileSprite(0, H - 190, W, 120, 'hills')
       .setOrigin(0, 0).setScrollFactor(0.35);
 
-    // Static level geometry: one tileSprite per platform.
+    // Static level geometry: one tileSprite per platform. Solid ground uses the
+    // generated stone tile when it loaded, else the procedural brick.
+    const solidTile = this.textures.exists('ground-stone-tile') ? 'ground-stone-tile' : 'brick';
     for (const q of config.level.platforms) {
-      this.add.tileSprite(q.x, q.y, q.w, q.h, q.oneWay ? 'oneway' : 'brick')
+      this.add.tileSprite(q.x, q.y, q.w, q.h, q.oneWay ? 'oneway' : solidTile)
         .setOrigin(0, 0);
     }
     // Exit door + checkpoints.

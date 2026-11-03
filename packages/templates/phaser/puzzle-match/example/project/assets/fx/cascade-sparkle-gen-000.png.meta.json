@@ -1,0 +1,15 @@
+{
+  "source": "generated",
+  "entity": "fx",
+  "role": "cascade-sparkle",
+  "prompt": "single four-point star sparkle burst, bright white-gold core with soft cyan and gold glow rays, radiant light, centered, symmetric, transparent background, no text, no logos, no border, no gems",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 256,
+  "height": 256,
+  "mode": "RGBA",
+  "sha256": "caea77ad04577ba364c79747e03e539a41ef1de69f111a0a505b35b4cc506cb3",
+  "providerSha256": "1cfbc65e902287cd58e2d75bc67cafb7a91e23a3d61ae33a309ec311cd60d8c1",
+  "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+}

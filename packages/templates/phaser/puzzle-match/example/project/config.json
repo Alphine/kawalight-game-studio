@@ -65,7 +65,10 @@
       "gem-sapphire": "assets/gem/sapphire-gen-000.png",
       "gem-emerald": "assets/gem/emerald-gen-000.png",
       "gem-topaz": "assets/gem/topaz-gen-000.png",
-      "gem-amethyst": "assets/gem/amethyst-gen-000.png"
+      "gem-amethyst": "assets/gem/amethyst-gen-000.png",
+      "board-backdrop": "assets/scene/board-backdrop-gen-000.png",
+      "title-emblem": "assets/ui/title-emblem-gen-000.png",
+      "cascade-sparkle": "assets/fx/cascade-sparkle-gen-000.png"
     }
   }
 }

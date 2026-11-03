@@ -1,0 +1,15 @@
+{
+  "source": "generated",
+  "entity": "ui",
+  "role": "title-emblem",
+  "prompt": "ornate circular emblem medallion: five faceted gemstones in ruby red, sapphire blue, emerald green, topaz gold and amethyst violet arranged in a ring around a gold star, thin polished gold metal rim, dark navy inner field, bright specular highlights, centered, symmetric, transparent background, no text, no letters, no logos, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 512,
+  "height": 512,
+  "mode": "RGBA",
+  "sha256": "f4e966565e071bb3ffc6ce7590cf79a2b96a199c1005d20837a90c50c708aa9b",
+  "providerSha256": "a34f074918e5cc3eefe34d1acd9abd7c003286834a61f69a80193b2e8f6bb220",
+  "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+}

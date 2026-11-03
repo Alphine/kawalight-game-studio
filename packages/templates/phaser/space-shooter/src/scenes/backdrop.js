@@ -5,6 +5,9 @@
 export const SPARK_KEY = 'kgsm-spark';
 export const HALO_KEY = 'kgsm-halo';
 export const NEBULA_KEY = 'kgsm-nebula';
+// Optional generated full-frame art (see example/project/config.json).
+export const SPACE_BG_KEY = 'background-space';
+export const IMPACT_KEY = 'impact-flash';
 
 export const STAR_LAYERS = [
   { key: 'kgsm-stars-far', size: 256, count: 130, min: 70, max: 120, bigChance: 0.02, speed: 14, depth: -27 },
@@ -18,9 +21,17 @@ export function createBackdrop(scene, W, H) {
   base.fillGradientStyle(0x0a1030, 0x0a1030, 0x02030a, 0x02030a, 1);
   base.fillRect(0, 0, W, H);
 
+  // Generated opaque backdrop replaces the gradient visually; the procedural
+  // nebula and stars still scroll over it.
+  const hasArt = scene.textures.exists(SPACE_BG_KEY);
+  if (hasArt) {
+    scene.add.image(0, 0, SPACE_BG_KEY)
+      .setOrigin(0, 0).setDisplaySize(W, H).setDepth(-31);
+  }
+
   const layers = [];
   const nebula = scene.add.tileSprite(0, 0, W, H, NEBULA_KEY)
-    .setOrigin(0, 0).setDepth(-30).setAlpha(0.9);
+    .setOrigin(0, 0).setDepth(-30).setAlpha(hasArt ? 0.35 : 0.9);
   layers.push({ sprite: nebula, speed: NEBULA_SPEED });
   for (const s of STAR_LAYERS) {
     const sprite = scene.add.tileSprite(0, 0, W, H, s.key)

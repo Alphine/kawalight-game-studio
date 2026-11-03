@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "terrain",
+  "role": "stone-tile",
+  "prompt": "seamless square pixel-art mossy stone block tile, fully opaque square filling the whole frame edge to edge, weathered stone-violet #4a3b5c blocks with darker #352a45 mortar seams, a moss green #5fd08a cap along the top edge with lighter highlights, key light from upper-left, subtle cracks, edges tile seamlessly on all four sides; no transparency, no border, no text, no logo, no shadow outside the tile",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 64,
+  "mode": "RGBA",
+  "sha256": "75ad2411e2c4119d63d3019b52867065ad7299d1c744be1a1fc071fe0f73c6fd"
+}

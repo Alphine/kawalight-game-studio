@@ -1,0 +1,15 @@
+{
+  "source": "generated",
+  "entity": "decor",
+  "role": "fence",
+  "prompt": "A short horizontal segment of a rustic wooden picket fence with a round green hedge bush at its left end, side view, centered. Weathered warm wood in earth brown #5A3A22 and soft tan #9A6A3F with straw-gold #E9B44C highlight on the top rail, moss green #4F8A3C and light green #7DB35A for the hedge with a few tiny cream flower dots. Clean 2px dark-brown outline, flat cel shading, light from the upper-left. Isolated on a fully transparent background. No ground shadow, no text, no label, no border.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 384,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "6e9f9272f42e2461f6b3139553582c1b04aa12b23a6d7f86ca5159effe56e8e2",
+  "providerSha256": "c937935b4adc1c12afe1f695c569b19e6f1c62b4a9b8ad359f08111abf884dee",
+  "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+}

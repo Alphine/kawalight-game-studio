@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "scene",
+  "role": "board-backdrop",
+  "prompt": "full-frame dark navy gem cavern backdrop, deep navy base #0b1433 fading to near black at the corners as a soft vignette, faint crystal facets and gentle glints at the edges in ruby red, sapphire blue, emerald green, topaz gold and amethyst violet, calm empty dark center with soft diffuse light, flat painted look, no characters, no objects in the center, no text, no logos, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 960,
+  "height": 540,
+  "mode": "RGBA",
+  "sha256": "cd19696c6162c7f637e10f801a5ea0d55e9cd9486f5b913cddb4398f0cb2ff96"
+}

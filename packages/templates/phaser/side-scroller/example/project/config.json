@@ -276,7 +276,9 @@
       "spikes": "assets/hazard/spikes-gen-000.png",
       "coin": "assets/pickup/coin-gen-000.png",
       "exit-door": "assets/level/exit-door-gen-000.png",
-      "checkpoint": "assets/level/checkpoint-gen-000.png"
+      "checkpoint": "assets/level/checkpoint-gen-000.png",
+      "bg-night-canyon": "assets/background/canyon-backdrop-gen-000.png",
+      "ground-stone-tile": "assets/terrain/stone-tile-gen-000.png"
     }
   }
 }

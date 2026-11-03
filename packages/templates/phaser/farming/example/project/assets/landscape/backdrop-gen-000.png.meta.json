@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "landscape",
+  "role": "backdrop",
+  "prompt": "Full-frame wide landscape painting of a sunny countryside farm, seen from a gentle elevated view, filling the entire image edge to edge. Warm late-morning light from the upper-right, soft aqua sky gradient at the top with a few fluffy white clouds, a pale gold sun glow near the upper-right corner. Rolling hills in layered moss green #4F8A3C, light green #7DB35A and aqua-tinted distant hills #A6D1BD, a few round broccoli-shaped trees with earth brown #5A3A22 trunks, a soft grassy foreground in deep green #2F5A2A. Gentle painterly flat cel shading, clean and cheerful, mid-tone values so it sits behind a bright playfield. Leave the central 60 percent of the image calm and low in detail, with no large objects. No text, no logos, no border, no vignette, no people, no animals.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 960,
+  "height": 540,
+  "mode": "RGBA",
+  "sha256": "094e6260bc0b27aeada408ce0b2ad14e909ff95ab8132405a62cba1ec84e4647"
+}

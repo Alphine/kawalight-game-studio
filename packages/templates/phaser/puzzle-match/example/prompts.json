@@ -43,5 +43,35 @@
     "height": 64,
     "style": "pixel-art",
     "prompt": "single faceted amethyst gemstone, pixel art, centered, bright violet purple with specular highlight, solid dark outline, transparent background, no text, no border"
+  },
+  {
+    "sprite": "board-backdrop",
+    "entity": "scene",
+    "role": "board-backdrop",
+    "width": 960,
+    "height": 540,
+    "style": "illustrated-2d",
+    "opaque": true,
+    "prompt": "full-frame dark navy gem cavern backdrop, deep navy base #0b1433 fading to near black at the corners as a soft vignette, faint crystal facets and gentle glints at the edges in ruby red, sapphire blue, emerald green, topaz gold and amethyst violet, calm empty dark center with soft diffuse light, flat painted look, no characters, no objects in the center, no text, no logos, no border"
+  },
+  {
+    "sprite": "title-emblem",
+    "entity": "ui",
+    "role": "title-emblem",
+    "width": 512,
+    "height": 512,
+    "style": "illustrated-2d",
+    "opaque": false,
+    "prompt": "ornate circular emblem medallion: five faceted gemstones in ruby red, sapphire blue, emerald green, topaz gold and amethyst violet arranged in a ring around a gold star, thin polished gold metal rim, dark navy inner field, bright specular highlights, centered, symmetric, transparent background, no text, no letters, no logos, no border"
+  },
+  {
+    "sprite": "cascade-sparkle",
+    "entity": "fx",
+    "role": "cascade-sparkle",
+    "width": 256,
+    "height": 256,
+    "style": "illustrated-2d",
+    "opaque": false,
+    "prompt": "single four-point star sparkle burst, bright white-gold core with soft cyan and gold glow rays, radiant light, centered, symmetric, transparent background, no text, no logos, no border, no gems"
   }
 ]

@@ -1,0 +1,15 @@
+{
+  "source": "generated",
+  "entity": "fx",
+  "role": "hit-spark",
+  "prompt": "a single bright impact flash effect seen from above: a four-point starburst with a hot pale ivory core, short amber-gold (#ffb347) and pale cyan-blue (#8fc8ff) rays radiating outward, a soft glowing halo, symmetric and centered. Palette limited to pale ivory (#f4f1e8), amber gold (#ffb347), light cyan-blue (#8fc8ff) and deep navy ink (#141a2e) for a thin outer edge. Centered, fully transparent background, no text, no logo, no border, no frame.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "d2741b90cb923f7436ca5811fb8ae048315306d06e95099a76da4913248e5d1f",
+  "providerSha256": "b823e5b4b63b2e9113c7d0d55be2f00f211675836193370b95b056feafef317e",
+  "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+}

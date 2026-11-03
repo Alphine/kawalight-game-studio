@@ -67,6 +67,13 @@ export class GameScene extends Phaser.Scene {
       yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
 
+    // Generated fence decor in the right margin, bottom-aligned with the field.
+    if (this.textures.exists('fence-decor')) {
+      const marginL = f.originX + this.fieldW + FRAME;
+      this.add.image((marginL + W) / 2, f.originY + this.fieldH - 10, 'fence-decor')
+        .setOrigin(0.5, 1).setDisplaySize(150, 50).setDepth(2);
+    }
+
     // Soil + crop + marker layers, one entry per plot.
     this.cells = [];
     for (let r = 0; r < f.rows; r++) {

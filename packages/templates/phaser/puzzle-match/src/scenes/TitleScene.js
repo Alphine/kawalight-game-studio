@@ -19,6 +19,9 @@ export class TitleScene extends Phaser.Scene {
     const W = config.world.width;
     const H = config.world.height;
     this.cameras.main.setBackgroundColor(PALETTE.ink);
+    if (this.textures.exists('board-backdrop')) {
+      this.add.image(W / 2, H / 2, 'board-backdrop').setDisplaySize(W, H).setDepth(-1);
+    }
 
     // Decorative board along the bottom, drawn with the same plates as the game.
     const keys = config.gems.map((g) => g.sprite);
@@ -57,6 +60,12 @@ export class TitleScene extends Phaser.Scene {
     const cardH = 130;
     const cardY = 96;
     framedPanel(this, W / 2 - cardW / 2, cardY, cardW, cardH, { radius: 18 });
+    // Gem emblem on each side of the name, when the emblem sprite is loaded.
+    if (this.textures.exists('title-emblem')) {
+      const emblemY = cardY + cardH / 2;
+      this.add.image(W / 2 - 245, emblemY, 'title-emblem').setDisplaySize(110, 110);
+      this.add.image(W / 2 + 245, emblemY, 'title-emblem').setDisplaySize(110, 110).setFlipX(true);
+    }
     this.add.text(W / 2, cardY + 50, 'GEM RUSH', {
       fontFamily: 'monospace', fontSize: '60px', fontStyle: 'bold',
       color: '#ffd479', stroke: '#5a3a00', strokeThickness: 8,

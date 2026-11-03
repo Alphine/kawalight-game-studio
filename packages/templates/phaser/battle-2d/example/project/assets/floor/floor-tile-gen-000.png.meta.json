@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "floor",
+  "role": "floor-tile",
+  "prompt": "seamless tiling top-down floor texture for a dark sci-fi arena, square stone slabs with thin bevelled grout lines and small riveted corners, viewed straight from above, lit softly from the top-left. Palette limited to deep navy (#141a2e), dark navy stone (#171f38), slightly lighter cobalt-blue highlight edges (#2a3561) and near-black shadow grooves (#0b0f1d), with faint cobalt blue (#3d6fd6) rivet glints. Edges must wrap seamlessly so the tile repeats with no visible seam, low contrast, no focal object, no characters, no props. Full-frame square image, fully opaque background, no text, no logo, no border, no frame.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 256,
+  "height": 256,
+  "mode": "RGBA",
+  "sha256": "0e0972fd7666a95b4078700be27d27a6c038a77138864b9ea0ac3b9789c02aae"
+}

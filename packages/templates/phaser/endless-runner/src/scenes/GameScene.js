@@ -31,14 +31,27 @@ export class GameScene extends Phaser.Scene {
     this.lastDust = 0;
 
     this.cameras.main.setBackgroundColor('#0b1020');
+    // Generated full-frame skyline sits behind the procedural layers (added first).
+    if (this.textures.exists('bg-skyline')) {
+      this.add.image(0, 0, 'bg-skyline').setOrigin(0, 0).setDisplaySize(W, H);
+    }
     this.far = this.add.tileSprite(0, this.groundY - 120, W, 120, 'far')
       .setOrigin(0, 0).setAlpha(0.55);
     this.clouds = this.add.tileSprite(0, 0, W, H, 'clouds')
       .setOrigin(0, 0).setAlpha(0.7);
     this.hills = this.add.tileSprite(0, this.groundY - 80, W, 80, 'hills')
       .setOrigin(0, 0);
-    this.ground = this.add.tileSprite(0, this.groundY, W, H - this.groundY, 'ground')
-      .setOrigin(0, 0);
+    if (this.textures.exists('ground-roof')) {
+      // Generated roof strip (512x96) scaled to the ground band height.
+      this.ground = this.add.tileSprite(0, this.groundY, W, H - this.groundY, 'ground-roof')
+        .setOrigin(0, 0);
+      const s = (H - this.groundY) / 96;
+      this.ground.tileScaleX = s;
+      this.ground.tileScaleY = s;
+    } else {
+      this.ground = this.add.tileSprite(0, this.groundY, W, H - this.groundY, 'ground')
+        .setOrigin(0, 0);
+    }
     this.typeToKey = new Map(config.obstacles.map((o) => [o.id, o.sprite]));
     this.typeToDef = new Map(config.obstacles.map((o) => [o.id, o]));
 

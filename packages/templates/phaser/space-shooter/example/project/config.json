@@ -194,7 +194,9 @@
       "pickup": "assets/pickup/power-orb-gen-000.png",
       "enemy-drone": "assets/enemy/drone-gen-000.png",
       "enemy-weaver": "assets/enemy/weaver-gen-000.png",
-      "enemy-diver": "assets/enemy/diver-gen-000.png"
+      "enemy-diver": "assets/enemy/diver-gen-000.png",
+      "background-space": "assets/background/space-nebula-gen-000.png",
+      "impact-flash": "assets/impact/impact-flash-gen-000.png"
     }
   }
 }

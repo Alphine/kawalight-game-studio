@@ -43,6 +43,24 @@
       "provider": "meta-image",
       "model": "muse-image-1.0",
       "sha256": "ae096af1811376d93696578e2d309962934a9cd82869fa012eedf39f650682ae"
+    },
+    {
+      "sprite": "background-space",
+      "file": "assets/background/space-nebula-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "a1a7684b54ff653d84d779a41718a4b0f8a564013b7a99520cd8c6b584eda4b2",
+      "providerSha256": null,
+      "postProcess": null
+    },
+    {
+      "sprite": "impact-flash",
+      "file": "assets/impact/impact-flash-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "bc8080e09a996839d788c41aae257c6b7cff52dfdcd6b38df6c36e4a679f6c71",
+      "providerSha256": null,
+      "postProcess": "background removed: dark backdrop flood-filled from image edges to alpha 0 (local key, no provider call)"
     }
   ],
   "playable": "galaxy-strike-playable.zip",

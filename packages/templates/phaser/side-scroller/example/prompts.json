@@ -52,5 +52,25 @@
     "height": 96,
     "style": "pixel-art",
     "prompt": "pixel-art wooden checkpoint signpost with a small amber-glowing lantern on top, a moss-green #5fd08a banner, stone-violet #4a3b5c base, dark navy #1c2b3a outline; key light from upper-left; transparent background, no text, no lettering, no border"
+  },
+  {
+    "sprite": "bg-night-canyon",
+    "entity": "background",
+    "role": "canyon-backdrop",
+    "width": 960,
+    "height": 540,
+    "style": "pixel-art",
+    "opaque": true,
+    "prompt": "full-frame side-view pixel-art night canyon backdrop, layered depth: a deep navy night sky with a few small pale stars and a soft large amber-lit moon at upper-left, distant stone-violet #4a3b5c mountain silhouettes fading into haze, mid-ground dark pine #2e4a3f cliffs with moss green #5fd08a highlights on their upper edges, lower third is dark navy #1c2b3a shadowed valley floor with faint moss; key light from upper-left; low contrast, calm, uncluttered center band so a platformer character stays readable in front; no text, no logo, no border, no characters, no UI"
+  },
+  {
+    "sprite": "ground-stone-tile",
+    "entity": "terrain",
+    "role": "stone-tile",
+    "width": 64,
+    "height": 64,
+    "style": "pixel-art",
+    "opaque": true,
+    "prompt": "seamless square pixel-art mossy stone block tile, fully opaque square filling the whole frame edge to edge, weathered stone-violet #4a3b5c blocks with darker #352a45 mortar seams, a moss green #5fd08a cap along the top edge with lighter highlights, key light from upper-left, subtle cracks, edges tile seamlessly on all four sides; no transparency, no border, no text, no logo, no shadow outside the tile"
   }
 ]

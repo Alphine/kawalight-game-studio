@@ -9,7 +9,7 @@ import { createStore } from '../../runtime/store.js';
 import { createAudio } from '../../runtime/audio.js';
 import { createDebug } from '../../runtime/debug.js';
 import { burst, shake, flash, popup } from '../../runtime/juice.js';
-import { createBackdrop, SPARK_KEY, HALO_KEY } from './backdrop.js';
+import { createBackdrop, SPARK_KEY, HALO_KEY, IMPACT_KEY } from './backdrop.js';
 import { COLOR, HEX, FONT, drawPanel, drawRule } from './ui.js';
 
 // Sprites are generated at 128px; these are the on-screen sizes (px) that
@@ -449,6 +449,18 @@ export class GameScene extends Phaser.Scene {
             scale: boss ? 1.9 : 1.4,
           });
           this.ring(img.x, img.y, boss ? COLOR.rose : COLOR.gold, boss ? 30 : 16);
+          if (this.textures.exists(IMPACT_KEY)) {
+            const base = boss ? 1.6 : 0.9;
+            const flashImg = this.add.image(img.x, img.y, IMPACT_KEY)
+              .setDepth(7).setScale(base);
+            this.tweens.add({
+              targets: flashImg,
+              scale: base * 1.8,
+              alpha: 0,
+              duration: boss ? 420 : 260,
+              onComplete: () => flashImg.destroy(),
+            });
+          }
           if (kill) {
             popup(this, img.x, img.y - 18, `+${kill.gain}`, {
               color: HEX.gold, size: '14px',

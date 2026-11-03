@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "background",
+  "role": "space-nebula",
+  "prompt": "full-frame deep space backdrop, 16:9 landscape, edge to edge, soft violet and teal nebula clouds drifting across a near-black navy sky, a few faint distant galaxies, scattered tiny white and pale cyan stars with sparse brighter star points, darker vignette toward the corners, low contrast and calm so bright sprites stay readable on top, no planets, no ships, no central object, palette limited to deep navy, violet, teal and white, no text, no logo, no border, no frame",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 960,
+  "height": 540,
+  "mode": "RGBA",
+  "sha256": "a1a7684b54ff653d84d779a41718a4b0f8a564013b7a99520cd8c6b584eda4b2"
+}

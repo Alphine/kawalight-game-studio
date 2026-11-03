@@ -40,6 +40,24 @@
       "model": "muse-image-1.0",
       "sha256": "bc6e6597018244a275c4ab31340fc50a68f48c4e1394fede464ade5b041bbd07",
       "postProcessing": "white background flood-filled from the border to transparency (no regeneration)"
+    },
+    {
+      "sprite": "farm-landscape",
+      "file": "assets/landscape/backdrop-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "094e6260bc0b27aeada408ce0b2ad14e909ff95ab8132405a62cba1ec84e4647",
+      "providerSha256": null,
+      "postProcess": null
+    },
+    {
+      "sprite": "fence-decor",
+      "file": "assets/decor/fence-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "6e9f9272f42e2461f6b3139553582c1b04aa12b23a6d7f86ca5159effe56e8e2",
+      "providerSha256": "c937935b4adc1c12afe1f695c569b19e6f1c62b4a9b8ad359f08111abf884dee",
+      "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
     }
   ],
   "playable": "sunny-acres-playable.zip"

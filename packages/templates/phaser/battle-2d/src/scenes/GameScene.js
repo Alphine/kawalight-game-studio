@@ -35,7 +35,9 @@ export class GameScene extends Phaser.Scene {
     const bw = b.maxX - b.minX;
     const bh = b.maxY - b.minY;
 
-    this.add.tileSprite(0, 0, W, H, 'arena-floor').setOrigin(0, 0);
+    // Generated seamless floor tile when present; the procedural tile is the fallback.
+    const floorKey = this.textures.exists('floor-tile') ? 'floor-tile' : 'arena-floor';
+    this.add.tileSprite(0, 0, W, H, floorKey).setOrigin(0, 0);
     this.add.image(W / 2, H / 2, 'arena-vignette').setOrigin(0.5).setDepth(2);
 
     // Arena wall: dark outer band, amber inner rule, cobalt hairline.
@@ -200,6 +202,17 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  // Generated hit-spark at an impact point; a no-op if the texture is missing.
+  spark(x, y, px = 40) {
+    if (!this.textures.exists('hit-spark')) return;
+    const img = this.add.image(x, y, 'hit-spark').setDepth(7);
+    img.setScale(px / 128).setRotation(Math.random() * Math.PI);
+    this.tweens.add({
+      targets: img, scale: (px * 1.5) / 128, alpha: 0, duration: 220, ease: 'Cubic.easeOut',
+      onComplete: () => img.destroy(),
+    });
+  }
+
   handleEvents(events) {
     const p = this.sim.player;
     for (const e of events) {
@@ -219,6 +232,7 @@ export class GameScene extends Phaser.Scene {
           colors: [0xff5a5a, 0xffb347, 0xffffff], gravityY: 0, scale: 1.5,
         });
         hitFlash(this, this.playerImg, 0xff5a5a, 140);
+        this.spark(p.x, p.y, 48);
       } else if (e.type === 'pickup') {
         this.audio.pickup();
         burst(this, p.x, p.y, {
@@ -328,6 +342,7 @@ export class GameScene extends Phaser.Scene {
       if (struck) {
         // Impact: white flash (after the damage tint, so it is visible) plus sparks.
         hitFlash(this, img, 0xffffff, 70);
+        this.spark(e.x, e.y, 40);
         burst(this, e.x, e.y, {
           count: 6, speedMin: 40, speedMax: 160, lifespan: 260,
           colors: [0xffffff, 0xffb347], gravityY: 0, scale: 1.0,

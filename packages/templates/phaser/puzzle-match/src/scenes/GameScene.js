@@ -79,6 +79,12 @@ export class GameScene extends Phaser.Scene {
   drawBoard() {
     const b = this.cfg.board;
     const pad = 10;
+    // Full-frame generated backdrop behind everything, when the sprite is loaded.
+    if (this.textures.exists('board-backdrop')) {
+      const W = this.cfg.world.width;
+      const H = this.cfg.world.height;
+      this.add.image(W / 2, H / 2, 'board-backdrop').setDisplaySize(W, H).setDepth(-1);
+    }
     framedPanel(this, b.originX - pad, b.originY - pad,
       b.cols * b.tileSize + pad * 2, b.rows * b.tileSize + pad * 2,
       { radius: 16, alpha: 0.96 });
@@ -358,6 +364,15 @@ export class GameScene extends Phaser.Scene {
     // A cascade shakes the board a little; a deeper one shakes it harder.
     if (cascade >= 2) shake(this, 200, 0.008);
     else if (cascade === 1) shake(this, 110, 0.004);
+    // A sparkle flash marks each cascade, when the sparkle sprite is loaded.
+    if (cascade > 0 && this.textures.exists('cascade-sparkle')) {
+      const spark = this.add.image(cx / n, cy / n, 'cascade-sparkle')
+        .setDisplaySize(64, 64).setAlpha(0.95).setDepth(18);
+      this.tweens.add({
+        targets: spark, scale: { from: 0.4, to: 1.3 }, alpha: 0, angle: 45,
+        duration: 420, ease: 'Cubic.easeOut', onComplete: () => spark.destroy(),
+      });
+    }
     return Promise.all(waits);
   }
 

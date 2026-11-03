@@ -52,5 +52,24 @@
     "height": 128,
     "style": "pixel-art",
     "prompt": "heavy alien diver ship facing left toward the player, arrowhead-shaped coral-red hull with magenta edge plates and a dark cockpit with a gold glow, dark navy outline, light from the top-left, palette of coral red, magenta, deep plum and gold, crisp pixel art, single centered sprite on a fully transparent background, no text, no logo, no border, no background"
+  },
+  {
+    "sprite": "background-space",
+    "entity": "background",
+    "role": "space-nebula",
+    "width": 960,
+    "height": 540,
+    "style": "illustrated-2d",
+    "opaque": true,
+    "prompt": "full-frame deep space backdrop, 16:9 landscape, edge to edge, soft violet and teal nebula clouds drifting across a near-black navy sky, a few faint distant galaxies, scattered tiny white and pale cyan stars with sparse brighter star points, darker vignette toward the corners, low contrast and calm so bright sprites stay readable on top, no planets, no ships, no central object, palette limited to deep navy, violet, teal and white, no text, no logo, no border, no frame"
+  },
+  {
+    "sprite": "impact-flash",
+    "entity": "impact",
+    "role": "impact-flash",
+    "width": 64,
+    "height": 64,
+    "style": "pixel-art",
+    "prompt": "small bright energy impact flash, a four-point starburst with a hot white core, cyan and gold rays radiating outward, short soft glow falloff, palette of white, cyan and gold only, crisp pixel art, single centered effect on a fully transparent background, no text, no border, no background"
   }
 ]

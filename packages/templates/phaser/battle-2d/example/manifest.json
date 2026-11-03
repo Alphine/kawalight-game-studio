@@ -64,6 +64,24 @@
       "sha256": "fa8d4b23a9da0b4bb92349afa315272adb7ba947de58a8fd75578b480ac3823b",
       "generatedSha256": "22803094ad50a8f8d24b2c445a4c5fd86b1ad6b8662d37604f1b70b1ddd25218",
       "postProcess": "edge-connected near-white backdrop set to alpha 0 (Meta returns opaque white canvas)"
+    },
+    {
+      "sprite": "floor-tile",
+      "file": "assets/floor/floor-tile-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "0e0972fd7666a95b4078700be27d27a6c038a77138864b9ea0ac3b9789c02aae",
+      "providerSha256": null,
+      "postProcess": null
+    },
+    {
+      "sprite": "hit-spark",
+      "file": "assets/fx/hit-spark-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "d2741b90cb923f7436ca5811fb8ae048315306d06e95099a76da4913248e5d1f",
+      "providerSha256": "b823e5b4b63b2e9113c7d0d55be2f00f211675836193370b95b056feafef317e",
+      "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
     }
   ],
   "playable": "arena-clash-playable.zip",
