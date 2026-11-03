@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "enemy",
+  "role": "diver",
+  "prompt": "heavy alien diver ship facing left toward the player, arrowhead-shaped coral-red hull with magenta edge plates and a dark cockpit with a gold glow, dark navy outline, light from the top-left, palette of coral red, magenta, deep plum and gold, crisp pixel art, single centered sprite on a fully transparent background, no text, no logo, no border, no background",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "ccb925b44b8df7bdd8c867ffa4fbb764c963c9f7fac68f972687ef3195478892"
+}

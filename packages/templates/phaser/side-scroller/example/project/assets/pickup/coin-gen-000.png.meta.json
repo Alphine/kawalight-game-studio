@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "pickup",
+  "role": "coin",
+  "prompt": "pixel-art round gold coin with a small moss-green leaf emblem in the center, bright amber #ffd479 face, pale highlight at upper-left, darker amber #c98a2e rim, dark navy #1c2b3a outline; transparent background, no lettering, no text, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 40,
+  "height": 40,
+  "mode": "RGBA",
+  "sha256": "15d499ed31c21ca0c1cf800f4aec910f8b56c1e4342dc6d332265fd27123d646",
+  "postProcess": "border-connected near-white background keyed to alpha 0"
+}

@@ -1,0 +1,52 @@
+{
+  "genre": "puzzle-match",
+  "provider": "meta-image",
+  "assets": [
+    {
+      "sprite": "gem-ruby",
+      "file": "assets/gem/ruby-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "b36c458a87cf7dd3fbceca2e1bf305f9324c7bbad2c1df15ebddcf5572808ac5",
+      "providerSha256": "1536b71d34214597eec1f2135d38a8112234c792612dacff66eec8fe27dd3c6d",
+      "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+    },
+    {
+      "sprite": "gem-sapphire",
+      "file": "assets/gem/sapphire-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "9fae250699017eb5ac4a5f5641197cf6f75662cd2bfd8eb014f447b09e52eec0",
+      "providerSha256": "ff41e7eb4c341a268e4607732904e63bb8ba5c35643d5f2e631aeb492da4c1cb",
+      "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+    },
+    {
+      "sprite": "gem-emerald",
+      "file": "assets/gem/emerald-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "f1541e2b06ac409f7d1a21a460adb673e941138dbcfecc8f4b79043935a97bbd",
+      "providerSha256": "cfcc667a78281f3453b38fcee36a96d5dbe1d7553dd9a448dd54839cb438b89d",
+      "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+    },
+    {
+      "sprite": "gem-topaz",
+      "file": "assets/gem/topaz-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "0a65a1a374b5ea4301d97c9c7c52f2b43ee0981a8a4b86cceceeea19d04c79ef",
+      "providerSha256": "00925c118647d3b6312e04669ce5716dca4a5ff2777e90d9b0721d1d279d8901",
+      "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+    },
+    {
+      "sprite": "gem-amethyst",
+      "file": "assets/gem/amethyst-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "339feb3e0a87ffff2d76bfa6e001b57214231630453c35f612e3b075f4e6aac1",
+      "providerSha256": "e3eb534a740b551314cfc0de17bcde956ce5c6cfb961a03d50f615fb1cb16a2b",
+      "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+    }
+  ],
+  "playable": "gem-rush-playable.zip"
+}

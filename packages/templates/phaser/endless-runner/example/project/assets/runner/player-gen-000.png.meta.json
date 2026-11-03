@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "runner",
+  "role": "player",
+  "prompt": "side-view pixel art of a young parkour courier mid-stride running to the right, dark navy hooded jacket with cyan piping, glowing cyan visor, small amber backpack strap, coral red sneaker accents, one bold dark outline around the whole silhouette, light from the upper-left with a single darker shade on the lower-right, palette limited to deep navy, cyan, amber and coral red, full body centered, transparent background, no text, no logo, no border, no ground shadow",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 72,
+  "height": 96,
+  "mode": "RGBA",
+  "sha256": "087f7312f4a346419a56b803ea6caf740fb9bdec9af2f69ad6e40bbfc0257d26"
+}

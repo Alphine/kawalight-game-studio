@@ -1,0 +1,47 @@
+[
+  {
+    "sprite": "player",
+    "entity": "runner",
+    "role": "player",
+    "width": 72,
+    "height": 96,
+    "style": "pixel-art",
+    "prompt": "side-view pixel art of a young parkour courier mid-stride running to the right, dark navy hooded jacket with cyan piping, glowing cyan visor, small amber backpack strap, coral red sneaker accents, one bold dark outline around the whole silhouette, light from the upper-left with a single darker shade on the lower-right, palette limited to deep navy, cyan, amber and coral red, full body centered, transparent background, no text, no logo, no border, no ground shadow"
+  },
+  {
+    "sprite": "coin",
+    "entity": "coin",
+    "role": "pickup",
+    "width": 40,
+    "height": 40,
+    "style": "pixel-art",
+    "prompt": "pixel art spinning gold coin with a thin cyan neon ring around the rim, bright amber face with a pale yellow glossy highlight on the upper-left, darker amber shade on the lower-right, dark brown-navy outline, centered, transparent background, no text, no symbols, no border, palette of amber, pale yellow, cyan and deep navy"
+  },
+  {
+    "sprite": "obstacle-spike",
+    "entity": "spike",
+    "role": "hazard",
+    "width": 60,
+    "height": 80,
+    "style": "pixel-art",
+    "prompt": "pixel art cluster of three jagged steel spikes rising from a small dark navy rooftop base, coral red glowing tips with a pale pink highlight, steel grey-blue edges, light from the upper-left with darker lower-right faces, dark outline, centered, transparent background, no text, no logo, no border, palette of deep navy, steel grey, coral red and pale pink"
+  },
+  {
+    "sprite": "obstacle-block",
+    "entity": "crate",
+    "role": "hazard",
+    "width": 72,
+    "height": 112,
+    "style": "pixel-art",
+    "prompt": "pixel art rooftop cargo crate, steel-plated box with a dark navy frame, amber and navy diagonal hazard stripes across the top, coral red corner bolts, light from the upper-left with a darker lower-right side, dark outline, front-facing, centered, transparent background, no text, no logo, no border, palette of deep navy, steel grey, amber and coral red"
+  },
+  {
+    "sprite": "obstacle-drone",
+    "entity": "drone",
+    "role": "hazard",
+    "width": 80,
+    "height": 52,
+    "style": "pixel-art",
+    "prompt": "pixel art hovering security drone seen from the side, compact navy hull with a single coral red glowing sensor eye, two small steel rotor arms with blurred blades, cyan underglow beneath the hull, light from the upper-left, dark outline, centered, transparent background, no text, no logo, no border, palette of deep navy, steel grey, coral red and cyan"
+  }
+]

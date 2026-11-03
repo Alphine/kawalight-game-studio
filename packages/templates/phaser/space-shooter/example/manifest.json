@@ -1,0 +1,50 @@
+{
+  "genre": "space-shooter",
+  "provider": "meta-image",
+  "assets": [
+    {
+      "sprite": "player",
+      "file": "assets/hero/player-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "2a04aefd48017b9942eed2e5eef893c36b1b4a5d624c6032c82c32eab91278b4"
+    },
+    {
+      "sprite": "shot",
+      "file": "assets/shot/player-bolt-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "23bcfe160103b4357e634ebf37c075e656be7358b189807c01d3b156b8aafb38"
+    },
+    {
+      "sprite": "pickup",
+      "file": "assets/pickup/power-orb-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "de869c44b10a0e566a7e289eca383967b3c03f400f9050f0a6760a7684273afc"
+    },
+    {
+      "sprite": "enemy-drone",
+      "file": "assets/enemy/drone-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "14f0744562cc4bd5ab66fa5feb3c615f6cf459b0bf9ae472ebd5c92d47e930a2"
+    },
+    {
+      "sprite": "enemy-weaver",
+      "file": "assets/enemy/weaver-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "6842cd3d4d2269698a143261761f7b24895cb89afa0d3dab2177fbf1b347d394"
+    },
+    {
+      "sprite": "enemy-diver",
+      "file": "assets/enemy/diver-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "ae096af1811376d93696578e2d309962934a9cd82869fa012eedf39f650682ae"
+    }
+  ],
+  "playable": "galaxy-strike-playable.zip",
+  "postProcess": "background removed from flat light backdrop (flood fill from image edges, alpha 0); source Meta output kept in each *.meta.json"
+}

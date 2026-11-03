@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectName": "Gem Rush",
+  "genre": "puzzle-match",
+  "theme": "Gem Rush",
+  "visualStyle": "pixel-art",
+  "targetRuntime": "phaser3-html5",
+  "resolution": { "width": 960, "height": 540 },
+  "controls": { "scheme": "mouse-keyboard", "actions": ["swap", "hint", "reshuffle"] },
+  "difficulty": { "preset": "normal", "ramp": "gradual" },
+  "gameLoop": "Swap two neighbouring gems on a 7x7 board to line up three or more of the same kind. Cleared gems score, the board falls and refills, and cascades pay a bonus.",
+  "player": { "abilities": ["swap"], "health": 1, "lives": 1 },
+  "obstacles": [
+    { "id": "move-limit", "role": "every accepted swap costs one of 25 moves" },
+    { "id": "dead-board", "role": "when no move is left the board reshuffles, which costs no moves but breaks any plan" }
+  ],
+  "collectibles": "Gems score 10 points each; cascades add 50% per level.",
+  "progression": "Five gem kinds on a 7x7 board; a reshuffle happens only when no move is left.",
+  "scoring": "10 points per cleared gem, plus a 50% bonus for each cascade level.",
+  "winCondition": "Reach 1300 points before the moves run out.",
+  "loseCondition": "Run out of moves below the target.",
+  "seed": 7,
+  "notes": "Demo blueprint for the puzzle-match template."
+}

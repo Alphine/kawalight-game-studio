@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "hero",
+  "role": "runner",
+  "prompt": "side-view pixel-art explorer hero, full body standing facing right, green hooded tunic, brown leather belt, tan boots, short amber scarf; palette limited to moss green #5fd08a and deep green #2e4a3f, stone violet #4a3b5c, warm amber #ffd479 accents, dark navy #1c2b3a 1px outline; key light from upper-left with darker shading on lower-right; chunky readable pixel clusters, clear silhouette; transparent background, no ground shadow, no text, no logo, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 88,
+  "mode": "RGBA",
+  "sha256": "5463ef8fc71e848573bdd7c668a9261bf2303c72e8a9442720a55f6e9441af49",
+  "postProcess": "border-connected near-white background keyed to alpha 0"
+}

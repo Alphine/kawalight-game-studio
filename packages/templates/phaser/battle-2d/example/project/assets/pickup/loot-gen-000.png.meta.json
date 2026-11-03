@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "pickup",
+  "role": "loot",
+  "prompt": "a single faceted gemstone crystal floating in a soft amber-gold glow, seen from above, cut facets with pale ivory specular glints and a few tiny sparkle stars, pale ivory and amber gold palette (#ffd479, #ffb347) with deep navy ink (#141a2e) outline about 3px, soft light from the top-left, centered, fully transparent background, no text, no logo, no border, no frame.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 96,
+  "height": 96,
+  "mode": "RGBA",
+  "sha256": "9cd3676cedbab9636228cd648d27a9a7483aa972f9adb82f02e72f5dc94272a7"
+}

@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "enemy",
+  "role": "grunt",
+  "prompt": "top-down view seen from directly above, a hulking brute monster with heavy crimson-red armored plates, a spiked iron club raised toward the top edge of the image, broad symmetric body, small amber-gold eyes. Palette limited to deep navy ink (#141a2e), crimson red (#d9434f), dark crimson shadow, and amber gold rim highlights. Clean consistent dark navy outline about 3px, soft light from the top-left, contact shadow falling to the bottom-right. Centered, fully transparent background, no text, no logo, no border, no frame.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "8f437dabdbcba1c087ec6d62b843a55d1a823a1d63ac8e9a7ef7485ffcd625c5"
+}

@@ -1,0 +1,65 @@
+[
+  {
+    "sprite": "player",
+    "entity": "hero",
+    "role": "player",
+    "width": 128,
+    "height": 128,
+    "style": "illustrated-2d",
+    "prompt": "top-down view seen from directly above, a compact armored knight with a round tower shield on the left arm and a short sword on the right, weapon and nose pointing straight toward the top edge of the image, symmetric silhouette. Palette limited to deep navy ink (#141a2e), cobalt blue steel (#3d6fd6), amber gold trim (#ffb347), and pale ivory highlights. Clean consistent dark navy outline about 3px, soft light from the top-left, gentle contact shadow falling to the bottom-right. Centered, fully transparent background, no text, no logo, no border, no frame."
+  },
+  {
+    "sprite": "enemy-grunt",
+    "entity": "enemy",
+    "role": "grunt",
+    "width": 128,
+    "height": 128,
+    "style": "illustrated-2d",
+    "prompt": "top-down view seen from directly above, a hulking brute monster with heavy crimson-red armored plates, a spiked iron club raised toward the top edge of the image, broad symmetric body, small amber-gold eyes. Palette limited to deep navy ink (#141a2e), crimson red (#d9434f), dark crimson shadow, and amber gold rim highlights. Clean consistent dark navy outline about 3px, soft light from the top-left, contact shadow falling to the bottom-right. Centered, fully transparent background, no text, no logo, no border, no frame."
+  },
+  {
+    "sprite": "enemy-skitter",
+    "entity": "enemy",
+    "role": "skitter",
+    "width": 96,
+    "height": 96,
+    "style": "illustrated-2d",
+    "prompt": "top-down view seen from directly above, a small fast spider-like skitter bug with a narrow segmented crimson-red carapace, six thin jointed legs splayed symmetrically, head pointing toward the top edge of the image, two cobalt-blue glowing eyes. Palette limited to deep navy ink (#141a2e), crimson red (#d9434f), cobalt blue glow (#3d6fd6), and pale ivory highlights. Clean consistent dark navy outline about 3px, soft light from the top-left, small contact shadow falling to the bottom-right. Centered, fully transparent background, no text, no logo, no border, no frame."
+  },
+  {
+    "sprite": "enemy-stinger",
+    "entity": "enemy",
+    "role": "stinger",
+    "width": 128,
+    "height": 128,
+    "style": "illustrated-2d",
+    "prompt": "top-down view seen from directly above, a hovering ranged sentinel drone shaped like a wasp, a crimson-red shell with a long forward-pointing barrel cannon aimed at the top edge of the image, four symmetric wing blades, a single glowing amber-gold lens at the center. Palette limited to deep navy ink (#141a2e), crimson red (#d9434f), amber gold lens (#ffb347), and pale ivory highlights. Clean consistent dark navy outline about 3px, soft light from the top-left, contact shadow falling to the bottom-right. Centered, fully transparent background, no text, no logo, no border, no frame."
+  },
+  {
+    "sprite": "pickup",
+    "entity": "pickup",
+    "role": "loot",
+    "width": 96,
+    "height": 96,
+    "style": "illustrated-2d",
+    "prompt": "a single faceted gemstone crystal floating in a soft amber-gold glow, seen from above, cut facets with pale ivory specular glints and a few tiny sparkle stars, pale ivory and amber gold palette (#ffd479, #ffb347) with deep navy ink (#141a2e) outline about 3px, soft light from the top-left, centered, fully transparent background, no text, no logo, no border, no frame."
+  },
+  {
+    "sprite": "shot",
+    "entity": "bolt",
+    "role": "player-shot",
+    "width": 48,
+    "height": 48,
+    "style": "illustrated-2d",
+    "prompt": "a perfectly round glowing cobalt-blue energy orb with a bright pale ivory core and a soft outer halo, no tail, no direction, no spikes, centered, palette limited to cobalt blue (#3d6fd6), light cyan-blue (#8fc8ff), and pale ivory (#f4f1e8), fully transparent background, no text, no logo, no border, no frame."
+  },
+  {
+    "sprite": "foe-shot",
+    "entity": "bolt",
+    "role": "foe-shot",
+    "width": 48,
+    "height": 48,
+    "style": "illustrated-2d",
+    "prompt": "a perfectly round glowing crimson-red energy orb with a hot amber-gold core and a soft outer halo, no tail, no direction, no spikes, centered, palette limited to crimson red (#d9434f), amber gold (#ffb347), and pale ivory (#f4f1e8), fully transparent background, no text, no logo, no border, no frame."
+  }
+]

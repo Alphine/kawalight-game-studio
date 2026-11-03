@@ -1,0 +1,15 @@
+{
+  "source": "generated",
+  "entity": "gem",
+  "role": "sapphire",
+  "prompt": "single faceted sapphire gemstone, pixel art, centered, bright cornflower blue with specular highlight, solid dark outline, transparent background, no text, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 64,
+  "mode": "RGBA",
+  "sha256": "9fae250699017eb5ac4a5f5641197cf6f75662cd2bfd8eb014f447b09e52eec0",
+  "providerSha256": "ff41e7eb4c341a268e4607732904e63bb8ba5c35643d5f2e631aeb492da4c1cb",
+  "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+}

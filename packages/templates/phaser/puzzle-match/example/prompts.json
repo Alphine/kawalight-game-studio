@@ -1,0 +1,47 @@
+[
+  {
+    "sprite": "gem-ruby",
+    "entity": "gem",
+    "role": "ruby",
+    "width": 64,
+    "height": 64,
+    "style": "pixel-art",
+    "prompt": "single faceted ruby gemstone, pixel art, centered, bright red with specular highlight, solid dark outline, transparent background, no text, no border"
+  },
+  {
+    "sprite": "gem-sapphire",
+    "entity": "gem",
+    "role": "sapphire",
+    "width": 64,
+    "height": 64,
+    "style": "pixel-art",
+    "prompt": "single faceted sapphire gemstone, pixel art, centered, bright cornflower blue with specular highlight, solid dark outline, transparent background, no text, no border"
+  },
+  {
+    "sprite": "gem-emerald",
+    "entity": "gem",
+    "role": "emerald",
+    "width": 64,
+    "height": 64,
+    "style": "pixel-art",
+    "prompt": "single faceted emerald gemstone, pixel art, centered, bright green with specular highlight, solid dark outline, transparent background, no text, no border"
+  },
+  {
+    "sprite": "gem-topaz",
+    "entity": "gem",
+    "role": "topaz",
+    "width": 64,
+    "height": 64,
+    "style": "pixel-art",
+    "prompt": "single faceted topaz gemstone, pixel art, centered, bright golden yellow with specular highlight, solid dark outline, transparent background, no text, no border"
+  },
+  {
+    "sprite": "gem-amethyst",
+    "entity": "gem",
+    "role": "amethyst",
+    "width": 64,
+    "height": 64,
+    "style": "pixel-art",
+    "prompt": "single faceted amethyst gemstone, pixel art, centered, bright violet purple with specular highlight, solid dark outline, transparent background, no text, no border"
+  }
+]

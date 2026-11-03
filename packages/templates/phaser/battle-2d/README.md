@@ -29,7 +29,10 @@ autopilot run.
 - `src/scenes/*` — thin Phaser views over the simulation.
 - `src/main.js` — Phaser boot + autotest hook.
 - `demo/` — `index.html` + `style.css` (export entry).
-- `assets/` — starter placeholders; replace via Asset Forge.
+- `assets/gen/` — Meta-generated sprites (keyed to transparency) that `config.demo.json` uses.
+- `assets/*.png` — original starter placeholders, pinned by `tools/assets.test.mjs`.
+- `src/art.js` — sprite sizing and the procedural arena floor/vignette textures.
+- `example/` — the complete example game: `prompts.json` (art direction), `project/`, the playable zip and `manifest.json`.
 - `test/` — `node --test test/`.
 
 ## Controls

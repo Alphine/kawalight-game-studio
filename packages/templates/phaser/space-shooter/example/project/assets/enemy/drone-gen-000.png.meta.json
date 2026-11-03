@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "enemy",
+  "role": "drone",
+  "prompt": "small alien saucer drone facing left toward the player, round magenta-rose hull with a dark plum underside, single glowing gold eye in the center, light from the top-left, palette of magenta, deep plum, dark navy outline and gold, crisp pixel art, single centered sprite on a fully transparent background, no text, no logo, no border, no background",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "20e26eee10889d5af42ec20e29ff21b4c2ea15375a8fbfb3495a7b5e821411d4"
+}

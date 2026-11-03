@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectName": "Skyline Sprint",
+  "genre": "endless-runner",
+  "theme": "Neon Rooftops",
+  "visualStyle": "pixel-art",
+  "targetRuntime": "phaser3-html5",
+  "resolution": { "width": 960, "height": 540 },
+  "controls": { "scheme": "keyboard", "actions": ["jump", "slide"] },
+  "difficulty": { "preset": "normal", "ramp": "gradual" },
+  "gameLoop": "Sprint across neon rooftops: jump spikes and crates, slide under drones, grab coins, survive as the city scrolls ever faster.",
+  "player": { "abilities": ["jump", "slide"], "health": 1, "lives": 1 },
+  "obstacles": [
+    { "id": "spike", "role": "low spikes; jump over them" },
+    { "id": "block", "role": "tall crate; needs a full jump" },
+    { "id": "drone", "role": "hovering drone; slide under it" }
+  ],
+  "collectibles": "Coin lines and coin arcs over obstacles, 10 points each.",
+  "progression": "Endless: scroll speed ramps from 280 to 560 px/s while spawn gaps tighten from 600 to 480 px.",
+  "scoring": "1 point per meter travelled plus 10 per coin; best run persists locally.",
+  "winCondition": "Endless: beat your best distance.",
+  "loseCondition": "Hit any obstacle.",
+  "seed": 7,
+  "notes": "Demo blueprint for the endless-runner template."
+}

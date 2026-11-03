@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "1.0.0",
+  "template": {
+    "id": "phaser.puzzle-match",
+    "version": "1.0.0"
+  },
+  "seed": 7,
+  "world": {
+    "width": 960,
+    "height": 540
+  },
+  "board": {
+    "cols": 7,
+    "rows": 7,
+    "tileSize": 63,
+    "originX": 259.5,
+    "originY": 65.5
+  },
+  "gems": [
+    {
+      "id": "ruby",
+      "name": "Ruby",
+      "sprite": "gem-ruby"
+    },
+    {
+      "id": "sapphire",
+      "name": "Sapphire",
+      "sprite": "gem-sapphire"
+    },
+    {
+      "id": "emerald",
+      "name": "Emerald",
+      "sprite": "gem-emerald"
+    },
+    {
+      "id": "topaz",
+      "name": "Topaz",
+      "sprite": "gem-topaz"
+    },
+    {
+      "id": "amethyst",
+      "name": "Amethyst",
+      "sprite": "gem-amethyst"
+    }
+  ],
+  "scoring": {
+    "targetScore": 1300,
+    "pointsPerGem": 10,
+    "cascadeBonusPercent": 50
+  },
+  "moves": {
+    "limit": 25
+  },
+  "difficulty": {
+    "preset": "normal"
+  },
+  "controls": {
+    "hint": "H",
+    "reshuffle": "R",
+    "pause": "P"
+  },
+  "assets": {
+    "sprites": {
+      "gem-ruby": "assets/gem/ruby-gen-000.png",
+      "gem-sapphire": "assets/gem/sapphire-gen-000.png",
+      "gem-emerald": "assets/gem/emerald-gen-000.png",
+      "gem-topaz": "assets/gem/topaz-gen-000.png",
+      "gem-amethyst": "assets/gem/amethyst-gen-000.png"
+    }
+  }
+}

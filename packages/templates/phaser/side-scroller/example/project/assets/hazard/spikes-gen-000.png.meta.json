@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "hazard",
+  "role": "spikes",
+  "prompt": "pixel-art strip of three to four jagged sharp stone spikes rising from a short dark base, spikes in stone violet #4a3b5c with lighter top edges catching upper-left light, small moss tufts in moss green #5fd08a at the base, dark navy #1c2b3a outline; transparent background, no text, no logo, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 48,
+  "mode": "RGBA",
+  "sha256": "c7cf2a0e39f10bb34e1701837c7cb66ba01543c52f804213e270b77432eaf103",
+  "postProcess": "border-connected near-white background keyed to alpha 0"
+}

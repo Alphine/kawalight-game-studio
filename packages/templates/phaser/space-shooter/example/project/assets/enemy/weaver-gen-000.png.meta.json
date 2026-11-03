@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "enemy",
+  "role": "weaver",
+  "prompt": "alien weaver fighter facing left toward the player, slender body with two thin angled violet-magenta wings and gold wingtip lights, dark navy outline, light from the top-left, palette of magenta, violet, deep plum and gold, crisp pixel art, single centered sprite on a fully transparent background, no text, no logo, no border, no background",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "d3313e99b7d7ede56aeacf98c9c21edbbff1fc7af3a9406d5769a4e47db05781"
+}

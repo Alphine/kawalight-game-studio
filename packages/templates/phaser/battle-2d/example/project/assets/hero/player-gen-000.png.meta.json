@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "hero",
+  "role": "player",
+  "prompt": "top-down view seen from directly above, a compact armored knight with a round tower shield on the left arm and a short sword on the right, weapon and nose pointing straight toward the top edge of the image, symmetric silhouette. Palette limited to deep navy ink (#141a2e), cobalt blue steel (#3d6fd6), amber gold trim (#ffb347), and pale ivory highlights. Clean consistent dark navy outline about 3px, soft light from the top-left, gentle contact shadow falling to the bottom-right. Centered, fully transparent background, no text, no logo, no border, no frame.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "459bc74337867e87a126032512888abebcd1116c55706775db855ab322ea24f6"
+}

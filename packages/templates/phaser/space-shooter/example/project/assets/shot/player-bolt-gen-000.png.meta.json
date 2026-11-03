@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "shot",
+  "role": "player-bolt",
+  "prompt": "horizontal energy bolt projectile moving right, elongated glowing cyan plasma capsule with a bright white core and a short cyan tail, palette of cyan and white only, dark navy outline, crisp pixel art, centered, fully transparent background, no text, no border, no background",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 32,
+  "mode": "RGBA",
+  "sha256": "724a263cfbbef4c6cf2656a70d97f7b23f7bc802b46f60fd6ab9b76ad3c2206a"
+}

@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "bolt",
+  "role": "player-shot",
+  "prompt": "a perfectly round glowing cobalt-blue energy orb with a bright pale ivory core and a soft outer halo, no tail, no direction, no spikes, centered, palette limited to cobalt blue (#3d6fd6), light cyan-blue (#8fc8ff), and pale ivory (#f4f1e8), fully transparent background, no text, no logo, no border, no frame.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 48,
+  "height": 48,
+  "mode": "RGBA",
+  "sha256": "cb83fee18a368ee25683af493f79a62e5967d4bb679c78c16060cac44e08c97d"
+}

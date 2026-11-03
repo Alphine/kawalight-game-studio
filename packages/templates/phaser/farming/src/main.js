@@ -26,7 +26,7 @@ try {
       parent: 'game',
       width: config.world.width,
       height: config.world.height,
-      pixelArt: true,
+      pixelArt: false, // painted art: smooth scaling instead of nearest-neighbour
       roundPixels: true,
       fps: { target: 60 },
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },

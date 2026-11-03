@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "enemy",
+  "role": "stinger",
+  "prompt": "top-down view seen from directly above, a hovering ranged sentinel drone shaped like a wasp, a crimson-red shell with a long forward-pointing barrel cannon aimed at the top edge of the image, four symmetric wing blades, a single glowing amber-gold lens at the center. Palette limited to deep navy ink (#141a2e), crimson red (#d9434f), amber gold lens (#ffb347), and pale ivory highlights. Clean consistent dark navy outline about 3px, soft light from the top-left, contact shadow falling to the bottom-right. Centered, fully transparent background, no text, no logo, no border, no frame.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "7f6231195b11e492c9c7c556ef26517826394cc537a34d59d8d11d67795c238e"
+}

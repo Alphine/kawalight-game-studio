@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "drone",
+  "role": "hazard",
+  "prompt": "pixel art hovering security drone seen from the side, compact navy hull with a single coral red glowing sensor eye, two small steel rotor arms with blurred blades, cyan underglow beneath the hull, light from the upper-left, dark outline, centered, transparent background, no text, no logo, no border, palette of deep navy, steel grey, coral red and cyan",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 80,
+  "height": 52,
+  "mode": "RGBA",
+  "sha256": "e6746895e725aaa72fa041e3bf52cc0858fc7388c1803e064d65584c15a3a199"
+}

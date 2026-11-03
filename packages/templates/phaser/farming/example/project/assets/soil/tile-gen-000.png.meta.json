@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "soil",
+  "role": "tile",
+  "prompt": "Top-down square tile of tilled farm soil: rich earth brown with small clumps, a few straw-gold pebbles, shallow horizontal furrow lines, soft shadow on the lower-right of each clump, light from the upper-left. Mid-tone value so it can be tinted darker when watered. Palette: earth brown #5A3A22 to #9A6A3F, straw gold #E9B44C accents only. Fills the whole square edge to edge as a seamless tiling texture. No outline, no border, no vignette, no text.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 96,
+  "height": 96,
+  "mode": "RGBA",
+  "sha256": "e9bd631cca117b5c905ac795a6abded7b24bd0967712287109732f8a6e85afe7"
+}

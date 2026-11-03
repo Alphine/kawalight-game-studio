@@ -11,9 +11,14 @@ import { createStore } from '../../runtime/store.js';
 import { createAudio } from '../../runtime/audio.js';
 import { createDebug } from '../../runtime/debug.js';
 import { burst, shake, flash, popup } from '../../runtime/juice.js';
+import { PALETTE, FONT, TEXT, panel, bar, drawBackdrop, Button } from '../ui.js';
 
 const DRY_TINT = 0xffffff;
-const WET_TINT = 0x9a7a5a;
+const WET_TINT = 0xd0b89a; // multiplies the soil: a richer, darker wet tone
+const CROP_FILL = 0.92; // a mature crop fills this share of its plot
+const FRAME = 14; // wooden frame width around the field
+const HUD_Y = 6;
+const HUD_H = 52;
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -34,12 +39,33 @@ export class GameScene extends Phaser.Scene {
     this.fieldW = f.cols * f.plotSize;
     this.fieldH = f.rows * f.plotSize;
 
-    this.cameras.main.setBackgroundColor('#0d1a12');
-    // Field frame.
-    this.add.rectangle(f.originX - 8, f.originY - 8,
-      this.fieldW + 16, this.fieldH + 16, 0x2a1f14).setOrigin(0, 0);
-    this.add.rectangle(f.originX - 4, f.originY - 4,
-      this.fieldW + 8, this.fieldH + 8, 0x4a7a3f).setOrigin(0, 0);
+    this.cameras.main.setBackgroundColor('#7fc8c0');
+    drawBackdrop(this, W, H);
+
+    // Wooden frame with a grass border, then the farmer on the left margin.
+    const frame = this.add.graphics().setDepth(0);
+    frame.fillStyle(PALETTE.ink, 0.35);
+    frame.fillRoundedRect(f.originX - FRAME + 4, f.originY - FRAME + 7,
+      this.fieldW + FRAME * 2, this.fieldH + FRAME * 2, 18);
+    frame.fillStyle(PALETTE.earth, 1);
+    frame.fillRoundedRect(f.originX - FRAME, f.originY - FRAME,
+      this.fieldW + FRAME * 2, this.fieldH + FRAME * 2, 18);
+    frame.lineStyle(2, PALETTE.ink, 1);
+    frame.strokeRoundedRect(f.originX - FRAME, f.originY - FRAME,
+      this.fieldW + FRAME * 2, this.fieldH + FRAME * 2, 18);
+    frame.fillStyle(PALETTE.greenDeep, 1);
+    frame.fillRoundedRect(f.originX - 8, f.originY - 8, this.fieldW + 16, this.fieldH + 16, 10);
+
+    const farmerH = 150;
+    this.farmerHolder = this.add.container(f.originX / 2,
+      f.originY + this.fieldH - 6).setDepth(2);
+    this.farmer = this.add.image(0, 0, 'farmer').setOrigin(0.5, 1);
+    this.farmer.setScale(farmerH / this.farmer.height);
+    this.farmerHolder.add(this.farmer);
+    this.tweens.add({
+      targets: this.farmerHolder, y: this.farmerHolder.y - 5, duration: 1000,
+      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
 
     // Soil + crop + marker layers, one entry per plot.
     this.cells = [];
@@ -47,19 +73,20 @@ export class GameScene extends Phaser.Scene {
       for (let c = 0; c < f.cols; c++) {
         const cx = f.originX + c * f.plotSize + f.plotSize / 2;
         const cy = f.originY + r * f.plotSize + f.plotSize / 2;
+        const baseY = cy + f.plotSize / 2 - 8;
         const soil = this.add.image(cx, cy, 'soil')
-          .setDisplaySize(f.plotSize - 4, f.plotSize - 4);
-        const crop = this.add.image(cx, cy + f.plotSize / 2 - 8, config.crops[0].sprite)
-          .setOrigin(0.5, 1).setVisible(false);
+          .setDisplaySize(f.plotSize - 4, f.plotSize - 4).setDepth(1);
+        const crop = this.add.image(cx, baseY, config.crops[0].sprite)
+          .setOrigin(0.5, 1).setVisible(false).setDepth(3);
         const drop = this.add.image(cx + f.plotSize / 2 - 14, cy - f.plotSize / 2 + 14,
           'drop').setVisible(false).setDepth(5);
         const twinkle = this.add.image(cx, cy - f.plotSize / 2 + 14,
           'sparkle').setVisible(false).setDepth(5);
-        this.cells.push({ soil, crop, drop, twinkle });
+        this.cells.push({ soil, crop, drop, twinkle, baseY, key: undefined, cropIdx: -1 });
       }
     }
     this.hover = this.add.rectangle(0, 0, f.plotSize - 2, f.plotSize - 2)
-      .setStrokeStyle(2, 0xffd479).setVisible(false).setDepth(6);
+      .setStrokeStyle(3, PALETTE.goldLight, 0.95).setVisible(false).setDepth(6);
 
     // Keys by name (config keys + fallbacks + overlay keys).
     const KC = Phaser.Input.Keyboard.KeyCodes;
@@ -72,48 +99,66 @@ export class GameScene extends Phaser.Scene {
       if (KC[name]) this.keymap[name] = this.input.keyboard.addKey(KC[name]);
     }
 
-    // HUD.
-    const style = { fontFamily: 'monospace', fontSize: '16px', color: '#e8ecf8' };
-    this.hudDay = this.add.text(12, 6, '', style).setDepth(10);
-    this.hudCoins = this.add.text(W - 12, 6, '', style).setOrigin(1, 0).setDepth(10);
-    this.hudGoal = this.add.text(12, 28, '', {
-      fontFamily: 'monospace', fontSize: '13px', color: '#9fb38f',
-    }).setDepth(10);
-    // Day progress bar.
-    this.dayBarBg = this.add.rectangle(W / 2 - 100, 12, 200, 10, 0x1b2340)
-      .setOrigin(0, 0).setDepth(10);
-    this.dayBar = this.add.rectangle(W / 2 - 100, 12, 0, 10, 0xffd479)
-      .setOrigin(0, 0).setDepth(10);
+    this.buildHud(W);
 
-    // Toolbar (clickable + keyboard).
+    // Toolbar: buttons in a framed strip below the field.
+    this.toolY = frameBottom(f) + 8;
+    panel(this, 12, this.toolY - 6, W - 24, 48, { radius: 14 }).setDepth(9);
     this.toolBtns = {};
-    const ty = f.originY + this.fieldH + 12;
-    const mkBtn = (x, label, cb) => {
-      const t = this.add.text(x, ty, label, {
-        fontFamily: 'monospace', fontSize: '15px', color: '#c7d0e8',
-        backgroundColor: '#1b2340', padding: { x: 8, y: 4 },
-      }).setInteractive({ useHandCursor: true });
-      t.on('pointerdown', (ptr) => { ptr.event.stopPropagation(); cb(); });
-      return t;
-    };
-    this.toolBtns.plant = mkBtn(24, '', () => setTool(this.sim, 'plant'));
-    this.toolBtns.water = mkBtn(190, '', () => setTool(this.sim, 'water'));
-    this.toolBtns.harvest = mkBtn(356, '', () => setTool(this.sim, 'harvest'));
-    this.cropBtn = mkBtn(540, '', () => this.cycleCrop());
-    this.sleepBtn = mkBtn(790, '[N] Sleep', () => this.applyInput({ nextDay: true }));
+    this.toolBtns.plant = new Button(this, 0, this.toolY, '', () => setTool(this.sim, 'plant'));
+    this.toolBtns.water = new Button(this, 0, this.toolY, '', () => setTool(this.sim, 'water'));
+    this.toolBtns.harvest = new Button(this, 0, this.toolY, '', () => setTool(this.sim, 'harvest'));
+    this.cropBtn = new Button(this, 0, this.toolY, '', () => this.cycleCrop());
+    this.sleepBtn = new Button(this, 0, this.toolY, '[N] Sleep', () => this.applyInput({ nextDay: true }));
+    for (const b of [...Object.values(this.toolBtns), this.cropBtn, this.sleepBtn]) b.setDepth(10);
     this.refreshToolbar();
 
-    // Overlay (shared by pause / complete).
+    // Overlay (shared by pause / complete): dim, framed card, text.
     this.overlay = this.add.container(0, 0).setDepth(50).setVisible(false);
-    const dim = this.add.rectangle(0, 0, W, H, 0x04060d, 0.78).setOrigin(0, 0);
+    const dim = this.add.rectangle(0, 0, W, H, 0x04060d, 0.6).setOrigin(0, 0);
+    const card = panel(this, W / 2 - 280, H / 2 - 130, 560, 260, { radius: 18 });
     this.overlayText = this.add.text(W / 2, H / 2, '', {
-      fontFamily: 'monospace', fontSize: '22px', color: '#ffffff', align: 'center',
+      ...TEXT.body, fontSize: '20px', align: 'center', lineSpacing: 6,
     }).setOrigin(0.5);
-    this.overlay.add([dim, this.overlayText]);
+    this.overlay.add([dim, card, this.overlayText]);
     this.hiSaved = false;
 
     this.input.on('pointerdown', (ptr) => this.clickPlot(ptr));
     this.input.on('pointermove', (ptr) => this.moveHover(ptr));
+  }
+
+  // HUD: three framed panels above the field (day, banked goal, coins).
+  buildHud(W) {
+    const hw = 236;
+    panel(this, 12, HUD_Y, hw, HUD_H, { radius: 12 }).setDepth(9);
+    this.hudDay = this.add.text(26, HUD_Y + 8, '', TEXT.h1).setDepth(10);
+    this.hudTool = this.add.text(12 + hw - 14, HUD_Y + 12, '', TEXT.small)
+      .setOrigin(1, 0).setDepth(10);
+    this.dayBar = bar(this, 26, HUD_Y + 38, hw - 28, 6, PALETTE.gold);
+    this.dayBar.track.setDepth(10);
+    this.dayBar.fill.setDepth(10);
+
+    const cw = 460;
+    const cx0 = W / 2 - cw / 2;
+    panel(this, cx0, HUD_Y, cw, HUD_H, { radius: 12 }).setDepth(9);
+    this.hudGoal = this.add.text(W / 2, HUD_Y + 9, '', TEXT.h2)
+      .setOrigin(0.5, 0).setDepth(10);
+    this.goalBar = bar(this, cx0 + 18, HUD_Y + 38, cw - 36, 8, PALETTE.greenLight);
+    this.goalBar.track.setDepth(10);
+    this.goalBar.fill.setDepth(10);
+
+    const rx = W - 12 - hw;
+    panel(this, rx, HUD_Y, hw, HUD_H, { radius: 12 }).setDepth(9);
+    this.hudCoinIcon = this.add.image(rx + 28, HUD_Y + HUD_H / 2, 'coin')
+      .setDisplaySize(34, 34).setDepth(10);
+    const coinScale = this.hudCoinIcon.scaleX;
+    this.tweens.add({
+      targets: this.hudCoinIcon, scaleX: { from: coinScale, to: coinScale * 0.25 },
+      duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
+    this.hudCoins = this.add.text(rx + 52, HUD_Y + 8, '', TEXT.h1).setDepth(10);
+    this.hudStats = this.add.text(rx + 52, HUD_Y + 34, '', TEXT.small).setDepth(10);
+    this.hudCoinTarget = { x: rx + 28, y: HUD_Y + HUD_H / 2 };
   }
 
   down(...names) {
@@ -218,15 +263,70 @@ export class GameScene extends Phaser.Scene {
     const c = this.cfg.controls;
     const crop = this.cfg.crops[this.sim.cropIndex];
     for (const [tool, btn] of Object.entries(this.toolBtns)) {
-      const active = this.sim.tool === tool;
-      btn.setColor(active ? '#ffd479' : '#c7d0e8');
-      btn.setBackgroundColor(active ? '#3a2f14' : '#1b2340');
+      btn.setActive(this.sim.tool === tool);
     }
-    this.toolBtns.plant.setText(
+    this.toolBtns.plant.setLabel(
       `[${c.toolPlant.replace('ONE', '1')}] Plant ${crop.name} (${crop.seedCost}c)`);
-    this.toolBtns.water.setText(`[${c.toolWater.replace('TWO', '2')}] Water`);
-    this.toolBtns.harvest.setText(`[${c.toolHarvest.replace('THREE', '3')}] Harvest`);
-    this.cropBtn.setText(`[C] Seed: ${crop.name}`);
+    this.toolBtns.water.setLabel(`[${c.toolWater.replace('TWO', '2')}] Water`);
+    this.toolBtns.harvest.setLabel(`[${c.toolHarvest.replace('THREE', '3')}] Harvest`);
+    this.cropBtn.setLabel(`[C] Seed: ${crop.name}`);
+    this.layoutToolbar();
+  }
+
+  // Lay buttons left to right; Sleep sits at the right edge of the strip.
+  layoutToolbar() {
+    const W = this.cfg.world.width;
+    let x = 24;
+    for (const b of [this.toolBtns.plant, this.toolBtns.water, this.toolBtns.harvest, this.cropBtn]) {
+      b.setPosition(x, this.toolY);
+      x += b.boxW + 10;
+    }
+    this.sleepBtn.setPosition(W - 24 - this.sleepBtn.boxW, this.toolY);
+  }
+
+  // Sparkle, coin fly and popup on harvest; a crop ghost lifts away.
+  harvestFx(e, x, y) {
+    const f = this.cfg.farm;
+    const crop = this.cfg.crops.find((k) => k.id === e.crop);
+    const cell = this.cells[e.row * f.cols + e.col];
+    if (crop && cell && cell.crop.visible) {
+      const ghost = this.add.image(cell.crop.x, cell.baseY, crop.sprite)
+        .setOrigin(0.5, 1).setScale(cell.crop.scale).setDepth(30);
+      this.tweens.add({
+        targets: ghost, y: ghost.y - 52, scale: ghost.scale * 1.12, alpha: 0,
+        duration: 520, ease: 'Cubic.easeOut',
+        onComplete: () => ghost.destroy(),
+      });
+    }
+    const dest = this.hudCoinTarget;
+    for (let k = 0; k < 3; k++) {
+      const coin = this.add.image(x, y, 'coin').setDisplaySize(24, 24).setDepth(45);
+      this.tweens.add({
+        targets: coin, x: dest.x, y: dest.y, scale: 0.2, duration: 620, delay: k * 90,
+        ease: 'Cubic.easeIn',
+        onComplete: () => {
+          coin.destroy();
+          if (k === 2) this.bumpCoins();
+        },
+      });
+    }
+  }
+
+  bumpCoins() {
+    this.tweens.killTweensOf(this.hudCoins);
+    this.hudCoins.setScale(1.22);
+    this.tweens.add({
+      targets: this.hudCoins, scale: 1, duration: 320, ease: 'Back.easeOut',
+    });
+  }
+
+  // Farmer hop for planting and harvesting.
+  farmerHop() {
+    this.tweens.killTweensOf(this.farmer);
+    this.farmer.y = 0;
+    this.tweens.add({
+      targets: this.farmer, y: -14, duration: 130, yoyo: true, ease: 'Quad.easeOut',
+    });
   }
 
   handleEvents(events) {
@@ -236,55 +336,58 @@ export class GameScene extends Phaser.Scene {
         const { x, y } = this.cellCenter(e.col, e.row);
         if (e.type === 'plant') {
           this.audio.pickup();
+          this.farmerHop();
           burst(this, x, y + 20, {
             count: 6, speedMin: 30, speedMax: 110, lifespan: 300,
-            colors: [0x8a5a33, 0x5a3a22], scale: 1.0,
+            colors: [0x9a6a3f, 0x5a3a22], scale: 1.0,
           });
         } else if (e.type === 'water') {
           burst(this, x, y, {
             count: 10, speedMin: 40, speedMax: 140, lifespan: 350,
-            colors: [0x40c8ff, 0xcdf0ff], gravityY: 400, scale: 1.1,
+            colors: [PALETTE.sky, 0xcdeee6], gravityY: 400, scale: 1.1,
           });
         } else if (e.type === 'harvest') {
           const crop = this.cfg.crops.find((k) => k.id === e.crop);
           this.audio.pickup();
+          this.farmerHop();
           burst(this, x, y, {
-            count: 12, speedMin: 60, speedMax: 220, lifespan: 450,
-            colors: [0xffd479, 0xfff3c4], gravityY: 300, scale: 1.3,
+            count: 14, speedMin: 60, speedMax: 220, lifespan: 450,
+            colors: [PALETTE.gold, PALETTE.goldLight, 0xffffff], gravityY: 300, scale: 1.3,
           });
+          this.harvestFx(e, x, y);
           popup(this, x, y - 20, `+${crop ? crop.sellPrice : '?'}`, {
-            color: '#ffd479', size: '16px',
+            color: '#fff0b0', size: '18px', rise: 56,
           });
         } else if (e.type === 'mature') {
           burst(this, x, y, {
-            count: 5, speedMin: 20, speedMax: 80, lifespan: 300,
-            colors: [0x7fff9f, 0xfff3c4], gravityY: -50, scale: 1.0,
+            count: 6, speedMin: 20, speedMax: 80, lifespan: 300,
+            colors: [PALETTE.greenLight, PALETTE.goldLight], gravityY: -50, scale: 1.0,
           });
         }
       } else if (e.type === 'newday') {
         this.audio.win();
         popup(this, this.cfg.world.width / 2, 120, `Day ${e.day}`, {
-          color: '#7fd4ff', size: '30px', rise: 24, duration: 1200,
+          color: '#fff0b0', size: '30px', rise: 24, duration: 1200,
         });
       } else if (e.type === 'rain') {
         const f = this.cfg.farm;
         burst(this, f.originX + this.fieldW / 2, f.originY + 40, {
           count: 24, speedMin: 60, speedMax: 200, lifespan: 600,
-          colors: [0x40c8ff, 0x9fdcff], gravityY: 500, scale: 1.2,
+          colors: [PALETTE.sky, 0xcdeee6], gravityY: 500, scale: 1.2,
         });
         popup(this, f.originX + this.fieldW / 2, f.originY + 70, 'Rain!', {
-          color: '#9fdcff', size: '18px',
+          color: '#cdeee6', size: '18px',
         });
       } else if (e.type === 'complete') {
         this.audio.win();
         this.audio.pickup();
         const f = this.cfg.farm;
         shake(this, 220, 0.01);
-        flash(this, 200, 255, 220, 120);
+        flash(this, 200, 255, 240, 180);
         for (let i = 0; i < 3; i++) {
           burst(this, f.originX + (this.fieldW * (i + 1)) / 4, f.originY + 100, {
             count: 16, speedMin: 80, speedMax: 300, lifespan: 700,
-            colors: [0xffd479, 0x7fff9f, 0xff9f9f], scale: 1.6,
+            colors: [PALETTE.gold, PALETTE.goldLight, PALETTE.greenLight], scale: 1.6,
           });
         }
       }
@@ -305,6 +408,7 @@ export class GameScene extends Phaser.Scene {
       if (this.justDown('R')) { this.scene.restart(); return; }
       if (this.justDown('T')) { this.scene.start('title'); return; }
       this.syncSprites(time);
+      this.syncHud();
       return;
     }
 
@@ -323,28 +427,66 @@ export class GameScene extends Phaser.Scene {
       }
     }
     this.syncSprites(time);
-    const f = this.cfg.farm;
-    this.hudDay.setText(`DAY ${sim.day}   ${sim.tool.toUpperCase()}`
-      + (this.demoInput ? '   (auto)' : ''));
-    this.hudCoins.setText(`${sim.coins} COINS`);
-    const hi = this.store.get('hiscore', { earned: 0 });
-    this.hudGoal.setText(
-      `BANKED ${sim.totalEarned}/${this.cfg.scoring.targetCoins}`
-      + `   HARVESTS ${sim.harvested}   BEST ${Math.max(hi.earned || 0, sim.totalEarned)}`);
-    this.dayBar.width = 200 * (sim.dayTimeMs / (f.dayLengthSec * 1000));
+    this.syncHud();
     this.debug.update(`day ${sim.day} plots ${sim.plots.filter((p) => p.crop !== null).length}`);
+  }
+
+  syncHud() {
+    const sim = this.sim;
+    const f = this.cfg.farm;
+    const target = this.cfg.scoring.targetCoins;
+    const best = Math.max((this.store.get('hiscore', { earned: 0 }).earned) || 0,
+      sim.totalEarned);
+    this.hudDay.setText(`Day ${sim.day}`);
+    this.hudTool.setText(`${sim.tool.toUpperCase()}${this.demoInput ? ' · AUTO' : ''}`);
+    this.dayBar.set(sim.dayTimeMs / (f.dayLengthSec * 1000));
+    this.hudGoal.setText(`BANKED  ${sim.totalEarned} / ${target}`);
+    this.goalBar.set(sim.totalEarned / target);
+    this.hudCoins.setText(`${sim.coins} COINS`);
+    this.hudStats.setText(`HARVESTS ${sim.harvested}   BEST ${best}`);
+  }
+
+  // Crop scale for a growth stage: small sprout to full plant, in the plot.
+  cropScale(crop, stage) {
+    const src = this.textures.get(crop.sprite).getSourceImage();
+    const px = src && src.width ? src.width : 128;
+    const t = Math.min(1, stage / crop.stages);
+    return (this.cfg.farm.plotSize * CROP_FILL / px) * (0.3 + 0.7 * t);
+  }
+
+  // Runs once per change in a plot's crop or stage: planting springs in,
+  // growth pops. Between changes the scale is left alone so tweens can run.
+  stageCell(cell, plot, key) {
+    const prev = cell.cropIdx;
+    cell.key = key;
+    if (plot.crop === null) {
+      cell.cropIdx = -1;
+      this.tweens.killTweensOf(cell.crop);
+      cell.crop.setVisible(false);
+      return;
+    }
+    const crop = this.cfg.crops[plot.crop];
+    const target = this.cropScale(crop, plot.stage);
+    cell.crop.setTexture(crop.sprite).setVisible(true);
+    this.tweens.killTweensOf(cell.crop);
+    if (prev !== plot.crop) {
+      cell.crop.setScale(target * 0.25);
+      this.tweens.add({ targets: cell.crop, scale: target, duration: 520, ease: 'Back.easeOut' });
+    } else {
+      this.tweens.add({ targets: cell.crop, scale: target, duration: 420, ease: 'Back.easeOut' });
+    }
+    cell.cropIdx = plot.crop;
   }
 
   syncSprites(time) {
     const sim = this.sim;
-    const f = this.cfg.farm;
-    const base = (f.plotSize - 4) / 64; // crop sprites are 64x64
     for (let i = 0; i < this.cells.length; i++) {
       const cell = this.cells[i];
       const plot = sim.plots[i];
+      const key = plot.crop === null ? null : `${plot.crop}:${plot.stage}`;
+      if (key !== cell.key) this.stageCell(cell, plot, key);
       if (plot.crop === null) {
         cell.soil.setTint(DRY_TINT);
-        cell.crop.setVisible(false);
         cell.drop.setVisible(false);
         cell.twinkle.setVisible(false);
         continue;
@@ -352,16 +494,18 @@ export class GameScene extends Phaser.Scene {
       const crop = this.cfg.crops[plot.crop];
       const mature = plot.stage >= crop.stages;
       cell.soil.setTint(plot.watered ? WET_TINT : DRY_TINT);
-      const t = Math.min(1, plot.stage / crop.stages);
-      cell.crop.setTexture(crop.sprite).setVisible(true)
-        .setScale(base * (0.22 + 0.78 * t));
       cell.drop.setVisible(!mature && !plot.watered);
       cell.twinkle.setVisible(mature);
       if (mature) {
         cell.twinkle.setAlpha(0.5 + 0.5 * Math.sin(time / 200 + i));
-        cell.crop.y = cell.soil.y + f.plotSize / 2 - 8
-          + Math.sin(time / 300 + i * 1.7) * 2;
+        cell.crop.y = cell.baseY + Math.sin(time / 300 + i * 1.7) * 2;
+      } else {
+        cell.crop.y = cell.baseY;
       }
     }
   }
+}
+
+function frameBottom(f) {
+  return f.originY + f.rows * f.plotSize + FRAME;
 }

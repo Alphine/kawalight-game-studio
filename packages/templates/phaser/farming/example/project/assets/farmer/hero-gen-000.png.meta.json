@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "farmer",
+  "role": "hero",
+  "prompt": "A cheerful farmer character, full body, standing front view, centered. Wide-brimmed straw hat in straw gold #E9B44C, sky aqua #7FC8C0 overalls over a cream shirt with rolled sleeves, moss green #4F8A3C neckerchief, warm tan skin, earth brown #5A3A22 hair and boots, friendly small smile. Clean 2px dark-brown outline, flat cel shading with one soft highlight, light from the upper-left. Isolated on a fully transparent background. No ground shadow, no text, no border.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 96,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "bc6e6597018244a275c4ab31340fc50a68f48c4e1394fede464ade5b041bbd07",
+  "postProcessing": "white background flood-filled from the border to transparency"
+}

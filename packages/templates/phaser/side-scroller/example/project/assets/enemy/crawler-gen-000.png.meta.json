@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "enemy",
+  "role": "crawler",
+  "prompt": "side-view pixel-art moss crawler creature, low armored beetle-like critter with a mossy green shell and small stone-violet spikes along its back, short legs, two glowing amber eyes, facing right; palette moss green #5fd08a and deep green #2e4a3f, stone violet #4a3b5c, amber #ffd479 eyes, dark navy #1c2b3a outline; key light from upper-left; clear silhouette, transparent background, no text, no logo, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 72,
+  "height": 56,
+  "mode": "RGBA",
+  "sha256": "756ad152a5669a93de8f362c8e55bc3382f02dac0c26c0a2f5cda4e53a07c077",
+  "postProcess": "border-connected near-white background keyed to alpha 0"
+}

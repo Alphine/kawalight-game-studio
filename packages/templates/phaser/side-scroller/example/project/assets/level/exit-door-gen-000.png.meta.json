@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "level",
+  "role": "exit-door",
+  "prompt": "pixel-art ancient stone archway gateway with moss growing over its top, weathered stone-violet #4a3b5c blocks, moss green #5fd08a vines, a warm amber #ffd479 glow inside the opening, dark navy #1c2b3a outline; key light from upper-left; single standalone sprite, transparent background, no text, no logo, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 96,
+  "height": 160,
+  "mode": "RGBA",
+  "sha256": "3e769e7a01b344510bf52abb158d9840568ad50e9e714dc2f2f3cce904fb410f",
+  "postProcess": "border-connected near-white background keyed to alpha 0"
+}

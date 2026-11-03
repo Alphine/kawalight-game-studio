@@ -11,3 +11,7 @@ Keys (see `config.demo.json` → `assets.sprites`):
 
 - `player.png`, `shot.png`, `foe-shot.png`, `pickup.png`
 - `enemy-grunt.png`, `enemy-skitter.png`, `enemy-stinger.png`
+
+`gen/` holds the Meta-generated sprites from `example/prompts.json`, with the
+edge-connected white backdrop keyed to transparency. `config.demo.json` points at
+`gen/`; the placeholder PNGs above are kept only because their hashes are pinned.

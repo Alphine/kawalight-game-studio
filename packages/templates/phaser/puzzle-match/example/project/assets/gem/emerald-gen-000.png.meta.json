@@ -1,0 +1,15 @@
+{
+  "source": "generated",
+  "entity": "gem",
+  "role": "emerald",
+  "prompt": "single faceted emerald gemstone, pixel art, centered, bright green with specular highlight, solid dark outline, transparent background, no text, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 64,
+  "mode": "RGBA",
+  "sha256": "f1541e2b06ac409f7d1a21a460adb673e941138dbcfecc8f4b79043935a97bbd",
+  "providerSha256": "cfcc667a78281f3453b38fcee36a96d5dbe1d7553dd9a448dd54839cb438b89d",
+  "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+}

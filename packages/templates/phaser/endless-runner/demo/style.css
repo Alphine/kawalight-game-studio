@@ -12,7 +12,13 @@ html, body {
   padding: 16px;
 }
 
+/* Phaser FIT scaling reads the parent size: give #game a real box with the
+   world's 16:9 ratio so the canvas never collapses to a few pixels. */
 #game {
+  width: 100%;
+  max-width: 960px;
+  aspect-ratio: 960 / 540;
+  margin: 0 auto;
   display: flex;
   justify-content: center;
 }

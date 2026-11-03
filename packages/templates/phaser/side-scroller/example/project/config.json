@@ -1,0 +1,282 @@
+{
+  "schemaVersion": "1.0.0",
+  "template": {
+    "id": "phaser.side-scroller",
+    "version": "1.0.0"
+  },
+  "seed": 7,
+  "world": {
+    "width": 960,
+    "height": 540,
+    "levelWidth": 3600,
+    "levelHeight": 540,
+    "gravity": 2600,
+    "maxFallSpeed": 1400,
+    "killPlaneY": 600
+  },
+  "player": {
+    "spawn": {
+      "x": 80,
+      "y": 426
+    },
+    "width": 32,
+    "height": 44,
+    "moveSpeed": 300,
+    "acceleration": 2600,
+    "airControl": 0.65,
+    "jumpVelocity": 850,
+    "coyoteMs": 100,
+    "jumpBufferMs": 120,
+    "maxJumps": 1,
+    "health": 3,
+    "invulnMs": 1200,
+    "knockback": 280,
+    "stompBounce": 560
+  },
+  "level": {
+    "platforms": [
+      {
+        "x": 0.0,
+        "y": 470,
+        "w": 817.5,
+        "h": 70
+      },
+      {
+        "x": 927.5,
+        "y": 470,
+        "w": 817.5,
+        "h": 70
+      },
+      {
+        "x": 1855.0,
+        "y": 470,
+        "w": 817.5,
+        "h": 70
+      },
+      {
+        "x": 2782.5,
+        "y": 470,
+        "w": 817.5,
+        "h": 70
+      },
+      {
+        "x": 1266.25,
+        "y": 380,
+        "w": 140,
+        "h": 20,
+        "oneWay": true
+      },
+      {
+        "x": 2193.75,
+        "y": 380,
+        "w": 140,
+        "h": 20,
+        "oneWay": true
+      },
+      {
+        "x": 3121.25,
+        "y": 380,
+        "w": 140,
+        "h": 20,
+        "oneWay": true
+      }
+    ],
+    "hazards": [
+      {
+        "id": "spikes-1",
+        "sprite": "spikes",
+        "x": 1320.25,
+        "y": 446,
+        "w": 32,
+        "h": 24,
+        "damage": 1
+      },
+      {
+        "id": "spikes-2",
+        "sprite": "spikes",
+        "x": 2247.75,
+        "y": 446,
+        "w": 32,
+        "h": 24,
+        "damage": 1
+      },
+      {
+        "id": "spikes-3",
+        "sprite": "spikes",
+        "x": 3175.25,
+        "y": 446,
+        "w": 32,
+        "h": 24,
+        "damage": 1
+      }
+    ],
+    "enemies": [
+      {
+        "id": "walker-1",
+        "kind": "walker",
+        "sprite": "walker",
+        "x": 987.5,
+        "y": 442,
+        "w": 36,
+        "h": 28,
+        "speed": 90,
+        "patrolMinX": 937.5,
+        "patrolMaxX": 1699.0
+      },
+      {
+        "id": "walker-2",
+        "kind": "walker",
+        "sprite": "walker",
+        "x": 1952.0,
+        "y": 442,
+        "w": 36,
+        "h": 28,
+        "speed": 90,
+        "patrolMinX": 1865.0,
+        "patrolMaxX": 2626.5
+      },
+      {
+        "id": "walker-3",
+        "kind": "walker",
+        "sprite": "walker",
+        "x": 2916.5,
+        "y": 442,
+        "w": 36,
+        "h": 28,
+        "speed": 90,
+        "patrolMinX": 2792.5,
+        "patrolMaxX": 3554.0
+      }
+    ],
+    "collectibles": [
+      {
+        "id": "coin-p1-1",
+        "x": 839.5,
+        "y": 400
+      },
+      {
+        "id": "coin-p1-2",
+        "x": 856.0,
+        "y": 360
+      },
+      {
+        "id": "coin-p1-3",
+        "x": 872.5,
+        "y": 330
+      },
+      {
+        "id": "coin-p1-4",
+        "x": 889.0,
+        "y": 360
+      },
+      {
+        "id": "coin-p1-5",
+        "x": 905.5,
+        "y": 400
+      },
+      {
+        "id": "coin-p2-1",
+        "x": 1767.0,
+        "y": 400
+      },
+      {
+        "id": "coin-p2-2",
+        "x": 1783.5,
+        "y": 360
+      },
+      {
+        "id": "coin-p2-3",
+        "x": 1800.0,
+        "y": 330
+      },
+      {
+        "id": "coin-p2-4",
+        "x": 1816.5,
+        "y": 360
+      },
+      {
+        "id": "coin-p2-5",
+        "x": 1833.0,
+        "y": 400
+      },
+      {
+        "id": "coin-p3-1",
+        "x": 2694.5,
+        "y": 400
+      },
+      {
+        "id": "coin-p3-2",
+        "x": 2711.0,
+        "y": 360
+      },
+      {
+        "id": "coin-p3-3",
+        "x": 2727.5,
+        "y": 330
+      },
+      {
+        "id": "coin-p3-4",
+        "x": 2744.0,
+        "y": 360
+      },
+      {
+        "id": "coin-p3-5",
+        "x": 2760.5,
+        "y": 400
+      }
+    ],
+    "checkpoints": [
+      {
+        "id": "cp-1",
+        "x": 1350.0,
+        "y": 370,
+        "w": 32,
+        "h": 100
+      },
+      {
+        "id": "cp-2",
+        "x": 2592.0,
+        "y": 370,
+        "w": 32,
+        "h": 100
+      }
+    ],
+    "exit": {
+      "x": 3500,
+      "y": 390,
+      "w": 48,
+      "h": 80,
+      "sprite": "exit-door"
+    }
+  },
+  "scoring": {
+    "coinScore": 10,
+    "stompScore": 25,
+    "timeBonusPerSec": 5,
+    "parTimeSec": 81
+  },
+  "difficulty": {
+    "preset": "normal"
+  },
+  "controls": {
+    "left": "LEFT",
+    "right": "RIGHT",
+    "jump": "SPACE",
+    "pause": "P"
+  },
+  "camera": {
+    "followLerp": 0.12,
+    "deadzoneX": 80,
+    "deadzoneY": 60
+  },
+  "assets": {
+    "sprites": {
+      "player": "assets/hero/runner-gen-000.png",
+      "walker": "assets/enemy/crawler-gen-000.png",
+      "spikes": "assets/hazard/spikes-gen-000.png",
+      "coin": "assets/pickup/coin-gen-000.png",
+      "exit-door": "assets/level/exit-door-gen-000.png",
+      "checkpoint": "assets/level/checkpoint-gen-000.png"
+    }
+  }
+}

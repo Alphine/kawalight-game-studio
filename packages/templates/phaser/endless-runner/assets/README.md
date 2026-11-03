@@ -1,15 +1,16 @@
-# Starter assets
+# Sprite assets
 
-Geometric placeholder sprites generated deterministically by
-`tools/gen-runner-assets.mjs` (or the worker mock provider). They exist so the
-template runs on first load; replace them with Asset Forge generations or
-imports before any serious playtest.
+Generated with the Meta image provider (`muse-image-1.0`) from the prompts in
+`example/prompts.json`, then processed: the opaque studio background is keyed out
+to transparency (flood fill from the image border) so sprites sit cleanly on the
+parallax layers.
 
 Keys (see `config.demo.json` → `assets.sprites`):
 
-- `player.png` (36x48), `coin.png` (20x20)
-- `obstacle-spike.png` (30x40), `obstacle-block.png` (36x56),
-  `obstacle-drone.png` (40x26)
+- `player.png` (72x96 source, drawn at the player hitbox 36x48)
+- `coin.png` (40x40 source, drawn at 24x24)
+- `obstacle-spike.png` (60x80), `obstacle-block.png` (72x112),
+  `obstacle-drone.png` (80x52)
 
-Sprite sizes match the logical hitboxes exactly; the scenes render them
-unscaled (except the title zoom and the coin shimmer).
+Sources are drawn at the config's hitbox size each frame (`setDisplaySize`), so
+the art follows the assembled config even when obstacle sizes differ from the demo.

@@ -31,8 +31,8 @@ autopilot demo.
 - `src/scenes/*` — thin Phaser views over the simulation.
 - `src/main.js` — Phaser boot + autotest hook.
 - `demo/` — `index.html` + `style.css` (export entry).
-- `assets/` — starter placeholders; replace via Asset Forge.
-- `test/` — `node --test test/`.
+- `assets/` — generated Meta art, see `assets/README.md`. `tools/gen-assets.mjs` still writes placeholder shapes; do not run it over the real art.
+- `test/` — `node --test test/logic.test.js` (on Node 22 a bare directory argument is not accepted).
 
 ## Controls
 

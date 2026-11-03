@@ -1,0 +1,15 @@
+{
+  "source": "generated",
+  "entity": "gem",
+  "role": "ruby",
+  "prompt": "single faceted ruby gemstone, pixel art, centered, bright red with specular highlight, solid dark outline, transparent background, no text, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 64,
+  "mode": "RGBA",
+  "sha256": "b36c458a87cf7dd3fbceca2e1bf305f9324c7bbad2c1df15ebddcf5572808ac5",
+  "providerSha256": "1536b71d34214597eec1f2135d38a8112234c792612dacff66eec8fe27dd3c6d",
+  "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+}

@@ -1,0 +1,71 @@
+{
+  "genre": "battle-2d",
+  "provider": "meta-image",
+  "assets": [
+    {
+      "sprite": "player",
+      "file": "assets/hero/player-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "944b919b03c6040991246bf2467b328466695c2d91ba96b513b5a79a221e4126",
+      "generatedSha256": "459bc74337867e87a126032512888abebcd1116c55706775db855ab322ea24f6",
+      "postProcess": "edge-connected near-white backdrop set to alpha 0 (Meta returns opaque white canvas)"
+    },
+    {
+      "sprite": "enemy-grunt",
+      "file": "assets/enemy/grunt-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "b50988328ff76dd8570554aa246630618643194f8727d05349d79ff08bdb2e40",
+      "generatedSha256": "8f437dabdbcba1c087ec6d62b843a55d1a823a1d63ac8e9a7ef7485ffcd625c5",
+      "postProcess": "edge-connected near-white backdrop set to alpha 0 (Meta returns opaque white canvas)"
+    },
+    {
+      "sprite": "enemy-skitter",
+      "file": "assets/enemy/skitter-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "6c349a3baaf8ae2f1799768316e7ae20edcd3dac16125529a9104be29481353b",
+      "generatedSha256": "af65c0d41669381dbdf929c5d11d8f46ca0d8e693f6b906b3b5064936079c8e9",
+      "postProcess": "edge-connected near-white backdrop set to alpha 0 (Meta returns opaque white canvas)"
+    },
+    {
+      "sprite": "enemy-stinger",
+      "file": "assets/enemy/stinger-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "87d7737d49df3dbc78ec439fd5df7a8e239edd0e313eb9ea5832425e41b9833a",
+      "generatedSha256": "7f6231195b11e492c9c7c556ef26517826394cc537a34d59d8d11d67795c238e",
+      "postProcess": "edge-connected near-white backdrop set to alpha 0 (Meta returns opaque white canvas)"
+    },
+    {
+      "sprite": "pickup",
+      "file": "assets/pickup/loot-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "200bbbb91e819fefee35757caf685ce5a7706aa64a978d1761fac3262420db1b",
+      "generatedSha256": "9cd3676cedbab9636228cd648d27a9a7483aa972f9adb82f02e72f5dc94272a7",
+      "postProcess": "edge-connected near-white backdrop set to alpha 0 (Meta returns opaque white canvas)"
+    },
+    {
+      "sprite": "shot",
+      "file": "assets/bolt/player-shot-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "5ca1aea497184b9caf10da53f4f0675da51f89d6e9c632f916d371a3289ce314",
+      "generatedSha256": "cb83fee18a368ee25683af493f79a62e5967d4bb679c78c16060cac44e08c97d",
+      "postProcess": "edge-connected near-white backdrop set to alpha 0 (Meta returns opaque white canvas)"
+    },
+    {
+      "sprite": "foe-shot",
+      "file": "assets/bolt/foe-shot-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "fa8d4b23a9da0b4bb92349afa315272adb7ba947de58a8fd75578b480ac3823b",
+      "generatedSha256": "22803094ad50a8f8d24b2c445a4c5fd86b1ad6b8662d37604f1b70b1ddd25218",
+      "postProcess": "edge-connected near-white backdrop set to alpha 0 (Meta returns opaque white canvas)"
+    }
+  ],
+  "playable": "arena-clash-playable.zip",
+  "notes": "Assets were generated with meta-image (see prompts.json) and their backdrops were keyed out to transparency after generation; sprite files under project/assets are the keyed versions."
+}

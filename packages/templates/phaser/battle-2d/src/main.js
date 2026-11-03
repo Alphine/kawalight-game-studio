@@ -26,8 +26,11 @@ try {
       parent: 'game',
       width: config.world.width,
       height: config.world.height,
-      pixelArt: true,
+      // Generated art is illustrated (not pixel-art): smooth filtering keeps
+      // the downscaled sprites clean. Pixel positions still snap.
+      pixelArt: false,
       roundPixels: true,
+      backgroundColor: '#05070f',
       fps: { target: 60 },
       scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       scene: [BootScene, TitleScene, GameScene],

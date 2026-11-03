@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "bolt",
+  "role": "foe-shot",
+  "prompt": "a perfectly round glowing crimson-red energy orb with a hot amber-gold core and a soft outer halo, no tail, no direction, no spikes, centered, palette limited to crimson red (#d9434f), amber gold (#ffb347), and pale ivory (#f4f1e8), fully transparent background, no text, no logo, no border, no frame.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 48,
+  "height": 48,
+  "mode": "RGBA",
+  "sha256": "22803094ad50a8f8d24b2c445a4c5fd86b1ad6b8662d37604f1b70b1ddd25218"
+}

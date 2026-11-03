@@ -1,0 +1,56 @@
+[
+  {
+    "sprite": "player",
+    "entity": "hero",
+    "role": "player",
+    "width": 128,
+    "height": 128,
+    "style": "pixel-art",
+    "prompt": "side-view starfighter facing right, sleek swept-wing jet, steel-blue and white hull with bright cyan canopy and cyan engine glow at the rear, small gold accent stripe on the wing, palette limited to deep navy shadows, cyan highlights, magenta-free, light from the top-left, consistent 1px dark navy outline, crisp pixel art, single centered sprite on a fully transparent background, no text, no logo, no border, no background"
+  },
+  {
+    "sprite": "shot",
+    "entity": "shot",
+    "role": "player-bolt",
+    "width": 64,
+    "height": 32,
+    "style": "pixel-art",
+    "prompt": "horizontal energy bolt projectile moving right, elongated glowing cyan plasma capsule with a bright white core and a short cyan tail, palette of cyan and white only, dark navy outline, crisp pixel art, centered, fully transparent background, no text, no border, no background"
+  },
+  {
+    "sprite": "pickup",
+    "entity": "pickup",
+    "role": "power-orb",
+    "width": 64,
+    "height": 64,
+    "style": "pixel-art",
+    "prompt": "round power-up crystal orb, gold and amber faceted core with a bright white specular highlight at the top-left, soft glowing rim, dark navy outline, palette limited to gold, amber and white, light from the top-left, crisp pixel art, single centered object on a fully transparent background, no text, no border, no background"
+  },
+  {
+    "sprite": "enemy-drone",
+    "entity": "enemy",
+    "role": "drone",
+    "width": 128,
+    "height": 128,
+    "style": "pixel-art",
+    "prompt": "small alien saucer drone facing left toward the player, round magenta-rose hull with a dark plum underside, single glowing gold eye in the center, light from the top-left, palette of magenta, deep plum, dark navy outline and gold, crisp pixel art, single centered sprite on a fully transparent background, no text, no logo, no border, no background"
+  },
+  {
+    "sprite": "enemy-weaver",
+    "entity": "enemy",
+    "role": "weaver",
+    "width": 128,
+    "height": 128,
+    "style": "pixel-art",
+    "prompt": "alien weaver fighter facing left toward the player, slender body with two thin angled violet-magenta wings and gold wingtip lights, dark navy outline, light from the top-left, palette of magenta, violet, deep plum and gold, crisp pixel art, single centered sprite on a fully transparent background, no text, no logo, no border, no background"
+  },
+  {
+    "sprite": "enemy-diver",
+    "entity": "enemy",
+    "role": "diver",
+    "width": 128,
+    "height": 128,
+    "style": "pixel-art",
+    "prompt": "heavy alien diver ship facing left toward the player, arrowhead-shaped coral-red hull with magenta edge plates and a dark cockpit with a gold glow, dark navy outline, light from the top-left, palette of coral red, magenta, deep plum and gold, crisp pixel art, single centered sprite on a fully transparent background, no text, no logo, no border, no background"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "crate",
+  "role": "hazard",
+  "prompt": "pixel art rooftop cargo crate, steel-plated box with a dark navy frame, amber and navy diagonal hazard stripes across the top, coral red corner bolts, light from the upper-left with a darker lower-right side, dark outline, front-facing, centered, transparent background, no text, no logo, no border, palette of deep navy, steel grey, amber and coral red",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 72,
+  "height": 112,
+  "mode": "RGBA",
+  "sha256": "71fb6d87eb179d031fdc62e5a54589cab2173042d9e0d0d65a611466ead70b07"
+}

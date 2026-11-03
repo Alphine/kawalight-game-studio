@@ -1,0 +1,15 @@
+{
+  "source": "generated",
+  "entity": "gem",
+  "role": "topaz",
+  "prompt": "single faceted topaz gemstone, pixel art, centered, bright golden yellow with specular highlight, solid dark outline, transparent background, no text, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 64,
+  "mode": "RGBA",
+  "sha256": "0a65a1a374b5ea4301d97c9c7c52f2b43ee0981a8a4b86cceceeea19d04c79ef",
+  "providerSha256": "00925c118647d3b6312e04669ce5716dca4a5ff2777e90d9b0721d1d279d8901",
+  "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+}

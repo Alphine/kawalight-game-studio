@@ -227,13 +227,13 @@
   },
   "assets": {
     "sprites": {
-      "player": "assets/player.png",
-      "shot": "assets/shot.png",
-      "foe-shot": "assets/foe-shot.png",
-      "pickup": "assets/pickup.png",
-      "enemy-grunt": "assets/enemy-grunt.png",
-      "enemy-skitter": "assets/enemy-skitter.png",
-      "enemy-stinger": "assets/enemy-stinger.png"
+      "player": "assets/gen/player.png",
+      "shot": "assets/gen/shot.png",
+      "foe-shot": "assets/gen/foe-shot.png",
+      "pickup": "assets/gen/pickup.png",
+      "enemy-grunt": "assets/gen/enemy-grunt.png",
+      "enemy-skitter": "assets/gen/enemy-skitter.png",
+      "enemy-stinger": "assets/gen/enemy-stinger.png"
     }
   }
 }

@@ -1,0 +1,47 @@
+[
+  {
+    "sprite": "soil",
+    "entity": "soil",
+    "role": "tile",
+    "width": 96,
+    "height": 96,
+    "style": "illustrated-2d",
+    "prompt": "Top-down square tile of tilled farm soil: rich earth brown with small clumps, a few straw-gold pebbles, shallow horizontal furrow lines, soft shadow on the lower-right of each clump, light from the upper-left. Mid-tone value so it can be tinted darker when watered. Palette: earth brown #5A3A22 to #9A6A3F, straw gold #E9B44C accents only. Fills the whole square edge to edge as a seamless tiling texture. No outline, no border, no vignette, no text."
+  },
+  {
+    "sprite": "crop-turnip",
+    "entity": "crop",
+    "role": "turnip",
+    "width": 128,
+    "height": 128,
+    "style": "illustrated-2d",
+    "prompt": "A mature turnip plant ready to harvest, front three-quarter view, centered. Pale cream-gold bulb root half buried at the base with a sunlit upper-left highlight; four broad moss-green leaves with lighter veins fanning upward. Palette: moss green #4F8A3C and light green #7DB35A for leaves, straw gold #E9B44C for the bulb, earth brown #5A3A22 for outline and shadow. Clean 2px dark-brown outline, flat cel shading with one soft highlight, light from the upper-left. Isolated on a fully transparent background. No ground shadow, no text, no label, no border."
+  },
+  {
+    "sprite": "crop-pumpkin",
+    "entity": "crop",
+    "role": "pumpkin",
+    "width": 128,
+    "height": 128,
+    "style": "illustrated-2d",
+    "prompt": "A ripe orange pumpkin with a short curled stem and two leaves, front view, centered. Glossy terracotta-orange body with soft vertical ribs, warm highlight on the upper-left, deeper shade on the lower-right. Palette: terracotta orange #D9733B with highlight #F0A860, moss green #4F8A3C for stem and leaves, earth brown #5A3A22 for outline and stem shadow. Clean 2px dark-brown outline, flat cel shading, light from the upper-left. Isolated on a fully transparent background. No ground shadow, no text, no label, no border."
+  },
+  {
+    "sprite": "coin",
+    "entity": "coin",
+    "role": "gold",
+    "width": 64,
+    "height": 64,
+    "style": "illustrated-2d",
+    "prompt": "A single round gold farm coin, face-on, raised rim, with a small embossed sprout emblem in the center. Bright straw-gold #E9B44C face, pale highlight #FFF0B0 on the upper-left, darker amber #B9782A shade on the lower-right, earth brown #5A3A22 2px outline. Light from the upper-left. Isolated on a fully transparent background. No letters, no numbers, no text, no border."
+  },
+  {
+    "sprite": "farmer",
+    "entity": "farmer",
+    "role": "hero",
+    "width": 96,
+    "height": 128,
+    "style": "illustrated-2d",
+    "prompt": "A cheerful farmer character, full body, standing front view, centered. Wide-brimmed straw hat in straw gold #E9B44C, sky aqua #7FC8C0 overalls over a cream shirt with rolled sleeves, moss green #4F8A3C neckerchief, warm tan skin, earth brown #5A3A22 hair and boots, friendly small smile. Clean 2px dark-brown outline, flat cel shading with one soft highlight, light from the upper-left. Isolated on a fully transparent background. No ground shadow, no text, no border."
+  }
+]

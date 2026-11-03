@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "hero",
+  "role": "player",
+  "prompt": "side-view starfighter facing right, sleek swept-wing jet, steel-blue and white hull with bright cyan canopy and cyan engine glow at the rear, small gold accent stripe on the wing, palette limited to deep navy shadows, cyan highlights, magenta-free, light from the top-left, consistent 1px dark navy outline, crisp pixel art, single centered sprite on a fully transparent background, no text, no logo, no border, no background",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "260de9dacc1e9bd79ce3f0189dc6c3738defbb9a7b11358c8350ad8a228cc4cf"
+}

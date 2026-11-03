@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "pickup",
+  "role": "power-orb",
+  "prompt": "round power-up crystal orb, gold and amber faceted core with a bright white specular highlight at the top-left, soft glowing rim, dark navy outline, palette limited to gold, amber and white, light from the top-left, crisp pixel art, single centered object on a fully transparent background, no text, no border, no background",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 64,
+  "mode": "RGBA",
+  "sha256": "1902dd1a98a8d221896afcd00db2774461e4938fe871fe73c83b4d0c9915fd31"
+}

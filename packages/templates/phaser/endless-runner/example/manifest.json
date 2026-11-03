@@ -1,0 +1,52 @@
+{
+  "genre": "endless-runner",
+  "provider": "meta-image",
+  "assets": [
+    {
+      "sprite": "player",
+      "file": "assets/runner/player-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "087f7312f4a346419a56b803ea6caf740fb9bdec9af2f69ad6e40bbfc0257d26",
+      "providerSha256": "3467435577a5f656c3ccf5500bc36b826668722a5ddc774b8d6f3b16a198162f",
+      "postProcess": "border-connected white/grey background keyed to transparent after generation"
+    },
+    {
+      "sprite": "coin",
+      "file": "assets/coin/pickup-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "1f5b0358ccc4486bac42d85f708a817839f4a01cc844edce506ed960e8887bcd",
+      "providerSha256": "cfd09979cb5313d97fbd3c7becae6f7959a5d143acd57e1f11e5e11ddf8f880e",
+      "postProcess": "border-connected white/grey background keyed to transparent after generation"
+    },
+    {
+      "sprite": "obstacle-spike",
+      "file": "assets/spike/hazard-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "a1c98888e7dbb012dc2d705b5654b4a9c846a9c9663ab77a4d6e2037b6852f13",
+      "providerSha256": "ba634e25861d45e12338bc058501968d3c56b80a8d545822a36c53fa1598b62a",
+      "postProcess": "border-connected white/grey background keyed to transparent after generation"
+    },
+    {
+      "sprite": "obstacle-block",
+      "file": "assets/crate/hazard-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "71fb6d87eb179d031fdc62e5a54589cab2173042d9e0d0d65a611466ead70b07",
+      "providerSha256": "fdbce64453644c8116f7a628ae354b916bbee90b822ccaf85831863e4c0ffa91",
+      "postProcess": "border-connected white/grey background keyed to transparent after generation"
+    },
+    {
+      "sprite": "obstacle-drone",
+      "file": "assets/drone/hazard-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "e6746895e725aaa72fa041e3bf52cc0858fc7388c1803e064d65584c15a3a199",
+      "providerSha256": "c65f7f36f98e05b2bf2f3dce35eba35fa34e4dcc2171dab32af9f82935e31b51",
+      "postProcess": "border-connected white/grey background keyed to transparent after generation"
+    }
+  ],
+  "playable": "skyline-sprint-playable.zip"
+}

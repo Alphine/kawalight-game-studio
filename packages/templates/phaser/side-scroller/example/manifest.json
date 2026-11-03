@@ -1,0 +1,49 @@
+{
+  "genre": "side-scroller",
+  "provider": "meta-image",
+  "assets": [
+    {
+      "sprite": "player",
+      "file": "assets/hero/runner-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "5463ef8fc71e848573bdd7c668a9261bf2303c72e8a9442720a55f6e9441af49"
+    },
+    {
+      "sprite": "walker",
+      "file": "assets/enemy/crawler-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "756ad152a5669a93de8f362c8e55bc3382f02dac0c26c0a2f5cda4e53a07c077"
+    },
+    {
+      "sprite": "spikes",
+      "file": "assets/hazard/spikes-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "c7cf2a0e39f10bb34e1701837c7cb66ba01543c52f804213e270b77432eaf103"
+    },
+    {
+      "sprite": "coin",
+      "file": "assets/pickup/coin-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "15d499ed31c21ca0c1cf800f4aec910f8b56c1e4342dc6d332265fd27123d646"
+    },
+    {
+      "sprite": "exit-door",
+      "file": "assets/level/exit-door-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "3e769e7a01b344510bf52abb158d9840568ad50e9e714dc2f2f3cce904fb410f"
+    },
+    {
+      "sprite": "checkpoint",
+      "file": "assets/level/checkpoint-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "7418e05639a5791b096dde03f0616ba7f65465ce3be77929722670067430fb2c"
+    }
+  ],
+  "playable": "pixel-pass-playable.zip"
+}

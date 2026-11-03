@@ -8,6 +8,12 @@ import { createStore } from '../../runtime/store.js';
 import { createAudio } from '../../runtime/audio.js';
 import { createDebug } from '../../runtime/debug.js';
 import { burst, shake, flash, hitFlash, popup } from '../../runtime/juice.js';
+import { framePanel, textStyle } from '../ui.js';
+
+// Generated art is drawn at the logical hitbox height, feet-anchored, so the
+// picture sits exactly on the collision box. Coins use their 20px pickup size.
+const COIN_H = 20;
+const CHECKPOINT_H = 48;
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -27,8 +33,12 @@ export class GameScene extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor('#0d1626');
     this.cameras.main.setBounds(0, 0, config.world.levelWidth, config.world.levelHeight);
+
+    // Parallax backdrop, far to near: haze, ridge, hills.
     this.clouds = this.add.tileSprite(0, 0, W, H, 'clouds')
       .setOrigin(0, 0).setAlpha(0.7).setScrollFactor(0.1);
+    this.ridge = this.add.tileSprite(0, H - 250, W, 150, 'ridge')
+      .setOrigin(0, 0).setAlpha(0.9).setScrollFactor(0.2);
     this.hills = this.add.tileSprite(0, H - 190, W, 120, 'hills')
       .setOrigin(0, 0).setScrollFactor(0.35);
 
@@ -39,27 +49,27 @@ export class GameScene extends Phaser.Scene {
     }
     // Exit door + checkpoints.
     const ex = config.level.exit;
-    this.exitImg = this.add.image(ex.x + ex.w / 2, ex.y + ex.h, ex.sprite || 'exit-door')
-      .setOrigin(0.5, 1);
+    this.exitImg = this.artImage(ex.sprite || 'exit-door',
+      ex.x + ex.w / 2, ex.y + ex.h, ex.h);
     this.checkpointImgs = new Map();
     for (const cp of config.level.checkpoints) {
-      const img = this.add.image(cp.x + cp.w / 2, cp.y + cp.h, 'checkpoint')
-        .setOrigin(0.5, 1).setAlpha(0.45);
+      const img = this.artImage('checkpoint', cp.x + cp.w / 2, cp.y + cp.h, CHECKPOINT_H)
+        .setAlpha(0.45);
       this.checkpointImgs.set(cp.id, img);
     }
     // Static hazards.
     for (const hz of config.level.hazards) {
-      this.add.image(hz.x + hz.w / 2, hz.y + hz.h, hz.sprite)
-        .setOrigin(0.5, 1);
+      this.artImage(hz.sprite, hz.x + hz.w / 2, hz.y + hz.h, hz.h);
     }
 
     // Player (feet-anchored) + enemy/coin pools.
     const p = config.player;
-    this.playerImg = this.add.image(p.spawn.x + p.width / 2, p.spawn.y + p.height, 'player')
-      .setOrigin(0.5, 1);
+    this.playerImg = this.artImage('player',
+      p.spawn.x + p.width / 2, p.spawn.y + p.height, p.height);
     this.enemyImgs = new Map();
     this.coinImgs = new Map();
     this.enemySprites = new Map(config.level.enemies.map((e) => [e.id, e.sprite]));
+    this.enemyHeights = new Map(config.level.enemies.map((e) => [e.id, e.h]));
 
     // Camera follows the runner with a configured deadzone + lerp.
     const cam = config.camera;
@@ -77,19 +87,63 @@ export class GameScene extends Phaser.Scene {
       if (KC[name]) this.keymap[name] = this.input.keyboard.addKey(KC[name]);
     }
 
-    // HUD (fixed to the camera).
-    const style = { fontFamily: 'monospace', fontSize: '16px', color: '#e8ecf8' };
-    this.hudLeft = this.add.text(12, 8, '', style).setDepth(10).setScrollFactor(0);
-    this.hudRight = this.add.text(W - 12, 8, '', style).setOrigin(1, 0).setDepth(10).setScrollFactor(0);
+    // HUD (fixed to the camera): a slim top bar with an amber keyline.
+    const bar = this.add.graphics().setDepth(9).setScrollFactor(0);
+    bar.fillStyle(0x0d1626, 0.72);
+    bar.fillRect(0, 0, W, 36);
+    bar.fillStyle(0xffd479, 0.6);
+    bar.fillRect(0, 36, W, 2);
+    this.hudLeft = this.add.text(16, 9, '', textStyle('body', { fontSize: '17px' }))
+      .setDepth(10).setScrollFactor(0);
+    this.hudRight = this.add.text(W - 16, 9, '', textStyle('body', { fontSize: '17px' }))
+      .setOrigin(1, 0).setDepth(10).setScrollFactor(0);
 
-    // Overlay (shared by pause / win / game over).
+    // Overlay (shared by pause / win / game over): dim + framed message panel.
     this.overlay = this.add.container(0, 0).setDepth(50).setVisible(false).setScrollFactor(0);
-    const dim = this.add.rectangle(0, 0, W, H, 0x04060d, 0.78).setOrigin(0, 0);
-    this.overlayText = this.add.text(W / 2, H / 2, '', {
-      fontFamily: 'monospace', fontSize: '22px', color: '#ffffff', align: 'center',
-    }).setOrigin(0.5);
-    this.overlay.add([dim, this.overlayText]);
+    const dim = this.add.rectangle(0, 0, W, H, 0x04060d, 0.7).setOrigin(0, 0);
+    this.overlayPanel = framePanel(this, W / 2, H / 2, 480, 250, { depth: 51 });
+    this.overlayText = this.add.text(W / 2, H / 2, '', textStyle('body', {
+      fontSize: '20px', align: 'center', lineSpacing: 8,
+    })).setOrigin(0.5).setDepth(52);
+    this.overlay.add([dim, this.overlayPanel, this.overlayText]);
     this.hiSaved = false;
+  }
+
+  // Places a generated sprite with its feet at (x, y), scaled to height h.
+  artImage(key, x, y, h) {
+    const img = this.add.image(x, y, key).setOrigin(0.5, 1);
+    const scale = h / img.height;
+    img.setScale(scale);
+    img.setData('base', scale);
+    return img;
+  }
+
+  // Eased squash-and-stretch around the sprite's base scale.
+  squash(img, sx, sy, ms) {
+    if (!img || !img.active) return;
+    const base = img.getData('base') ?? img.scaleX;
+    this.tweens.killTweensOf(img);
+    img.setScale(base * sx, base * sy);
+    this.tweens.add({
+      targets: img, scaleX: base, scaleY: base, duration: ms,
+      ease: 'Back.easeOut',
+    });
+  }
+
+  // Removes a sprite with a short eased fade (used for coins and defeated foes).
+  vanish(img, { grow = 1.6, squashY = 0.2, ms = 180 } = {}) {
+    if (!img || !img.active) return;
+    const base = img.getData('base') ?? img.scaleX;
+    this.tweens.killTweensOf(img);
+    this.tweens.add({
+      targets: img,
+      scaleX: base * grow,
+      scaleY: base * squashY,
+      alpha: 0,
+      duration: ms,
+      ease: 'Cubic.easeOut',
+      onComplete: () => img.destroy(),
+    });
   }
 
   down(...names) {
@@ -128,6 +182,12 @@ export class GameScene extends Phaser.Scene {
   showOverlay(msg) {
     this.overlayText.setText(msg);
     this.overlay.setVisible(true);
+    this.overlayPanel.setAlpha(0);
+    this.overlayText.setAlpha(0);
+    this.tweens.add({
+      targets: [this.overlayPanel, this.overlayText], alpha: 1,
+      duration: 240, ease: 'Cubic.easeOut',
+    });
   }
 
   saveHi() {
@@ -155,6 +215,7 @@ export class GameScene extends Phaser.Scene {
     for (const e of events) {
       const at = this.playerCenter();
       if (e.type === 'jump') {
+        this.squash(this.playerImg, 0.88, 1.14, 160);
         burst(this, at.x, at.y + this.cfg.player.height / 2, {
           count: 6, speedMin: 30, speedMax: 120, lifespan: 300,
           colors: [0x8b94b3, 0xcfd6ea], scale: 1.0,
@@ -162,8 +223,8 @@ export class GameScene extends Phaser.Scene {
       } else if (e.type === 'coin') {
         this.audio.pickup();
         burst(this, at.x, at.y, {
-          count: 8, speedMin: 40, speedMax: 160, lifespan: 350,
-          colors: [0xffd479, 0xfff3c4], gravityY: 200, scale: 1.1,
+          count: 10, speedMin: 40, speedMax: 170, lifespan: 380,
+          colors: [0xffd479, 0xfff3c4, 0x5fd08a], gravityY: 200, scale: 1.2,
         });
         popup(this, at.x, at.y - 30, `+${this.cfg.scoring.coinScore}`, {
           color: '#ffd479', size: '15px',
@@ -171,7 +232,10 @@ export class GameScene extends Phaser.Scene {
       } else if (e.type === 'checkpoint') {
         this.audio.win();
         const img = this.checkpointImgs.get(e.id);
-        if (img) img.setAlpha(1);
+        if (img) {
+          img.setAlpha(1);
+          this.squash(img, 1.25, 0.8, 260);
+        }
         popup(this, at.x, at.y - 40, 'CHECKPOINT', {
           color: '#7fd4ff', size: '16px', rise: 30, duration: 900,
         });
@@ -186,7 +250,7 @@ export class GameScene extends Phaser.Scene {
         });
       } else if (e.type === 'hurt') {
         this.audio.hurt();
-        shake(this, 180, 0.015);
+        shake(this, 180, 0.012);
         flash(this, 150, 255, 60, 60);
         hitFlash(this, this.playerImg, 0xff5a5a, 200);
       } else if (e.type === 'respawn') {
@@ -261,6 +325,7 @@ export class GameScene extends Phaser.Scene {
     const p = this.cfg.player;
     const pl = sim.player;
     this.playerImg.setPosition(pl.x + p.width / 2, pl.y + p.height);
+    // Art faces right, so flip when running left.
     this.playerImg.setFlipX(pl.facing < 0);
     if (sim.phase === 'gameover') {
       this.playerImg.setRotation(-1.35);
@@ -273,8 +338,9 @@ export class GameScene extends Phaser.Scene {
       ? (Math.floor(time / 90) % 2 === 0 ? 0.35 : 1)
       : 1);
 
-    // Exit glow pulse.
-    this.exitImg.setScale(1 + 0.03 * Math.sin(time / 300));
+    // Exit glow pulse, eased around its base scale.
+    const exitBase = this.exitImg.getData('base');
+    this.exitImg.setScale(exitBase * (1 + 0.03 * Math.sin(time / 300)));
 
     const seenEnemies = new Set();
     for (const e of sim.enemies) {
@@ -283,15 +349,16 @@ export class GameScene extends Phaser.Scene {
       let img = this.enemyImgs.get(e.uid);
       if (!img) {
         const key = this.enemySprites.get(e.id) || 'walker';
-        img = this.add.image(e.x, e.y, key).setOrigin(0.5, 1);
+        img = this.artImage(key, e.x, e.y, this.enemyHeights.get(e.id) || e.h);
         this.enemyImgs.set(e.uid, img);
       }
       img.setPosition(e.x + e.w / 2, e.y + e.h);
-      img.setFlipX(e.dir > 0);
+      // Art faces right: flip when patrolling left.
+      img.setFlipX(e.dir < 0);
     }
     for (const [uid, img] of this.enemyImgs) {
       if (!seenEnemies.has(uid)) {
-        img.destroy();
+        this.vanish(img, { grow: 1.3, squashY: 0.15, ms: 160 });
         this.enemyImgs.delete(uid);
       }
     }
@@ -303,14 +370,18 @@ export class GameScene extends Phaser.Scene {
       let img = this.coinImgs.get(cn.uid);
       if (!img) {
         img = this.add.image(cn.x, cn.y, 'coin');
+        img.setScale(COIN_H / img.height);
+        img.setData('base', COIN_H / img.height);
         this.coinImgs.set(cn.uid, img);
       }
       img.setPosition(cn.x, cn.y);
-      img.scaleX = 0.35 + 0.65 * Math.abs(Math.cos(time / 160 + cn.uid));
+      // Coin spin: horizontal shimmer around the base scale.
+      const base = img.getData('base');
+      img.setScale(base * (0.35 + 0.65 * Math.abs(Math.cos(time / 160 + cn.uid))), base);
     }
     for (const [uid, img] of this.coinImgs) {
       if (!seenCoins.has(uid)) {
-        img.destroy();
+        this.vanish(img, { grow: 1.8, squashY: 1.8, ms: 200 });
         this.coinImgs.delete(uid);
       }
     }

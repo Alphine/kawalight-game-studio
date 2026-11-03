@@ -1,0 +1,46 @@
+{
+  "genre": "farming",
+  "provider": "meta-image",
+  "assets": [
+    {
+      "sprite": "soil",
+      "file": "assets/soil/tile-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "e9bd631cca117b5c905ac795a6abded7b24bd0967712287109732f8a6e85afe7"
+    },
+    {
+      "sprite": "crop-turnip",
+      "file": "assets/crop/turnip-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "e8d7aa333afff7a876c0006ed0508dcaf1f21c1a653b3d82c426163c51becc63",
+      "postProcessing": "white background flood-filled from the border to transparency (no regeneration)"
+    },
+    {
+      "sprite": "crop-pumpkin",
+      "file": "assets/crop/pumpkin-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "b65fad6a91f1585f7395611c63f50213ca1e5cf85779fe05ef03eca0cd2da757",
+      "postProcessing": "white background flood-filled from the border to transparency (no regeneration)"
+    },
+    {
+      "sprite": "coin",
+      "file": "assets/coin/gold-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "24d442e0468e81c1660980664b7f0187a3bc1f477d850b2e18613767201f2373",
+      "postProcessing": "white background flood-filled from the border to transparency (no regeneration)"
+    },
+    {
+      "sprite": "farmer",
+      "file": "assets/farmer/hero-gen-000.png",
+      "provider": "meta-image",
+      "model": "muse-image-1.0",
+      "sha256": "bc6e6597018244a275c4ab31340fc50a68f48c4e1394fede464ade5b041bbd07",
+      "postProcessing": "white background flood-filled from the border to transparency (no regeneration)"
+    }
+  ],
+  "playable": "sunny-acres-playable.zip"
+}

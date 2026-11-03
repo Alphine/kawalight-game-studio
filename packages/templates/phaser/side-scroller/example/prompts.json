@@ -1,0 +1,56 @@
+[
+  {
+    "sprite": "player",
+    "entity": "hero",
+    "role": "runner",
+    "width": 64,
+    "height": 88,
+    "style": "pixel-art",
+    "prompt": "side-view pixel-art explorer hero, full body standing facing right, green hooded tunic, brown leather belt, tan boots, short amber scarf; palette limited to moss green #5fd08a and deep green #2e4a3f, stone violet #4a3b5c, warm amber #ffd479 accents, dark navy #1c2b3a 1px outline; key light from upper-left with darker shading on lower-right; chunky readable pixel clusters, clear silhouette; transparent background, no ground shadow, no text, no logo, no border"
+  },
+  {
+    "sprite": "walker",
+    "entity": "enemy",
+    "role": "crawler",
+    "width": 72,
+    "height": 56,
+    "style": "pixel-art",
+    "prompt": "side-view pixel-art moss crawler creature, low armored beetle-like critter with a mossy green shell and small stone-violet spikes along its back, short legs, two glowing amber eyes, facing right; palette moss green #5fd08a and deep green #2e4a3f, stone violet #4a3b5c, amber #ffd479 eyes, dark navy #1c2b3a outline; key light from upper-left; clear silhouette, transparent background, no text, no logo, no border"
+  },
+  {
+    "sprite": "spikes",
+    "entity": "hazard",
+    "role": "spikes",
+    "width": 64,
+    "height": 48,
+    "style": "pixel-art",
+    "prompt": "pixel-art strip of three to four jagged sharp stone spikes rising from a short dark base, spikes in stone violet #4a3b5c with lighter top edges catching upper-left light, small moss tufts in moss green #5fd08a at the base, dark navy #1c2b3a outline; transparent background, no text, no logo, no border"
+  },
+  {
+    "sprite": "coin",
+    "entity": "pickup",
+    "role": "coin",
+    "width": 40,
+    "height": 40,
+    "style": "pixel-art",
+    "prompt": "pixel-art round gold coin with a small moss-green leaf emblem in the center, bright amber #ffd479 face, pale highlight at upper-left, darker amber #c98a2e rim, dark navy #1c2b3a outline; transparent background, no lettering, no text, no border"
+  },
+  {
+    "sprite": "exit-door",
+    "entity": "level",
+    "role": "exit-door",
+    "width": 96,
+    "height": 160,
+    "style": "pixel-art",
+    "prompt": "pixel-art ancient stone archway gateway with moss growing over its top, weathered stone-violet #4a3b5c blocks, moss green #5fd08a vines, a warm amber #ffd479 glow inside the opening, dark navy #1c2b3a outline; key light from upper-left; single standalone sprite, transparent background, no text, no logo, no border"
+  },
+  {
+    "sprite": "checkpoint",
+    "entity": "level",
+    "role": "checkpoint",
+    "width": 48,
+    "height": 96,
+    "style": "pixel-art",
+    "prompt": "pixel-art wooden checkpoint signpost with a small amber-glowing lantern on top, a moss-green #5fd08a banner, stone-violet #4a3b5c base, dark navy #1c2b3a outline; key light from upper-left; transparent background, no text, no lettering, no border"
+  }
+]

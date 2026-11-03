@@ -1,0 +1,15 @@
+{
+  "source": "generated",
+  "entity": "gem",
+  "role": "amethyst",
+  "prompt": "single faceted amethyst gemstone, pixel art, centered, bright violet purple with specular highlight, solid dark outline, transparent background, no text, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 64,
+  "mode": "RGBA",
+  "sha256": "339feb3e0a87ffff2d76bfa6e001b57214231630453c35f612e3b075f4e6aac1",
+  "providerSha256": "e3eb534a740b551314cfc0de17bcde956ce5c6cfb961a03d50f615fb1cb16a2b",
+  "postProcess": "border-connected near-white background keyed to transparent after generation (provider returns opaque backdrops)"
+}

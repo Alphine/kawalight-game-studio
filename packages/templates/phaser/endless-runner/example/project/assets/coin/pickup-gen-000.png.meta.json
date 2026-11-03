@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "coin",
+  "role": "pickup",
+  "prompt": "pixel art spinning gold coin with a thin cyan neon ring around the rim, bright amber face with a pale yellow glossy highlight on the upper-left, darker amber shade on the lower-right, dark brown-navy outline, centered, transparent background, no text, no symbols, no border, palette of amber, pale yellow, cyan and deep navy",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 40,
+  "height": 40,
+  "mode": "RGBA",
+  "sha256": "1f5b0358ccc4486bac42d85f708a817839f4a01cc844edce506ed960e8887bcd"
+}

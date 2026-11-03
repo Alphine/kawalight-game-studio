@@ -1,5 +1,5 @@
-// Game screen: HUD, pause/game-over/stage-clear overlays. Thin view over the
-// pure simulation in logic.js: input in, step, sync sprites, play sounds.
+// Game screen: arena, HUD, pause/game-over/stage-clear overlays. Thin view over
+// the pure simulation in logic.js: input in, step, sync sprites, play sounds.
 // Restart uses scene.restart(): no global listeners, so nothing duplicates.
 
 import { createGame, stepGame, pauseGame, resumeGame, suggestInput } from '../logic.js';
@@ -8,6 +8,13 @@ import { createStore } from '../../runtime/store.js';
 import { createAudio } from '../../runtime/audio.js';
 import { createDebug } from '../../runtime/debug.js';
 import { burst, shake, flash, hitFlash, popup } from '../../runtime/juice.js';
+import { fitImage } from '../art.js';
+
+const INK = 0x05070f;
+const AMBER = 0xffb347;
+const CRIMSON = 0xd9434f;
+const LABEL = { fontFamily: 'monospace', fontSize: '10px', color: '#8b94b3' };
+const VALUE = { fontFamily: 'monospace', fontSize: '17px', fontStyle: 'bold', color: '#ffffff' };
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -25,26 +32,31 @@ export class GameScene extends Phaser.Scene {
     const W = config.world.width;
     const H = config.world.height;
     const b = config.player.bounds;
+    const bw = b.maxX - b.minX;
+    const bh = b.maxY - b.minY;
 
     this.add.tileSprite(0, 0, W, H, 'arena-floor').setOrigin(0, 0);
-    // Arena edge.
-    const edge = this.add.graphics().setDepth(1);
-    edge.lineStyle(3, 0x2b3763, 1);
-    edge.strokeRect(b.minX - 8, b.minY - 8,
-      b.maxX - b.minX + 16, b.maxY - b.minY + 16);
+    this.add.image(W / 2, H / 2, 'arena-vignette').setOrigin(0.5).setDepth(2);
+
+    // Arena wall: dark outer band, amber inner rule, cobalt hairline.
+    const frame = this.add.graphics().setDepth(3);
+    frame.lineStyle(8, INK, 0.9).strokeRoundedRect(b.minX - 14, b.minY - 14, bw + 28, bh + 28, 10);
+    frame.lineStyle(2, AMBER, 0.55).strokeRoundedRect(b.minX - 8, b.minY - 8, bw + 16, bh + 16, 8);
+    frame.lineStyle(1, 0x3d6fd6, 0.45).strokeRoundedRect(b.minX - 3, b.minY - 3, bw + 6, bh + 6, 6);
     this.typeToKey = new Map(config.enemies.map((e) => [e.id, e.sprite]));
 
     // Player + pools.
-    this.playerImg = this.add.image(config.player.x, config.player.y, 'player');
+    this.playerImg = fitImage(this.add.image(config.player.x, config.player.y, 'player').setDepth(6), 'player');
     this.shotImgs = [];
     for (let i = 0; i < config.ranged.poolSize; i++) {
-      this.shotImgs.push(this.add.image(-100, -100, 'shot').setVisible(false));
+      this.shotImgs.push(fitImage(this.add.image(-100, -100, 'shot').setDepth(6).setVisible(false), 'shot'));
     }
     this.foeShotImgs = [];
     for (let i = 0; i < config.foeShots.poolSize; i++) {
-      this.foeShotImgs.push(this.add.image(-100, -100, 'foe-shot').setVisible(false));
+      this.foeShotImgs.push(fitImage(this.add.image(-100, -100, 'foe-shot').setDepth(6).setVisible(false), 'foe-shot'));
     }
     this.enemyImgs = new Map();
+    this.enemyHp = new Map();
     this.pickupImgs = [];
     // Kill gains queued by handleEvents, paired with explosion positions when
     // the enemy sprite is destroyed in syncSprites (logic emits no positions).
@@ -61,19 +73,57 @@ export class GameScene extends Phaser.Scene {
       if (KC[name]) this.keymap[name] = this.input.keyboard.addKey(KC[name]);
     }
 
-    // HUD.
-    const style = { fontFamily: 'monospace', fontSize: '16px', color: '#e8ecf8' };
-    this.hudScore = this.add.text(12, 8, '', style).setDepth(10);
-    this.hudState = this.add.text(W - 12, 8, '', style).setOrigin(1, 0).setDepth(10);
+    this.buildHud(W, config.player.health);
 
-    // Overlay (shared by pause / game over / stage clear).
+    // Overlay (shared by pause / game over / stage clear): framed panel.
     this.overlay = this.add.container(0, 0).setDepth(50).setVisible(false);
-    const dim = this.add.rectangle(0, 0, W, H, 0x04060d, 0.78).setOrigin(0, 0);
+    const dim = this.add.rectangle(0, 0, W, H, INK, 0.7).setOrigin(0, 0);
+    this.overlayPanel = this.add.graphics();
     this.overlayText = this.add.text(W / 2, H / 2, '', {
-      fontFamily: 'monospace', fontSize: '22px', color: '#ffffff', align: 'center',
+      fontFamily: 'monospace', fontSize: '20px', color: '#ffffff', align: 'center', lineSpacing: 6,
     }).setOrigin(0.5);
-    this.overlay.add([dim, this.overlayText]);
+    this.overlay.add([dim, this.overlayPanel, this.overlayText]);
     this.hiSaved = false;
+  }
+
+  buildHud(W, maxHp) {
+    // Top bar: score (left), wave (centre), hearts and lives (right).
+    const bar = this.add.graphics().setDepth(9);
+    bar.fillStyle(INK, 0.74).fillRect(0, 0, W, 40);
+    bar.fillStyle(AMBER, 0.7).fillRect(0, 39, W, 1);
+
+    this.add.text(16, 5, 'SCORE', LABEL).setDepth(10);
+    this.hudScore = this.add.text(16, 16, '0', VALUE).setDepth(10);
+    this.add.text(W / 2, 5, 'WAVE', LABEL).setOrigin(0.5, 0).setDepth(10);
+    this.hudWave = this.add.text(W / 2, 16, '', VALUE).setOrigin(0.5, 0).setDepth(10);
+
+    this.hpLabelX = W - 300;
+    this.add.text(this.hpLabelX, 5, 'HEALTH', LABEL).setDepth(10);
+    this.hudPips = this.add.graphics().setDepth(10);
+    this.maxHp = maxHp;
+    this.hudPipX = this.hpLabelX + 2;
+
+    this.add.text(W - 16, 5, 'LIVES', LABEL).setOrigin(1, 0).setDepth(10);
+    this.hudLives = this.add.text(W - 16, 16, '', VALUE).setOrigin(1, 0).setDepth(10);
+  }
+
+  updateHud(sim) {
+    const n = this.cfg.waves.length;
+    this.hudScore.setText(`${sim.score}`);
+    this.hudWave.setText(`${Math.min(sim.waveIndex + 1, n)} / ${n}`);
+    this.hudLives.setText(`${sim.player.lives}`);
+    const hp = Math.max(sim.player.hp, 0);
+    this.hudPips.clear();
+    for (let i = 0; i < this.maxHp; i++) {
+      const cx = this.hudPipX + i * 16 + 5;
+      const cy = 27;
+      if (i < hp) {
+        this.hudPips.fillStyle(CRIMSON, 1).fillCircle(cx, cy, 5);
+        this.hudPips.fillStyle(0xffffff, 0.35).fillCircle(cx - 1, cy - 1, 2);
+      } else {
+        this.hudPips.lineStyle(1, 0x3a4670, 1).strokeCircle(cx, cy, 4);
+      }
+    }
   }
 
   down(...names) {
@@ -114,7 +164,17 @@ export class GameScene extends Phaser.Scene {
 
   showOverlay(msg) {
     this.overlayText.setText(msg);
-    this.overlay.setVisible(true);
+    const W = this.cfg.world.width;
+    const H = this.cfg.world.height;
+    const pw = Math.max(380, this.overlayText.width + 72);
+    const ph = this.overlayText.height + 56;
+    const x = W / 2 - pw / 2;
+    const y = H / 2 - ph / 2;
+    this.overlayPanel.clear()
+      .fillStyle(0x0b1020, 0.94).fillRoundedRect(x, y, pw, ph, 14)
+      .lineStyle(2, AMBER, 0.9).strokeRoundedRect(x, y, pw, ph, 14);
+    this.overlay.setVisible(true).setAlpha(0);
+    this.tweens.add({ targets: this.overlay, alpha: 1, duration: 220, ease: 'Quad.easeOut' });
   }
 
   saveHi() {
@@ -131,7 +191,7 @@ export class GameScene extends Phaser.Scene {
     ring.lineStyle(2, 0xffffff, 0.9);
     ring.strokeCircle(x, y, range * 0.8);
     this.tweens.add({
-      targets: ring, alpha: 0, scale: 1.15, duration: 220,
+      targets: ring, alpha: 0, scale: 1.15, duration: 220, ease: 'Cubic.easeOut',
       onComplete: () => ring.destroy(),
     });
     burst(this, x, y, {
@@ -162,16 +222,16 @@ export class GameScene extends Phaser.Scene {
       } else if (e.type === 'pickup') {
         this.audio.pickup();
         burst(this, p.x, p.y, {
-          count: 8, speedMin: 40, speedMax: 150, lifespan: 350,
+          count: 12, speedMin: 40, speedMax: 170, lifespan: 380,
           colors: e.kind === 'heal' ? [0xff7d8a, 0xffffff] : [0xffd479, 0xffffff],
-          gravityY: 0, scale: 1.0,
+          gravityY: -40, scale: 1.1,
         });
         if (e.kind !== 'heal') {
-          popup(this, p.x, p.y - 24, `+${this.cfg.pickups?.bonusScore ?? 50}`, {
-            color: '#ffd479', size: '14px',
+          popup(this, p.x, p.y - 30, `+${this.cfg.pickups?.bonusScore ?? 50}`, {
+            color: '#ffd479', size: '15px',
           });
         } else {
-          popup(this, p.x, p.y - 24, '+HP', { color: '#ff7d8a', size: '14px' });
+          popup(this, p.x, p.y - 30, '+HP', { color: '#ff7d8a', size: '15px' });
         }
       } else if (e.type === 'wave-clear') {
         popup(this, this.cfg.world.width / 2, 120, `WAVE ${e.wave} CLEAR`, {
@@ -222,12 +282,13 @@ export class GameScene extends Phaser.Scene {
       this.handleEvents(stepGame(sim, this.cfg, input, delta));
     }
     this.syncSprites(time);
-    this.hudScore.setText(`SCORE ${sim.score}`);
-    const hp = Math.max(sim.player.hp, 0);
-    this.hudState.setText(
-      `WAVE ${Math.min(sim.waveIndex + 1, this.cfg.waves.length)}/${this.cfg.waves.length}`
-      + `   HP ${hp}   LIVES ${sim.player.lives}`);
+    this.updateHud(sim);
     this.debug.update(`wave ${sim.waveIndex + 1} foes ${sim.enemies.length}`);
+  }
+
+  popIn(img, scale) {
+    img.setScale(0);
+    this.tweens.add({ targets: img, scale, duration: 240, ease: 'Back.easeOut' });
   }
 
   syncSprites(time) {
@@ -252,14 +313,26 @@ export class GameScene extends Phaser.Scene {
       let img = this.enemyImgs.get(e.uid);
       if (!img) {
         const key = this.typeToKey.get(e.type) || 'player';
-        img = this.add.image(e.x, e.y, key);
-        if (e.isBoss) img.setScale(1.8);
+        img = fitImage(this.add.image(e.x, e.y, key).setDepth(5), key, e.isBoss ? 1.8 : 1);
+        this.popIn(img, img.scaleX);
         this.enemyImgs.set(e.uid, img);
+        this.enemyHp.set(e.uid, e.hp);
       }
+      const prevHp = this.enemyHp.get(e.uid);
+      const struck = prevHp !== undefined && e.hp < prevHp;
+      this.enemyHp.set(e.uid, e.hp);
       img.setPosition(e.x, e.y);
       img.setRotation(Math.atan2(p.y - e.y, p.x - e.x) + Math.PI / 2);
       if (e.hp < e.maxHp) img.setTint(0xff9a9a);
       else img.clearTint();
+      if (struck) {
+        // Impact: white flash (after the damage tint, so it is visible) plus sparks.
+        hitFlash(this, img, 0xffffff, 70);
+        burst(this, e.x, e.y, {
+          count: 6, speedMin: 40, speedMax: 160, lifespan: 260,
+          colors: [0xffffff, 0xffb347], gravityY: 0, scale: 1.0,
+        });
+      }
     }
     for (const [uid, img] of this.enemyImgs) {
       if (!seen.has(uid)) {
@@ -281,11 +354,14 @@ export class GameScene extends Phaser.Scene {
         }
         img.destroy();
         this.enemyImgs.delete(uid);
+        this.enemyHp.delete(uid);
       }
     }
 
     while (this.pickupImgs.length < sim.pickups.length) {
-      this.pickupImgs.push(this.add.image(-100, -100, 'pickup'));
+      const img = fitImage(this.add.image(-100, -100, 'pickup').setDepth(5), 'pickup');
+      this.pickupImgs.push(img);
+      this.popIn(img, img.scaleX);
     }
     this.pickupImgs.forEach((img, i) => {
       const k = sim.pickups[i];

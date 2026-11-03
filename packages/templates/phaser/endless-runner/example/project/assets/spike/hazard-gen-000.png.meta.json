@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "spike",
+  "role": "hazard",
+  "prompt": "pixel art cluster of three jagged steel spikes rising from a small dark navy rooftop base, coral red glowing tips with a pale pink highlight, steel grey-blue edges, light from the upper-left with darker lower-right faces, dark outline, centered, transparent background, no text, no logo, no border, palette of deep navy, steel grey, coral red and pale pink",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 60,
+  "height": 80,
+  "mode": "RGBA",
+  "sha256": "a1c98888e7dbb012dc2d705b5654b4a9c846a9c9663ab77a4d6e2037b6852f13"
+}

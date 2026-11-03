@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "crop",
+  "role": "pumpkin",
+  "prompt": "A ripe orange pumpkin with a short curled stem and two leaves, front view, centered. Glossy terracotta-orange body with soft vertical ribs, warm highlight on the upper-left, deeper shade on the lower-right. Palette: terracotta orange #D9733B with highlight #F0A860, moss green #4F8A3C for stem and leaves, earth brown #5A3A22 for outline and stem shadow. Clean 2px dark-brown outline, flat cel shading, light from the upper-left. Isolated on a fully transparent background. No ground shadow, no text, no label, no border.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "b65fad6a91f1585f7395611c63f50213ca1e5cf85779fe05ef03eca0cd2da757",
+  "postProcessing": "white background flood-filled from the border to transparency"
+}

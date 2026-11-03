@@ -10,11 +10,14 @@ import {
 import { createStore } from '../../runtime/store.js';
 import { createAudio } from '../../runtime/audio.js';
 import { createDebug } from '../../runtime/debug.js';
+import { burst, shake } from '../../runtime/juice.js';
+import { framedPanel, gemColor, PALETTE } from '../ui.js';
 
-const SWAP_MS = 120;
-const CLEAR_MS = 140;
-const FALL_MS = 150;
-const SPAWN_MS = 170;
+const SWAP_MS = 150;
+const CLEAR_MS = 150;
+const FALL_MS = 180;
+const SPAWN_MS = 210;
+const HUD_H = 48;
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -33,41 +36,26 @@ export class GameScene extends Phaser.Scene {
     this.paused = false;
     this.overlay = null;
     this.finished = false;
+    this.lastScore = 0;
 
-    const W = config.world.width;
-    const H = config.world.height;
     const b = config.board;
     this.tile = b.tileSize;
+    this.gemSize = b.tileSize - 12;
     this.originX = b.originX;
     this.originY = b.originY;
 
-    this.cameras.main.setBackgroundColor('#070b16');
-    this.boardBg = this.add.rectangle(
-      b.originX - 8, b.originY - 8, b.cols * b.tileSize + 16, b.rows * b.tileSize + 16,
-      0x101a36).setOrigin(0, 0);
+    this.cameras.main.setBackgroundColor(PALETTE.ink);
+    this.drawBoard();
 
-    // Plate per cell, a gem sprite per filled cell, and one selection ring.
-    this.plates = [];
-    for (let r = 0; r < b.rows; r++) {
-      for (let c = 0; c < b.cols; c++) {
-        const { x, y } = this.cellCenter(r, c);
-        this.add.image(x, y, 'plate').setDisplaySize(this.tile - 4, this.tile - 4)
-          .setAlpha(0.9);
-      }
-    }
     this.gems = Array.from({ length: b.rows }, () => Array(b.cols).fill(null));
     this.ring = this.add.image(0, 0, 'ring').setDisplaySize(this.tile - 2, this.tile - 2)
       .setVisible(false).setDepth(6);
-    this.syncGems(true);
+    this.ringBase = this.ring.scaleX;
+    this.syncGems();
 
-    // HUD.
-    const style = { fontFamily: 'monospace', fontSize: '16px', color: '#e8ecf8' };
-    this.hudScore = this.add.text(12, 6, '', style).setDepth(10);
-    this.hudMoves = this.add.text(W - 12, 6, '', style).setOrigin(1, 0).setDepth(10);
-    this.hudGoal = this.add.text(12, 28, '', {
-      fontFamily: 'monospace', fontSize: '13px', color: '#9fb38f',
-    }).setDepth(10);
+    this.buildHud();
     this.updateHud();
+
 
     // Keys named by config.controls, with fallbacks for the overlay keys.
     const KC = Phaser.Input.Keyboard.KeyCodes;
@@ -84,6 +72,66 @@ export class GameScene extends Phaser.Scene {
     this.audio.unlock();
     this.hintTimer = null;
     this.hintGlow = [];
+  }
+
+  // ---- drawing ----------------------------------------------------------------
+
+  drawBoard() {
+    const b = this.cfg.board;
+    const pad = 10;
+    framedPanel(this, b.originX - pad, b.originY - pad,
+      b.cols * b.tileSize + pad * 2, b.rows * b.tileSize + pad * 2,
+      { radius: 16, alpha: 0.96 });
+    for (let r = 0; r < b.rows; r++) {
+      for (let c = 0; c < b.cols; c++) {
+        const { x, y } = this.cellCenter(r, c);
+        this.add.image(x, y, 'plate').setDisplaySize(this.tile - 4, this.tile - 4)
+          .setAlpha(0.9);
+      }
+    }
+  }
+
+  buildHud() {
+    const W = this.cfg.world.width;
+    framedPanel(this, 8, 4, W - 16, HUD_H, { radius: 12, depth: 9 });
+    const caption = {
+      fontFamily: 'monospace', fontSize: '11px', fontStyle: 'bold', color: '#8b94b3',
+    };
+    const value = {
+      fontFamily: 'monospace', fontSize: '22px', fontStyle: 'bold', color: '#ffd479',
+    };
+    this.add.text(24, 9, 'SCORE', caption).setDepth(10);
+    this.hudScore = this.add.text(24, 19, '', value).setDepth(10);
+    this.add.text(W - 24, 9, 'MOVES', caption).setOrigin(1, 0).setDepth(10);
+    this.hudMoves = this.add.text(W - 24, 19, '', { ...value, color: '#e8ecf8' })
+      .setOrigin(1, 0).setDepth(10);
+
+    // Goal caption and a progress bar toward the target score.
+    this.add.text(W / 2, 9, `GOAL ${this.cfg.scoring.targetScore}`, caption)
+      .setOrigin(0.5, 0).setDepth(10);
+    const barW = 260;
+    const barX = W / 2 - barW / 2;
+    const barY = 36;
+    this.hudBarW = barW;
+    this.add.rectangle(barX, barY, barW, 8, 0x0a1126).setOrigin(0, 0.5)
+      .setStrokeStyle(1, PALETTE.panelEdge).setDepth(10);
+    this.hudBar = this.add.rectangle(barX, barY, 0, 8, PALETTE.gold)
+      .setOrigin(0, 0.5).setDepth(11);
+  }
+
+  updateHud() {
+    const s = summarize(this.sim);
+    this.hudScore.setText(`${s.score}`);
+    this.hudMoves.setText(`${s.movesLeft}`);
+    this.hudBar.setSize(this.hudBarW * Math.min(1, s.score / s.target), 8);
+    if (s.score !== this.lastScore) {
+      this.lastScore = s.score;
+      this.tweens.killTweensOf(this.hudScore);
+      this.hudScore.setScale(1);
+      this.tweens.add({
+        targets: this.hudScore, scale: { from: 1.3, to: 1 }, duration: 220, ease: 'Back.easeOut',
+      });
+    }
   }
 
   // ---- geometry -------------------------------------------------------------
@@ -106,8 +154,22 @@ export class GameScene extends Phaser.Scene {
     return this.cfg.gems[gem].sprite;
   }
 
+  // Gem colour for the burst, looked up from the sprite key on a gem image.
+  colorFor(sprite) {
+    const gem = this.cfg.gems.find((g) => g.sprite === sprite);
+    return gemColor(gem ? gem.id : '');
+  }
+
+  // A gem image at its display size. The base scale is kept as data so tweens
+  // can scale relative to it.
+  gemImage(x, y, sprite) {
+    const img = this.add.image(x, y, sprite).setDepth(2);
+    img.setData('base', this.gemSize / img.width);
+    return img.setScale(img.getData('base'));
+  }
+
   // Create or move gem sprites so they match the simulation grid exactly.
-  syncGems(instant = false) {
+  syncGems() {
     const { rows, cols } = this.cfg.board;
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
@@ -119,12 +181,12 @@ export class GameScene extends Phaser.Scene {
           continue;
         }
         if (!img) {
-          img = this.add.image(x, y, this.spriteKey(gem)).setDisplaySize(this.tile - 12, this.tile - 12);
+          img = this.gemImage(x, y, this.spriteKey(gem));
           this.gems[r][c] = img;
         }
-        img.setTexture(this.spriteKey(gem)).setDisplaySize(this.tile - 12, this.tile - 12);
-        img.setPosition(x, y).setAlpha(1).setScale(1, 1).setDepth(2);
-        if (instant) img.setScale(1, 1);
+        img.setTexture(this.spriteKey(gem));
+        img.setData('base', this.gemSize / img.width);
+        img.setPosition(x, y).setAlpha(1).setScale(img.getData('base')).setDepth(2);
       }
     }
   }
@@ -137,7 +199,10 @@ export class GameScene extends Phaser.Scene {
     const cell = this.cellAt(pointer.x, pointer.y);
     if (!cell) return;
     this.clearHint();
-    this.run(() => selectAt(this.sim, cell[0], cell[1]));
+    // A refused swap between two neighbours gets a small nudge instead of silence.
+    const from = this.sim.selected;
+    const adjacent = from && Math.abs(from[0] - cell[0]) + Math.abs(from[1] - cell[1]) === 1;
+    this.run(() => selectAt(this.sim, cell[0], cell[1]), adjacent ? [from, cell] : null);
   }
 
   update() {
@@ -186,7 +251,7 @@ export class GameScene extends Phaser.Scene {
   // ---- running simulation actions ------------------------------------------
 
   // Run one simulation action, animate its events, then re-sync and check the end.
-  async run(action) {
+  async run(action, refused = null) {
     if (this.busy) return;
     this.busy = true;
     const res = action();
@@ -194,6 +259,8 @@ export class GameScene extends Phaser.Scene {
       for (const event of res.events) {
         await this.animate(event);
       }
+    } else if (res && res.ok === false && res.reason === 'no-match' && refused) {
+      await this.nudge(refused[0], refused[1]);
     }
     this.syncGems();
     this.busy = false;
@@ -222,6 +289,9 @@ export class GameScene extends Phaser.Scene {
   markSelected([r, c]) {
     const { x, y } = this.cellCenter(r, c);
     this.ring.setPosition(x, y).setVisible(true);
+    this.tweens.killTweensOf(this.ring);
+    this.ring.setScale(this.ringBase * 1.15);
+    this.tweens.add({ targets: this.ring, scale: this.ringBase, duration: 160, ease: 'Back.easeOut' });
     return Promise.resolve();
   }
 
@@ -231,16 +301,32 @@ export class GameScene extends Phaser.Scene {
     this.ring.setVisible(false);
     const pa = this.cellCenter(a[0], a[1]);
     const pb = this.cellCenter(b[0], b[1]);
+    const ease = 'Sine.easeInOut';
     const moves = [];
-    if (ga) moves.push(this.tween({ targets: ga, x: pb.x, y: pb.y, duration: SWAP_MS }));
-    if (gb) moves.push(this.tween({ targets: gb, x: pa.x, y: pa.y, duration: SWAP_MS }));
+    if (ga) moves.push(this.tween({ targets: ga, x: pb.x, y: pb.y, duration: SWAP_MS, ease }));
+    if (gb) moves.push(this.tween({ targets: gb, x: pa.x, y: pa.y, duration: SWAP_MS, ease }));
     return Promise.all(moves).then(() => {
       this.gems[a[0]][a[1]] = gb;
       this.gems[b[0]][b[1]] = ga;
     });
   }
 
-  animateClear({ cells, points }) {
+  // Refused swap: both gems lean toward each other and back.
+  nudge([ar, ac], [br, bc]) {
+    const pa = this.cellCenter(ar, ac);
+    const pb = this.cellCenter(br, bc);
+    const moves = [];
+    const ga = this.gems[ar][ac];
+    const gb = this.gems[br][bc];
+    const ease = 'Sine.easeInOut';
+    if (ga) moves.push(this.tween({ targets: ga, x: pa.x + (pb.x - pa.x) * 0.2,
+      y: pa.y + (pb.y - pa.y) * 0.2, duration: 70, yoyo: true, ease }));
+    if (gb) moves.push(this.tween({ targets: gb, x: pb.x + (pa.x - pb.x) * 0.2,
+      y: pb.y + (pa.y - pb.y) * 0.2, duration: 70, yoyo: true, ease }));
+    return Promise.all(moves);
+  }
+
+  animateClear({ cells, points, cascade }) {
     const waits = [];
     let cx = 0;
     let cy = 0;
@@ -251,13 +337,27 @@ export class GameScene extends Phaser.Scene {
       cy += p.y;
       if (img) {
         this.gems[r][c] = null;
-        waits.push(this.tween({ targets: img, scale: 0.2, alpha: 0, duration: CLEAR_MS })
+        burst(this, p.x, p.y, {
+          colors: [this.colorFor(img.texture.key)], count: 7,
+          speedMin: 40, speedMax: 170, lifespan: 360, scale: 1.1, gravityY: 280,
+        });
+        // Pop up a little, then shrink away with a slight overshoot.
+        const base = img.getData('base');
+        waits.push(this.tween({ targets: img, scale: base * 1.2, duration: 70, ease: 'Quad.easeOut' })
+          .then(() => this.tween({ targets: img, scale: 0, alpha: 0,
+            duration: CLEAR_MS, ease: 'Back.easeIn' }))
           .then(() => img.destroy()));
       }
     }
     this.audio.pickup();
     const n = cells.length || 1;
     this.popupText(cx / n, cy / n, `+${points}`);
+    if (cascade > 0) {
+      this.popupText(cx / n, cy / n + 22, `CASCADE x${cascade + 1}`, '#7fd4ff', 13);
+    }
+    // A cascade shakes the board a little; a deeper one shakes it harder.
+    if (cascade >= 2) shake(this, 200, 0.008);
+    else if (cascade === 1) shake(this, 110, 0.004);
     return Promise.all(waits);
   }
 
@@ -272,7 +372,8 @@ export class GameScene extends Phaser.Scene {
       if (!img) continue;
       this.gems[to[0]][to[1]] = img;
       const p = this.cellCenter(to[0], to[1]);
-      pending.push(this.tween({ targets: img, x: p.x, y: p.y, duration: FALL_MS }));
+      pending.push(this.tween({ targets: img, x: p.x, y: p.y, duration: FALL_MS,
+        ease: 'Quad.easeIn' }));
     }
     // New gems enter from above their column, stacked by how far they fall.
     const perColumn = new Map();
@@ -288,10 +389,11 @@ export class GameScene extends Phaser.Scene {
         const [r] = spawn.at;
         const target = this.cellCenter(r, c);
         const startRow = r - total;
-        const img = this.add.image(target.x, this.cellCenter(startRow, c).y,
-          this.spriteKey(spawn.gem)).setDisplaySize(this.tile - 12, this.tile - 12).setDepth(2);
+        const img = this.gemImage(target.x, this.cellCenter(startRow, c).y,
+          this.spriteKey(spawn.gem));
         this.gems[r][c] = img;
-        pending.push(this.tween({ targets: img, y: target.y, duration: SPAWN_MS }));
+        pending.push(this.tween({ targets: img, y: target.y, duration: SPAWN_MS,
+          ease: 'Bounce.easeOut' }));
       }
     }
     return Promise.all(pending);
@@ -307,7 +409,7 @@ export class GameScene extends Phaser.Scene {
     }
     return Promise.all(fades).then(() => {
       for (let r = 0; r < this.gems.length; r++) this.gems[r].fill(null);
-      this.syncGems(true);
+      this.syncGems();
       for (const row of this.gems) for (const img of row) if (img) img.setAlpha(0);
       const shown = [];
       for (const row of this.gems) for (const img of row) if (img) {
@@ -317,36 +419,35 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  popupText(x, y, text) {
+  popupText(x, y, text, color = '#ffd479', size = 20) {
     const label = this.add.text(x, y, text, {
-      fontFamily: 'monospace', fontSize: '18px', color: '#ffd479',
-      stroke: '#000000', strokeThickness: 3,
+      fontFamily: 'monospace', fontSize: `${size}px`, fontStyle: 'bold', color,
+      stroke: '#000000', strokeThickness: 4,
     }).setOrigin(0.5).setDepth(20);
-    this.tweens.add({ targets: label, y: y - 40, alpha: 0, duration: 600,
-      onComplete: () => label.destroy() });
+    this.tweens.add({ targets: label, y: y - 44, alpha: 0, duration: 650,
+      ease: 'Cubic.easeOut', onComplete: () => label.destroy() });
   }
 
-  // ---- HUD, overlays, end of game -----------------------------------------
-
-  updateHud() {
-    const s = summarize(this.sim);
-    this.hudScore.setText(`SCORE ${s.score}`);
-    this.hudMoves.setText(`MOVES ${s.movesLeft}`);
-    this.hudGoal.setText(`GOAL ${s.target} · H hint · R reshuffle · P pause`);
-  }
+  // ---- overlays, end of game -----------------------------------------------
 
   showOverlay(title, subtitle) {
     this.hideOverlay();
     const W = this.cfg.world.width;
     const H = this.cfg.world.height;
     const dim = this.add.rectangle(0, 0, W, H, 0x000000, 0.6).setOrigin(0, 0).setDepth(30);
-    const t = this.add.text(W / 2, H / 2 - 20, title, {
-      fontFamily: 'monospace', fontSize: '44px', color: '#ffd479',
-    }).setOrigin(0.5).setDepth(31);
-    const s = this.add.text(W / 2, H / 2 + 26, subtitle, {
+    const pw = 520;
+    const ph = 170;
+    const panel = framedPanel(this, W / 2 - pw / 2, H / 2 - ph / 2, pw, ph,
+      { radius: 18, depth: 31 });
+    const t = this.add.text(W / 2, H / 2 - 26, title, {
+      fontFamily: 'monospace', fontSize: '42px', fontStyle: 'bold',
+      color: '#ffd479', stroke: '#5a3a00', strokeThickness: 6,
+    }).setOrigin(0.5).setDepth(32);
+    const s = this.add.text(W / 2, H / 2 + 30, subtitle, {
       fontFamily: 'monospace', fontSize: '16px', color: '#c7d0e8',
-    }).setOrigin(0.5).setDepth(31);
-    this.overlay = [dim, t, s];
+    }).setOrigin(0.5).setDepth(32);
+    this.tweens.add({ targets: t, scale: { from: 0.6, to: 1 }, duration: 320, ease: 'Back.easeOut' });
+    this.overlay = [dim, panel, t, s];
   }
 
   hideOverlay() {

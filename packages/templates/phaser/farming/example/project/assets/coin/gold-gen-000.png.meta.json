@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "coin",
+  "role": "gold",
+  "prompt": "A single round gold farm coin, face-on, raised rim, with a small embossed sprout emblem in the center. Bright straw-gold #E9B44C face, pale highlight #FFF0B0 on the upper-left, darker amber #B9782A shade on the lower-right, earth brown #5A3A22 2px outline. Light from the upper-left. Isolated on a fully transparent background. No letters, no numbers, no text, no border.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 64,
+  "height": 64,
+  "mode": "RGBA",
+  "sha256": "24d442e0468e81c1660980664b7f0187a3bc1f477d850b2e18613767201f2373",
+  "postProcessing": "white background flood-filled from the border to transparency"
+}

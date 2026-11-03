@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "crop",
+  "role": "turnip",
+  "prompt": "A mature turnip plant ready to harvest, front three-quarter view, centered. Pale cream-gold bulb root half buried at the base with a sunlit upper-left highlight; four broad moss-green leaves with lighter veins fanning upward. Palette: moss green #4F8A3C and light green #7DB35A for leaves, straw gold #E9B44C for the bulb, earth brown #5A3A22 for outline and shadow. Clean 2px dark-brown outline, flat cel shading with one soft highlight, light from the upper-left. Isolated on a fully transparent background. No ground shadow, no text, no label, no border.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 128,
+  "height": 128,
+  "mode": "RGBA",
+  "sha256": "e8d7aa333afff7a876c0006ed0508dcaf1f21c1a653b3d82c426163c51becc63",
+  "postProcessing": "white background flood-filled from the border to transparency"
+}

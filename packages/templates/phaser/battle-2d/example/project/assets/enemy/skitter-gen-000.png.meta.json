@@ -1,0 +1,13 @@
+{
+  "source": "generated",
+  "entity": "enemy",
+  "role": "skitter",
+  "prompt": "top-down view seen from directly above, a small fast spider-like skitter bug with a narrow segmented crimson-red carapace, six thin jointed legs splayed symmetrically, head pointing toward the top edge of the image, two cobalt-blue glowing eyes. Palette limited to deep navy ink (#141a2e), crimson red (#d9434f), cobalt blue glow (#3d6fd6), and pale ivory highlights. Clean consistent dark navy outline about 3px, soft light from the top-left, small contact shadow falling to the bottom-right. Centered, fully transparent background, no text, no logo, no border, no frame.",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 96,
+  "height": 96,
+  "mode": "RGBA",
+  "sha256": "af65c0d41669381dbdf929c5d11d8f46ca0d8e693f6b906b3b5064936079c8e9"
+}

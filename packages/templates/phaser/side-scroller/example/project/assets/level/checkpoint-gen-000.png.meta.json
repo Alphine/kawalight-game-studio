@@ -1,0 +1,14 @@
+{
+  "source": "generated",
+  "entity": "level",
+  "role": "checkpoint",
+  "prompt": "pixel-art wooden checkpoint signpost with a small amber-glowing lantern on top, a moss-green #5fd08a banner, stone-violet #4a3b5c base, dark navy #1c2b3a outline; key light from upper-left; transparent background, no text, no lettering, no border",
+  "provider": "meta-image",
+  "model": "muse-image-1.0",
+  "seed": null,
+  "width": 48,
+  "height": 96,
+  "mode": "RGBA",
+  "sha256": "7418e05639a5791b096dde03f0616ba7f65465ce3be77929722670067430fb2c",
+  "postProcess": "border-connected near-white background keyed to alpha 0"
+}
