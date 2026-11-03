@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
 from pathlib import Path
 
 from .. import audio as audio_mod
@@ -87,6 +89,28 @@ def generate_sfx(req: Request) -> tuple[int, dict]:
         raise ApiError("audio-error", str(exc), 400) from None
 
 
+def save_browser_wav(req: Request) -> tuple[int, dict]:
+    """Store a WAV that the studio rendered in the browser (base64 body)."""
+    project = require_project(req.group("id"))
+    body = req.body
+    preset = need_str(body, "preset")
+    role = check_segment(body.get("role") or preset, "role")
+    entity = body.get("entity")
+    if entity is not None:
+        entity = check_segment(entity, "entity")
+    encoded = need_str(body, "data")
+    try:
+        data = base64.b64decode(encoded, validate=True)
+    except (binascii.Error, ValueError):
+        raise bad_request("data must be base64-encoded WAV bytes") from None
+    try:
+        return 201, sfx_mod.save_wav(
+            project.dir, data, preset=preset, role=role, entity=entity,
+            seed=body.get("seed", 0))
+    except audio_mod.AudioError as exc:
+        raise ApiError("audio-error", str(exc), 400) from None
+
+
 ROUTES = [
     ("POST", r"/projects/(?P<id>[^/]+)/backup", create_backup),
     ("GET", r"/backups", list_backups),
@@ -94,5 +118,6 @@ ROUTES = [
     ("POST", r"/projects/(?P<id>[^/]+)/audio/import", import_audio),
     ("GET", r"/projects/(?P<id>[^/]+)/audio", list_audio),
     ("POST", r"/projects/(?P<id>[^/]+)/audio/generate", generate_sfx),
+    ("POST", r"/projects/(?P<id>[^/]+)/audio/save-wav", save_browser_wav),
     ("GET", r"/audio/sfx-presets", list_sfx_presets),
 ]

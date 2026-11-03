@@ -144,3 +144,66 @@ def generate(project_dir: str | Path, preset: str, *, role: str,
 def _frames(data: bytes) -> int:
     with wave.open(io.BytesIO(data), "rb") as wf:
         return wf.getnframes()
+
+
+BROWSER_PROVIDER_ID = "local-js-sfx"
+
+
+def save_wav(project_dir: str | Path, data: bytes, *, preset: str, role: str,
+             entity: str | None = None, seed: object = 0) -> dict:
+    """Store a WAV rendered in the browser under ``audio/`` with a sidecar.
+
+    The bytes are checked as a real WAV (header, size, duration) before they
+    are written, so the browser can only add audio files, not arbitrary data.
+    """
+    project_dir = Path(project_dir)
+    if preset not in PRESETS:
+        raise SfxError(f"unknown sfx preset {preset!r}")
+    role = audio_mod._check_name(role, "role", required=True)
+    assert role is not None
+    entity = audio_mod._check_name(entity, "entity", required=False)
+    seed = _check_seed(seed)
+    if not data:
+        raise SfxError("wav data is empty")
+    if len(data) > audio_mod.MAX_AUDIO_BYTES:
+        raise SfxError(f"wav exceeds size limit: {len(data)} bytes "
+                       f"(max {audio_mod.MAX_AUDIO_BYTES})")
+    if not (data[:4] == b"RIFF" and data[8:12] == b"WAVE"):
+        raise SfxError("data is not a WAV file")
+    try:
+        with wave.open(io.BytesIO(data), "rb") as wf:
+            channels = wf.getnchannels()
+            width = wf.getsampwidth()
+            rate = wf.getframerate()
+            frames = wf.getnframes()
+    except (wave.Error, EOFError) as exc:
+        raise SfxError(f"invalid WAV: {exc}") from None
+    if (channels, width) != (1, 2) or rate != SAMPLE_RATE:
+        raise SfxError("expected mono 16-bit WAV at 22050 Hz")
+    duration = frames / rate
+    if duration > audio_mod.MAX_DURATION_SECONDS:
+        raise SfxError("wav exceeds duration limit")
+
+    folder = project_dir / "audio"
+    if entity:
+        folder /= entity
+    folder.mkdir(parents=True, exist_ok=True)
+    dest = folder / f"{role}-{preset}.wav"
+    dest.write_bytes(data)
+    meta = {
+        "source": "generated",
+        "provider": BROWSER_PROVIDER_ID,
+        "preset": preset,
+        "seed": seed,
+        "role": role,
+        "entity": entity,
+        "sha256": hashlib.sha256(data).hexdigest(),
+        "bytes": len(data),
+        "format": "wav",
+        "durationSeconds": round(duration, 3),
+        "sampleRate": rate,
+        "channels": channels,
+    }
+    sidecar = dest.with_suffix(dest.suffix + ".meta.json")
+    sidecar.write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    return {"path": dest.relative_to(project_dir).as_posix(), "meta": meta}

@@ -30,13 +30,14 @@
       + ' · generate or import SFX for the exported game.</p></div>'
       + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh library</button></div></div>'
       + '<section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('forge') + ' Generate sound effect</h3></div>'
-      + '<p class="muted small">Synthesized on this machine: no API, no quota. The same preset and seed always give the same file.</p>'
+      + '<p class="muted small">Synthesized in the browser: no API, no quota. Preview plays it here; Save stores the WAV in this project.</p>'
       + '<div class="form-grid">'
       + '<label class="fld"><span>Preset</span><select data-f="gen-preset"><option value="">Loading presets…</option></select></label>'
       + '<label class="fld"><span>Role (optional)</span><input data-f="gen-role" placeholder="defaults to the preset name"></label>'
       + '<label class="fld"><span>Entity (optional)</span><input data-f="gen-entity" placeholder="player"></label>'
       + '<label class="fld"><span>Seed</span><input data-f="gen-seed" type="number" min="0" max="2147483647" value="0"></label></div>'
-      + '<div class="btn-row"><button type="button" class="btn primary" data-a="generate">' + I('forge') + 'Generate</button></div></section>'
+      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="preview">' + I('play') + 'Preview</button>'
+      + '<button type="button" class="btn primary" data-a="save">' + I('plus') + 'Save to project</button></div></section>'
       + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow" data-admin-only><div class="panel-head"><h3>' + I('plus') + ' Import local file</h3></div>'
       + '<div class="row"><label class="fld grow"><span>Absolute path on this machine</span>'
       + '<input data-f="src" placeholder="C:\\audio\\jump.wav (.wav / .mp3 / .ogg)"></label>'
@@ -74,44 +75,58 @@
       }, 'Importing…');
     });
     loadPresets(root);
-    root.querySelector('[data-a="generate"]').addEventListener('click', function (e) {
-      var preset = root.querySelector('[data-f="gen-preset"]').value;
-      var seed = Number(root.querySelector('[data-f="gen-seed"]').value || '0');
-      if (!preset) { UI().toast('Pick a preset first.', 'error'); return; }
-      if (!Number.isInteger(seed) || seed < 0 || seed > 2147483647) {
-        UI().toast('Seed must be a whole number from 0 to 2147483647.', 'error');
-        return;
-      }
-      var body = { preset: preset, seed: seed };
-      var role = root.querySelector('[data-f="gen-role"]').value.trim();
-      var entity = root.querySelector('[data-f="gen-entity"]').value.trim();
-      if (role) body.role = role;
-      if (entity) body.entity = entity;
+    root.querySelector('[data-a="preview"]').addEventListener('click', function () {
+      var sfx = genInput(root);
+      if (!sfx) return;
+      globalThis.KgsmSfx.play(sfx.preset, sfx.seed).catch(function (err) {
+        UI().toast('Preview failed: ' + UI().errorText(err), 'error');
+      });
+    });
+    root.querySelector('[data-a="save"]').addEventListener('click', function (e) {
+      var sfx = genInput(root);
+      if (!sfx) return;
+      var synth = globalThis.KgsmSfx;
+      var body = {
+        preset: sfx.preset,
+        seed: sfx.seed,
+        role: sfx.role || sfx.preset,
+        data: synth.toBase64(synth.encodeWav(synth.render(sfx.preset, sfx.seed))),
+      };
+      if (sfx.entity) body.entity = sfx.entity;
       UI().busy(e.target, function () {
-        return api().generateSfx(p.id, body).then(function (res) {
-          UI().toast('Generated → ' + res.path, 'success');
+        return api().saveBrowserWav(p.id, body).then(function (res) {
+          UI().toast('Saved → ' + res.path, 'success');
           loadList(root, p);
           if (V().refreshProjects) V().refreshProjects();
         });
-      }, 'Generating…');
+      }, 'Saving…');
     });
     loadList(root, p);
   }
 
+  // Presets come from the browser synth, so the panel works with the worker offline.
   function loadPresets(root) {
     var select = root.querySelector('[data-f="gen-preset"]');
-    if (!S().get('online')) {
-      select.innerHTML = '<option value="">Worker offline</option>';
-      return;
+    select.innerHTML = '<option value="">Choose a preset…</option>' + globalThis.KgsmSfx.PRESETS.map(function (name) {
+      return '<option value="' + U().esc(name) + '">' + U().esc(name) + '</option>';
+    }).join('');
+  }
+
+  // Read and check the generator fields; toasts and returns null when invalid.
+  function genInput(root) {
+    var preset = root.querySelector('[data-f="gen-preset"]').value;
+    var seed = Number(root.querySelector('[data-f="gen-seed"]').value || '0');
+    if (!preset) { UI().toast('Pick a preset first.', 'error'); return null; }
+    if (!Number.isInteger(seed) || seed < 0 || seed > 2147483647) {
+      UI().toast('Seed must be a whole number from 0 to 2147483647.', 'error');
+      return null;
     }
-    api().sfxPresets().then(function (res) {
-      if (!select.isConnected) return;
-      select.innerHTML = '<option value="">Choose a preset…</option>' + (res.presets || []).map(function (name) {
-        return '<option value="' + U().esc(name) + '">' + U().esc(name) + '</option>';
-      }).join('');
-    }, function () {
-      if (select.isConnected) select.innerHTML = '<option value="">Could not load presets</option>';
-    });
+    return {
+      preset: preset,
+      seed: seed,
+      role: root.querySelector('[data-f="gen-role"]').value.trim(),
+      entity: root.querySelector('[data-f="gen-entity"]').value.trim(),
+    };
   }
 
   function loadList(root, p) {

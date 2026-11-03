@@ -172,6 +172,7 @@
       listAudio: function (id) { return get(V1 + '/projects/' + encodeURIComponent(id) + '/audio'); },
       sfxPresets: function () { return get(V1 + '/audio/sfx-presets'); },
       generateSfx: function (id, body) { return post(V1 + '/projects/' + encodeURIComponent(id) + '/audio/generate', body); },
+      saveBrowserWav: function (id, body) { return post(V1 + '/projects/' + encodeURIComponent(id) + '/audio/save-wav', body); },
       // §10 Secrets (names only; values are write-only)
       putSecret: function (name, value) { return put(V1 + '/secrets/' + encodeURIComponent(name), { value: value }); },
       deleteSecret: function (name) { return del(V1 + '/secrets/' + encodeURIComponent(name)); },

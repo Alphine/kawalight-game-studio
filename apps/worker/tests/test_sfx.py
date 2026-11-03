@@ -123,3 +123,49 @@ def test_generate_route_errors(store):
     status, body = call("POST", "/projects/nope/audio/generate",
                         {"preset": "jump"})
     assert status == 404
+
+
+def test_save_wav_stores_browser_audio_with_sidecar(tmp_path):
+    data = sfx.render_wav("powerup", seed=4)
+    result = sfx.save_wav(tmp_path, data, preset="powerup", role="pickup",
+                          entity="player", seed=4)
+    assert result["path"] == "audio/player/pickup-powerup.wav"
+    dest = tmp_path / result["path"]
+    assert dest.read_bytes() == data
+    meta = result["meta"]
+    assert meta["provider"] == "local-js-sfx" and meta["source"] == "generated"
+    assert meta["sampleRate"] == sfx.SAMPLE_RATE and meta["channels"] == 1
+
+
+@pytest.mark.parametrize("data", [b"", b"not a wav at all" * 4])
+def test_save_wav_rejects_non_wav(tmp_path, data):
+    with pytest.raises(audio_mod.AudioError):
+        sfx.save_wav(tmp_path, data, preset="jump", role="jump")
+
+
+def test_save_wav_rejects_wrong_format(tmp_path):
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as wf:
+        wf.setnchannels(2)
+        wf.setsampwidth(2)
+        wf.setframerate(44100)
+        wf.writeframes(b"\x00\x00\x00\x00" * 100)
+    with pytest.raises(audio_mod.AudioError):
+        sfx.save_wav(tmp_path, buf.getvalue(), preset="jump", role="jump")
+
+
+def test_save_browser_wav_route(store):
+    import base64
+    pid = projects_mod.create("Browser Wav", "puzzle-match").id
+    data = sfx.render_wav("click", seed=1)
+    status, body = call("POST", f"/projects/{pid}/audio/save-wav",
+                        {"preset": "click", "role": "tap", "seed": 1,
+                         "data": base64.b64encode(data).decode("ascii")})
+    assert status == 201
+    assert body["path"] == "audio/tap-click.wav"
+    status, _ = call("POST", f"/projects/{pid}/audio/save-wav",
+                     {"preset": "click", "data": "%%%not-base64"})
+    assert status == 400
+    status, _ = call("POST", f"/projects/{pid}/audio/save-wav",
+                     {"preset": "click", "data": base64.b64encode(b"junk").decode()})
+    assert status == 400
