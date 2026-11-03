@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from kgsm import __version__
 
+from .. import auth as auth_mod
 from .. import costs as costs_mod
 from .. import db as db_mod
 from .. import secrets as secrets_mod
@@ -34,8 +35,8 @@ from . import (
     need_str,
     quote_to_dict,
 )
-from . import (routes_assets, routes_auto, routes_config, routes_export,
-                 routes_ops, routes_playtest, routes_projects,
+from . import (routes_assets, routes_auto, routes_auth, routes_config,
+                 routes_export, routes_ops, routes_playtest, routes_projects,
                  routes_providers, routes_secrets, routes_story)
 
 DEFAULT_HOST = "127.0.0.1"
@@ -166,8 +167,26 @@ CORE_ROUTES = [
 # Routing
 # --------------------------------------------------------------------------
 
+# Routes anyone may call. Everything else needs a session when auth is enforced.
+PUBLIC_HANDLERS = {
+    health, routes_auth.register, routes_auth.login, routes_auth.logout,
+    routes_auth.me,
+}
+
+# Routes that touch shared state or read server-side paths: admin only.
+ADMIN_HANDLERS = {
+    routes_secrets.put_secret, routes_secrets.delete_secret,
+    routes_secrets.list_secrets,
+    routes_ops.create_backup, routes_ops.list_backups,
+    routes_ops.restore_backup, routes_ops.import_audio,
+    routes_assets.import_asset_route, routes_auto.create_auto,
+    costs_limits_get, costs_limits_put, costs_ledger,
+}
+
+
 def _collect_routes() -> list:
-    tables = [CORE_ROUTES, routes_projects.ROUTES, routes_auto.ROUTES,
+    tables = [CORE_ROUTES, routes_auth.ROUTES, routes_projects.ROUTES,
+              routes_auto.ROUTES,
               routes_config.ROUTES, routes_assets.ROUTES,
               routes_export.ROUTES, routes_secrets.ROUTES,
               routes_providers.ROUTES, routes_ops.ROUTES,
@@ -189,10 +208,22 @@ def dispatch(req: Request) -> tuple[int, dict | RawBody]:
         match = pattern.fullmatch(req.path)
         if match is not None:
             req.match = match
+            if req.enforce_auth:
+                if handler not in PUBLIC_HANDLERS and req.user is None:
+                    err = ApiError("unauthenticated", "sign in to continue", 401)
+                    return err.status, err.to_body()
+                if handler in ADMIN_HANDLERS and not req.user.is_admin:
+                    err = ApiError("forbidden", "this action is admin-only", 403)
+                    return err.status, err.to_body()
+            # Bind the caller's identity for project scoping. In-process
+            # callers (enforce_auth False) bind None: unscoped, as before.
+            token = auth_mod.bind(req.user if req.enforce_auth else None)
             try:
                 return handler(req)
             except ApiError as exc:
                 return exc.status, exc.to_body()
+            finally:
+                auth_mod.unbind(token)
     raise ApiError("not-found", f"no route for {req.method} {req.path}", 404)
 
 
@@ -391,7 +422,13 @@ class Handler(BaseHTTPRequestHandler):
         query_list = parse_qs(parsed.query, keep_blank_values=True)
         query = {key: values[0] for key, values in query_list.items()}
         req = Request(method=self.command, path=api_path, query=query,
-                      query_list=query_list, body=body)
+                      query_list=query_list, body=body,
+                      client_ip=self.client_address[0])
+        if auth_mod.auth_required():
+            req.enforce_auth = True
+            req.session_token = auth_mod.token_from_cookie_header(
+                self.headers.get("Cookie"))
+            req.user = auth_mod.user_for_session(req.session_token)
         try:
             status, response = dispatch(req)
         except ApiError as exc:
@@ -405,7 +442,8 @@ class Handler(BaseHTTPRequestHandler):
         if isinstance(response, RawBody):
             self._send_bytes(status, response.data, response.content_type)
         else:
-            self._send_json(status, response)
+            extra = {"Set-Cookie": req.set_cookie} if req.set_cookie else None
+            self._send_json(status, response, extra)
 
 
 class Server(ThreadingHTTPServer):

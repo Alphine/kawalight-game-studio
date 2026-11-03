@@ -24,6 +24,7 @@ from . import (
     need_str,
     opt_bool,
     quote_to_dict,
+    spend_ai_quota,
 )
 
 # Serializes generate_story's quote→authorize→generate→record_spend flow so
@@ -58,7 +59,7 @@ def generate_story(req: Request) -> tuple[int, dict]:
         if not isinstance(project_id, str) or not project_id:
             raise bad_request("projectId must be a non-empty string")
         try:
-            projects_mod.get(project_id)
+            projects_mod.get_visible(project_id)
         except projects_mod.ProjectError:
             raise ApiError("project-not-found",
                            f"project {project_id!r} not found", 404) from None
@@ -81,6 +82,8 @@ def generate_story(req: Request) -> tuple[int, dict]:
                 raise ApiError("cost-blocked", message, 402, quoted) from None
             raise ApiError("needs-confirmation", message, 409,
                            quoted) from None
+        if provider_id != "mock":
+            spend_ai_quota("story")
 
         # Text backends resolve through the registry's capability view;
         # ``mock`` keeps its offline placeholder (it exposes no

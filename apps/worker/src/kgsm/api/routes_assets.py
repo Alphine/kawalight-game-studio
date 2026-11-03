@@ -26,6 +26,7 @@ from . import (
     opt_int,
     quote_to_dict,
     require_project,
+    spend_ai_quota,
     resolve_inside,
 )
 
@@ -109,6 +110,8 @@ def generate_assets(req: Request) -> tuple[int, dict]:
                 raise ApiError("cost-blocked", message, 402, quoted) from None
             raise ApiError("needs-confirmation", message, 409,
                            quoted) from None
+        if provider_id != "mock":
+            spend_ai_quota("image", n_images)
 
         provider = get_provider(provider_id)
         try:

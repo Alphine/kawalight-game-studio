@@ -40,6 +40,10 @@
           var payload = null;
           try { payload = text ? JSON.parse(text) : null; } catch (e) { payload = null; }
           if (res.ok) return payload == null ? {} : payload;
+          // Web build: a dead or missing session sends the user back to sign in.
+          if (res.status === 401 && typeof location !== 'undefined' && location.pathname.indexOf('/kgsm/app') === 0) {
+            location.replace('/kgsm/');
+          }
           var U = globalThis.KgsmUtil;
           var parsed = U.parseApiError(payload, res.status, 'Request failed');
           throw new ApiError(parsed);

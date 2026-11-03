@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote
 
+from .. import auth as auth_mod
 from .. import projects as projects_mod
 
 CONTRACT_VERSION = "1.0.0"
@@ -56,6 +57,13 @@ class Request:
     query_list: dict[str, list[str]] = field(default_factory=dict)
     body: dict = field(default_factory=dict)
     match: re.Match | None = None
+    # Set by the HTTP layer only. ``enforce_auth`` is False for in-process
+    # callers (tests, desktop), which keep single-user behaviour.
+    enforce_auth: bool = False
+    user: "auth_mod.AuthContext | None" = None
+    client_ip: str = ""
+    set_cookie: str | None = None
+    session_token: str | None = None
 
     def group(self, name: str) -> str:
         assert self.match is not None, "no route match attached"
@@ -147,9 +155,17 @@ def quote_to_dict(quote) -> dict:
     }
 
 
+def spend_ai_quota(kind: str, amount: int = 1) -> None:
+    """Charge today's paid-generation quota (no-op for admins/desktop)."""
+    try:
+        auth_mod.consume_quota(kind, amount)
+    except auth_mod.AuthError as exc:
+        raise ApiError(exc.code, exc.message, exc.status) from None
+
+
 def require_project(project_id: str) -> projects_mod.Project:
     try:
-        return projects_mod.get(project_id)
+        return projects_mod.get_visible(project_id)
     except projects_mod.ProjectError:
         raise ApiError("project-not-found",
                        f"project {project_id!r} not found", 404) from None

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'">
+<title>Kawalight Game Studio Maker</title>
+<meta name="description" content="Bikin game 2D dari tema dan genre. Cerita dan asset dibantu AI, dirakit jadi game yang bisa dimainkan, lalu diekspor.">
+<link rel="stylesheet" href="landing.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/kgsm/" aria-label="Kawalight Game Studio Maker">
+    <span class="mark" aria-hidden="true">K</span>
+    <span>Kawalight <strong>Game Studio Maker</strong></span>
+  </a>
+  <nav aria-label="Utama">
+    <a href="#fitur">Fitur</a>
+    <a href="#akun" class="pill-link">Masuk</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <p class="eyebrow">Studio game 2D untuk semua orang</p>
+    <h1>Dari ide tema ke game yang bisa dimainkan, dalam satu alur.</h1>
+    <p class="lead">Pilih tema dan genre, biarkan AI membantu cerita dan asset, rakit jadi game yang bisa langsung dimainkan, uji, lalu ekspor ke Phaser atau Godot.</p>
+    <div class="cta">
+      <a class="btn primary" href="#akun" data-tab-target="register">Daftar gratis</a>
+      <a class="btn ghost" href="#akun" data-tab-target="login">Sudah punya akun</a>
+    </div>
+  </section>
+
+  <section id="fitur" class="features" aria-labelledby="fitur-judul">
+    <h2 id="fitur-judul">Yang bisa kamu lakukan</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>5 genre siap pakai</h3>
+        <p>Space shooter, endless runner, side-scroller, battle 2D, dan farming. Setiap genre sudah teruji dan bisa dimainkan.</p>
+      </article>
+      <article class="card">
+        <h3>Cerita dan asset dengan AI</h3>
+        <p>Tulis pembuka cerita dan hasilkan gambar pixel-art dengan model Meta AI. Setiap akun mendapat kuota harian.</p>
+      </article>
+      <article class="card">
+        <h3>Uji langsung di browser</h3>
+        <p>Mainkan hasil rakitan di playtest tanpa instalasi, lalu atur balance dan konfigurasi sampai pas.</p>
+      </article>
+      <article class="card">
+        <h3>Ekspor ke Phaser atau Godot</h3>
+        <p>Unduh proyek sebagai ZIP. Kamu memegang hasil kerjamu sepenuhnya.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="akun" class="account" aria-labelledby="akun-judul">
+    <div class="auth-card">
+      <h2 id="akun-judul">Masuk ke studio</h2>
+      <div class="tabs" role="tablist" aria-label="Pilih masuk atau daftar">
+        <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="form-login" data-tab="login">Masuk</button>
+        <button type="button" role="tab" id="tab-register" aria-selected="false" aria-controls="form-register" data-tab="register" tabindex="-1">Daftar</button>
+      </div>
+
+      <form id="form-login" role="tabpanel" aria-labelledby="tab-login" novalidate>
+        <label class="fld">
+          <span>Email</span>
+          <input name="email" type="email" autocomplete="email" required maxlength="254">
+        </label>
+        <label class="fld">
+          <span>Kata sandi</span>
+          <input name="password" type="password" autocomplete="current-password" required maxlength="200">
+        </label>
+        <button type="submit" class="btn primary wide">Masuk</button>
+      </form>
+
+      <form id="form-register" role="tabpanel" aria-labelledby="tab-register" novalidate hidden>
+        <label class="fld">
+          <span>Email</span>
+          <input name="email" type="email" autocomplete="email" required maxlength="254">
+        </label>
+        <label class="fld">
+          <span>Kata sandi (minimal 10 karakter)</span>
+          <input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200">
+        </label>
+        <button type="submit" class="btn primary wide">Buat akun</button>
+        <p class="fine">Kuota AI harian berlaku per akun. Email dipakai hanya untuk masuk.</p>
+      </form>
+
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Kawalight Game Studio Maker · KGSM v0.2.0</span>
+  <span>Dibuat di Indonesia</span>
+</footer>
+
+<script src="landing.js"></script>
+</body>
+</html>

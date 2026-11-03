@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import auth as auth_mod
 from . import db as dbmod
 from . import paths
 
@@ -47,6 +48,7 @@ class Project:
     archived: bool
     created_at: str
     updated_at: str
+    owner_id: str | None = None
 
     @property
     def dir(self) -> Path:
@@ -67,6 +69,7 @@ def _row_to_project(row: sqlite3.Row) -> Project:
         archived=bool(row["archived"]),
         created_at=row["created_at"],
         updated_at=row["updated_at"],
+        owner_id=row["owner_id"],
     )
 
 
@@ -110,10 +113,11 @@ def create(name: str, genre: str, conn: sqlite3.Connection | None = None) -> Pro
             try:
                 conn.execute(
                     "INSERT INTO projects (id, name, genre, state, state_reason,"
-                    " archived, created_at, updated_at)"
-                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    " archived, created_at, updated_at, owner_id)"
+                    " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (project.id, project.name, project.genre, project.state,
-                     "", 0, project.created_at, project.updated_at),
+                     "", 0, project.created_at, project.updated_at,
+                     auth_mod.current().user_id if auth_mod.current() else None),
                 )
             except sqlite3.IntegrityError:
                 continue
@@ -141,17 +145,37 @@ def get(project_id: str, conn: sqlite3.Connection | None = None) -> Project:
             conn.close()
 
 
+def get_visible(project_id: str, conn: sqlite3.Connection | None = None) -> Project:
+    """Like :func:`get`, but hides projects the current user does not own.
+
+    A foreign project answers exactly like a missing one, so IDs cannot be
+    probed across accounts.
+    """
+    project = get(project_id, conn)
+    owner = auth_mod.scoped_owner_id()
+    if owner is not None and project.owner_id != owner:
+        raise ProjectError(f"project {project_id!r} not found")
+    return project
+
+
 def list_projects(
     include_archived: bool = False, conn: sqlite3.Connection | None = None
 ) -> list[Project]:
     own = conn is None
     conn = conn or dbmod.connect()
     try:
-        sql = "SELECT * FROM projects"
+        clauses, params = [], []
         if not include_archived:
-            sql += " WHERE archived = 0"
+            clauses.append("archived = 0")
+        owner = auth_mod.scoped_owner_id()
+        if owner is not None:
+            clauses.append("owner_id = ?")
+            params.append(owner)
+        sql = "SELECT * FROM projects"
+        if clauses:
+            sql += " WHERE " + " AND ".join(clauses)
         sql += " ORDER BY updated_at DESC"
-        return [_row_to_project(r) for r in conn.execute(sql).fetchall()]
+        return [_row_to_project(r) for r in conn.execute(sql, params).fetchall()]
     finally:
         if own:
             conn.close()

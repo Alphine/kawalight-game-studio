@@ -50,4 +50,17 @@ def connect(db_file: Path | None = None) -> sqlite3.Connection:
     except sqlite3.DatabaseError:
         pass
     conn.executescript(_SCHEMA)
+    _migrate(conn)
     return conn
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Additive, idempotent upgrades for databases created by older builds.
+
+    Projects predating accounts have no owner (NULL): only the admin sees
+    them once authentication is enforced.
+    """
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(projects)")}
+    if "owner_id" not in columns:
+        conn.execute("ALTER TABLE projects ADD COLUMN owner_id TEXT NULL")
+        conn.commit()

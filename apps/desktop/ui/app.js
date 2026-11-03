@@ -255,12 +255,51 @@
 
   globalThis.KgsmApp = { api: api, go: go, checkHealth: checkHealth, renderRail: renderRail };
 
+  // Web build (/kgsm/app): require a signed-in account and offer sign-out.
+  // Desktop and local dev report authRequired=false and skip all of this.
+  function authGate() {
+    var base = store.get('workerUrl');
+    return fetch(base + '/api/v1/auth/me', { credentials: 'same-origin' }).then(function (res) {
+      if (res.status === 401) { location.replace('/kgsm/'); return null; }
+      return res.ok ? res.json() : null;
+    }).then(function (me) {
+      if (!me || !me.authRequired) return;
+      renderAccount(me.user);
+    }, function () { /* worker offline: the normal banner explains it */ });
+  }
+
+  function renderAccount(user) {
+    var host = document.querySelector('.hud-top-right');
+    if (!host || host.querySelector('[data-f="signout"]')) return;
+    var wrap = document.createElement('span');
+    wrap.className = 'account-chip';
+    var who = document.createElement('span');
+    who.className = 'muted small';
+    who.textContent = user ? user.email : '';
+    var out = document.createElement('button');
+    out.type = 'button';
+    out.className = 'btn ghost small';
+    out.setAttribute('data-f', 'signout');
+    out.textContent = 'Keluar';
+    out.addEventListener('click', function () {
+      fetch(store.get('workerUrl') + '/api/v1/auth/logout', {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' }, body: '{}',
+      }).then(function () { location.replace('/kgsm/'); },
+              function () { location.replace('/kgsm/'); });
+    });
+    wrap.appendChild(who);
+    wrap.appendChild(out);
+    host.insertBefore(wrap, host.firstChild);
+  }
+
   buildNav();
   window.addEventListener('hashchange', render);
   store.subscribe(function () { paintBanner(); });
   render();
   renderRail();
   detectShell();
+  authGate();
   checkHealth().then(function () {
     if (store.get('online') && globalThis.KgsmViews.refreshProjects) {
       globalThis.KgsmViews.refreshProjects().then(renderRail, function () { /* quiet */ });
