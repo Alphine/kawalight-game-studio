@@ -25,7 +25,8 @@
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><p class="hero-tag">' + I('forge') + ' ASSET FACTORY</p><h2>' + I('forge') + ' Asset Forge</h2>'
+      '<img class="menu-banner" src="img/banner-assets-dark.webp" alt="" aria-hidden="true" loading="lazy">'
+      + '<div class="view-head"><div><p class="hero-tag">' + I('forge') + ' ASSET FACTORY</p><h2>' + I('forge') + ' Asset Forge</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · prompt → quote → confirm → generate (FR-009).</p></div></div>'
       + '<div class="btn-row tablist" role="tablist" aria-label="Forge modes">'
       + '<button type="button" class="btn primary" data-a="tab-images" role="tab" aria-selected="true">' + I('forge') + 'Images</button> '
@@ -379,7 +380,8 @@
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><p class="hero-tag">' + I('lab') + ' ASSET FACTORY</p><h2>' + I('lab') + ' Asset Lab</h2>'
+      '<img class="menu-banner" src="img/banner-assets-dark.webp" alt="" aria-hidden="true" loading="lazy">'
+      + '<div class="view-head"><div><p class="hero-tag">' + I('lab') + ' ASSET FACTORY</p><h2>' + I('lab') + ' Asset Lab</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · import, inspect, slice, diagnose.</p></div>'
       + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh assets</button></div></div>'
       + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow" data-admin-only><div class="panel-head"><h3>' + I('plus') + ' Import local file</h3></div>'

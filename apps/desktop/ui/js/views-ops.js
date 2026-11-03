@@ -23,7 +23,8 @@
     if (!p) return;
     var savedUrl = S().get('playtestUrl') || '';
     root.innerHTML =
-      '<div class="view-head"><div><p class="hero-tag">' + I('play') + ' WEBGL SANDBOX</p><h2>' + I('play') + ' Playtest</h2>'
+      '<img class="menu-banner" src="img/banner-ops-dark.webp" alt="" aria-hidden="true" loading="lazy">'
+      + '<div class="view-head"><div><p class="hero-tag">' + I('play') + ' WEBGL SANDBOX</p><h2>' + I('play') + ' Playtest</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · '
       + U().esc(p.genre) + ' · auto-stage, run, pause, restart, console.</p></div></div>'
       + '<div class="btn-row tablist" role="tablist" aria-label="Playtest modes">'
@@ -442,7 +443,8 @@
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><p class="hero-tag">' + I('shield') + ' STUDIO &amp; SYSTEM</p><h2>' + I('shield') + ' Validation Center</h2>'
+      '<img class="menu-banner" src="img/banner-ops-dark.webp" alt="" aria-hidden="true" loading="lazy">'
+      + '<div class="view-head"><div><p class="hero-tag">' + I('shield') + ' STUDIO &amp; SYSTEM</p><h2>' + I('shield') + ' Validation Center</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · asset, config, runtime, export, security reports.</p></div>'
       + '<div class="row"><button type="button" class="btn primary" data-a="run-all">Run all checks</button></div></div>'
       + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('check') + ' Checks</h3></div>'
@@ -641,7 +643,8 @@
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><p class="hero-tag">' + I('export') + ' MULTI-PLATFORM BUILD</p><h2>' + I('export') + ' Export Center</h2>'
+      '<img class="menu-banner" src="img/banner-ops-dark.webp" alt="" aria-hidden="true" loading="lazy">'
+      + '<div class="view-head"><div><p class="hero-tag">' + I('export') + ' MULTI-PLATFORM BUILD</p><h2>' + I('export') + ' Export Center</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · HTML5 package, Phaser source, manifest.</p></div></div>'
       + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('export') + ' Packages</h3></div>'
       + '<div class="btn-col"><button type="button" class="btn primary" data-a="package">Build playable + source ZIPs</button> '
@@ -729,7 +732,7 @@
       if (!slot.isConnected) return;
       var ex = res.exports || [];
       if (!ex.length) {
-        slot.innerHTML = UI().emptyPanel('No builds yet', 'Build a package to produce playable + source ZIPs.');
+        slot.innerHTML = UI().emptyPanel('No builds yet', 'Use Build above to produce playable + source ZIPs in builds/.');
         return;
       }
       slot.innerHTML = '<ul class="asset-list">' + ex.map(function (b) {
@@ -837,7 +840,8 @@
 
   function renderSettings(root) {
     root.innerHTML =
-      '<div class="view-head"><div><p class="hero-tag">' + I('gear') + ' STUDIO &amp; SYSTEM</p><h2>' + I('gear') + ' Settings</h2>'
+      '<img class="menu-banner" src="img/banner-ops-dark.webp" alt="" aria-hidden="true" loading="lazy">'
+      + '<div class="view-head"><div><p class="hero-tag">' + I('gear') + ' STUDIO &amp; SYSTEM</p><h2>' + I('gear') + ' Settings</h2>'
       + '<p class="muted">Worker connection, providers, secret names, spend limits.</p></div></div>'
       + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow"><div class="panel-head"><h3>' + I('chip') + ' Worker connection</h3></div>'
       + '<label class="fld"><span>Worker base URL</span><input data-f="url" value="' + U().esc(S().get('workerUrl')) + '"></label>'

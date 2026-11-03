@@ -46,6 +46,7 @@ body {
     radial-gradient(800px 500px at 60% 110%, rgba(232, 121, 249, 0.18), transparent 60%),
     linear-gradient(180deg, var(--bg-1), var(--bg-0) 60%);
   background-attachment: fixed;
+  overflow-x: clip; /* the full-width hero scenery must never add a horizontal scrollbar */
 }
 a { color: inherit; }
 h1, h2, h3 { line-height: 1.15; margin: 0 0 .5em; letter-spacing: -0.01em; }
@@ -111,8 +112,20 @@ input:focus-visible, .lang-toggle:focus-visible, .skip:focus-visible {
 /* ---- hero ---- */
 main { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 .hero {
+  position: relative; isolation: isolate;
   display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: 40px; align-items: center; padding: 36px 0 56px;
+}
+/* Game-world scenery behind the hero: full width, scrim for legibility, faded into the page at the bottom. */
+.hero::before {
+  content: ""; position: absolute; z-index: -1; top: -40px; bottom: 0;
+  left: 50%; width: 100vw; transform: translateX(-50%); pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(7, 10, 26, .5), rgba(7, 10, 26, .4) 50%, rgba(7, 10, 26, .75)),
+    linear-gradient(90deg, rgba(7, 10, 26, .85) 0%, rgba(7, 10, 26, .4) 55%, rgba(7, 10, 26, .15) 100%),
+    url("img/world-dark.webp") center top / cover no-repeat;
+  -webkit-mask-image: linear-gradient(#000 62%, transparent);
+  mask-image: linear-gradient(#000 62%, transparent);
 }
 .pill {
   display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px;
@@ -262,6 +275,12 @@ section { padding: 56px 0; }
     box-shadow: 0 30px 80px rgba(168, 85, 247, .18), 0 0 0 6px rgba(255, 255, 255, .9);
   }
   :root:not([data-theme="dark"]) .base { background: linear-gradient(180deg, #d9d4ff, #bfb6f5); }
+  :root:not([data-theme="dark"]) .hero::before {
+    background:
+      linear-gradient(180deg, rgba(245, 243, 255, .55), rgba(245, 243, 255, .45) 50%, rgba(245, 243, 255, .8)),
+      linear-gradient(90deg, rgba(245, 243, 255, .85) 0%, rgba(245, 243, 255, .4) 55%, rgba(245, 243, 255, .15) 100%),
+      url("img/world-light.webp") center top / cover no-repeat;
+  }
   :root:not([data-theme="dark"]) .pill {
     color: #6b21a8; background: rgba(168, 85, 247, .12); border-color: rgba(168, 85, 247, .35);
   }

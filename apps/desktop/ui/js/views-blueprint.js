@@ -30,7 +30,8 @@
     var p = needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><h2>' + icon('blueprint') + 'Game Blueprint</h2>'
+      '<img class="menu-banner" src="img/banner-blueprint-dark.webp" alt="" aria-hidden="true" loading="lazy">'
+      + '<div class="view-head"><div><h2>' + icon('blueprint') + 'Game Blueprint</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong> · '
       + U().esc(p.genre) + ' · inspect and edit before assembly (FR-005).</p></div>'
       + '<div class="row"><button type="button" class="btn ghost" data-a="reload">' + icon('refresh') + 'Reload</button></div></div>'
@@ -49,8 +50,9 @@
       if (!body.isConnected) return;
       if (err && err.code === 'blueprint-not-found') {
         body.innerHTML = UI().emptyPanel('No blueprint stored yet',
-          'Create one with the New Game wizard, or paste JSON below and save it.')
+          'Create one with the New Game wizard, or paste blueprint JSON below and save it.')
           + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('plus') + 'New blueprint JSON</h3></div>'
+          + '<p class="muted small">Validate checks the JSON without saving; Save stores it as this project’s blueprint.</p>'
           + '<textarea data-f="json" rows="16" class="json" placeholder="{ … }"></textarea>'
           + '<div class="btn-row"><button type="button" class="btn ghost" data-a="validate">Validate</button> '
           + '<button type="button" class="btn primary" data-a="save">Save blueprint</button></div>'
@@ -90,6 +92,7 @@
       + '<div class="btn-row"><button type="button" class="btn ghost" data-a="validate">Validate</button> '
       + '<button type="button" class="btn primary" data-a="save">Save blueprint</button> '
       + '<button type="button" class="btn ghost" data-a="assemble">Assemble → config.json</button></div>'
+      + '<p class="muted small">Save before assembling: Assemble builds config.json from the saved blueprint, not from this text.</p>'
       + '<div data-slot="report"></div><div data-slot="asm"></div></section>';
     body.querySelector('[data-f="json"]').value = JSON.stringify(bp, null, 2);
     wireEdit(body, p, bp);

@@ -365,6 +365,24 @@ main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; 
 }
 .view-head .hero-tag .k-icon { width: 14px; height: 14px; }
 
+/* Key-art banner that opens each main menu view (first child of the view).
+ * Same radius, border and shadow family as .glass-panel; light mode dims it
+ * so the bright art does not glare against the light backdrop. */
+.menu-banner {
+  display: block; flex: none;
+  width: 100%; max-width: 100%; height: auto;
+  aspect-ratio: 4 / 1; object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  margin: 0 0 4px;
+  background: var(--card);
+}
+html:not(.dark) .menu-banner {
+  filter: brightness(0.88) saturate(0.9);
+  opacity: 0.92;
+}
+
 .hero {
   background:
     radial-gradient(600px 200px at 85% 20%, var(--accent-soft), transparent),
@@ -441,10 +459,14 @@ html.dark .hero {
   border-color: transparent;
   color: var(--heading);
 }
-.tablist .btn.primary, [role="tablist"] .btn.primary {
+.tablist .btn.primary, [role="tablist"] .btn.primary,
+.tablist .btn[aria-selected="true"], [role="tablist"] .btn[aria-selected="true"] {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
+}
+.tablist .btn:focus-visible, [role="tablist"] .btn:focus-visible {
+  outline-offset: 1px;
 }
 
 /* ---------- Genre grid ---------- */
@@ -606,6 +628,9 @@ code {
 .state { text-align: center; padding: 28px 16px; }
 .state h3 { margin: 8px 0 4px; justify-content: center; }
 .state p { margin: 4px 0; }
+.state.empty-state, .state.loading { border: 1px dashed var(--border-strong); border-radius: 14px; background: var(--card); }
+.state.empty-state h3 { color: var(--heading); }
+.state.empty-state .empty-img { margin-bottom: 10px; }
 .empty-art { font-size: 28px; color: var(--muted); display: flex; justify-content: center; }
 .error-state .empty-art { color: var(--red); }
 .success-state .empty-art { color: var(--green); }
@@ -774,7 +799,13 @@ textarea:focus-visible, summary:focus-visible, a:focus-visible {
 }
 
 @media (max-width: 700px) {
-  #app { flex-direction: column; }
+  #app { flex-direction: column; padding: 16px; }
+  #viewRoot, main { min-width: 0; max-width: 100%; }
+  #viewRoot > * { max-width: 100%; min-width: 0; }
+  .view-head h2 { font-size: 18px; }
+  .panel { padding: 12px; }
+  .menu-banner { border-radius: 12px; }
+  .btn-row > .btn { flex: 1 1 auto; }
   .sidebar { width: 100%; position: static; max-height: none; }
   .nav-toggle { display: block; }
   .sidebar.nav-collapsed #nav { display: none; }

@@ -25,7 +25,8 @@
     var p = V().needProject(root);
     if (!p) return;
     root.innerHTML =
-      '<div class="view-head"><div><p class="hero-tag">' + I('audio') + ' ASSET LIBRARY</p><h2>' + I('audio') + ' Audio</h2>'
+      '<img class="menu-banner" src="img/banner-audio-dark.webp" alt="" aria-hidden="true" loading="lazy">'
+      + '<div class="view-head"><div><p class="hero-tag">' + I('audio') + ' ASSET LIBRARY</p><h2>' + I('audio') + ' Audio</h2>'
       + '<p class="muted">Project: <strong>' + U().esc(p.name) + '</strong>'
       + ' · generate or import SFX for the exported game.</p></div>'
       + '<div class="row"><button type="button" class="btn ghost" data-a="refresh">' + I('refresh') + 'Refresh library</button></div></div>'
@@ -36,7 +37,7 @@
       + '<label class="fld"><span>Role (optional)</span><input data-f="gen-role" placeholder="defaults to the preset name"></label>'
       + '<label class="fld"><span>Entity (optional)</span><input data-f="gen-entity" placeholder="player"></label>'
       + '<label class="fld"><span>Seed</span><input data-f="gen-seed" type="number" min="0" max="2147483647" value="0"></label></div>'
-      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="preview">' + I('play') + 'Preview</button>'
+      + '<div class="btn-row"><button type="button" class="btn ghost" data-a="preview" title="Play this sound here, without saving">' + I('play') + 'Preview</button>'
       + '<button type="button" class="btn primary" data-a="save">' + I('plus') + 'Save to project</button></div></section>'
       + '<div class="grid-2"><section class="panel glass-panel glass-panel-glow" data-admin-only><div class="panel-head"><h3>' + I('plus') + ' Import local file</h3></div>'
       + '<div class="row"><label class="fld grow"><span>Absolute path on this machine</span>'
@@ -47,7 +48,7 @@
       + '<input data-f="role" value="sfx" placeholder="sfx"></label>'
       + '<label class="fld"><span>Entity (optional)</span>'
       + '<input data-f="entity" placeholder="player"></label></div>'
-      + '<div class="btn-row"><button type="button" class="btn primary" data-a="import">Import</button></div>'
+      + '<div class="btn-row"><button type="button" class="btn primary" data-a="import">' + I('plus') + 'Import file</button></div>'
       + '<p class="muted small">Accepted: .wav / .mp3 / .ogg · ≤ 32 MB · ≤ 10 min. '
       + 'Files land under <code>audio/</code> with a manifest-ready sidecar. '
       + 'Playback happens in the exported game — the worker stores files, it does not stream them.</p></section>'
