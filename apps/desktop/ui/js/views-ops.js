@@ -16,7 +16,6 @@
 
   // ---------- Playtest ----------
   var consoleLines = [];
-  var lastBlobUrl = null;
   var lastFrameEl = null;
 
   function renderPlaytest(root) {
@@ -77,7 +76,7 @@
       try { f.contentWindow.postMessage({ source: 'kgsm-shell', command: cmd }, '*'); }
       catch (e) { UI().toast('Could not message the preview: ' + e.message, 'error'); }
     }
-    function loadFrame(url, label) {
+    function loadFrame(src, label, isHtml) {
       var slot = root.querySelector('[data-slot="frame"]');
       slot.innerHTML = '';
       var f = document.createElement('iframe');
@@ -100,7 +99,7 @@
         pushConsole('error', 'preview failed to load');
         paintConsole(root);
       });
-      f.src = url;
+      if (isHtml) f.srcdoc = src; else f.src = src;
       slot.appendChild(f);
       lastFrameEl = f;
     }
@@ -269,13 +268,8 @@
           step('config has ' + rep.errors.length + ' error(s) — previewing anyway; fix in Level Studio.', 'err');
         }
         step('3/3 building schematic preview…');
-        var html = U().buildPreviewPage(config, p.name);
-        if (lastBlobUrl) {
-          try { URL.revokeObjectURL(lastBlobUrl); } catch (e) { /* ignore */ }
-        }
-        var url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
-        lastBlobUrl = url;
-        loadFrame(url, 'Schematic preview');
+        // srcdoc, not a blob: URL: the studio CSP has no blob: in frame-src.
+        loadFrame(U().buildPreviewPage(config, p.name), 'Schematic preview', true);
         step('preview staged — use Run / Pause / Restart above.');
       });
     }).catch(function (err) {
@@ -724,9 +718,29 @@
         return;
       }
       slot.innerHTML = '<ul class="asset-list">' + ex.map(function (b) {
+        var name = b.file.split('/').pop();
         return '<li><code>' + U().esc(b.file) + '</code> <span class="muted">'
-          + U().esc(U().fmtBytes(b.bytes)) + ' · ' + U().esc(U().fmtDate(b.createdAt)) + '</span></li>';
+          + U().esc(U().fmtBytes(b.bytes)) + ' · ' + U().esc(U().fmtDate(b.createdAt)) + '</span> '
+          + '<button type="button" class="btn ghost" data-a="download" data-file="' + U().esc(name) + '">Download</button></li>';
       }).join('') + '</ul>';
+      // Assigned, not addEventListener: loadBuilds re-renders this slot and must not stack handlers.
+      slot.onclick = function (e) {
+        var btn = e.target.closest ? e.target.closest('[data-a="download"]') : null;
+        if (!btn) return;
+        var name = btn.getAttribute('data-file');
+        UI().busy(btn, function () {
+          return api().downloadExport(p.id, name).then(function (blob) {
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+          });
+        }, 'Downloading…');
+      };
     }, function (err) {
       if (!slot.isConnected) return;
       slot.innerHTML = UI().errorPanel('Could not list builds', err,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,11 +21,16 @@ from ..validation import (
 )
 from . import (
     ApiError,
+    RawBody,
     Request,
     bad_request,
     read_project_json,
     require_project,
 )
+
+# A build file is a plain ``<slug>-<kind>.zip`` basename: no separators,
+# no leading dot, so the path can never leave ``builds/``.
+_BUILD_FILE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\.zip")
 
 # Genres with a Godot 4 exporter (puzzle-match ships Phaser only for now).
 _GODOT_TEMPLATES = {
@@ -198,8 +204,21 @@ def export_godot(req: Request) -> tuple[int, dict]:
     }
 
 
+def download_export(req: Request) -> tuple[int, RawBody]:
+    project = require_project(req.group("id"))
+    name = req.group("file")
+    path = project.dir / "builds" / name
+    if not _BUILD_FILE.fullmatch(name) or not path.is_file():
+        raise ApiError("export-not-found",
+                       f"build {name!r} not found", 404)
+    return 200, RawBody(data=path.read_bytes(),
+                        content_type="application/zip")
+
+
 ROUTES = [
     ("POST", r"/projects/(?P<id>[^/]+)/exports", create_export),
     ("GET", r"/projects/(?P<id>[^/]+)/exports", list_exports),
+    ("GET", r"/projects/(?P<id>[^/]+)/exports/(?P<file>[^/]+)",
+     download_export),
     ("POST", r"/projects/(?P<id>[^/]+)/exports/godot", export_godot),
 ]

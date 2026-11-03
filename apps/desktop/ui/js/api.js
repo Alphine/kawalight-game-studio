@@ -61,6 +61,20 @@
     }
 
     var V1 = '/api/v1';
+    // Binary GET (a build ZIP): returns a Blob; errors still arrive as JSON.
+    function download(p, o) {
+      var timeoutMs = (o && o.timeoutMs) || 120000;
+      return fetch(base() + p, { method: 'GET' }).then(function (res) {
+        if (res.ok) return res.blob();
+        return res.text().then(function (text) {
+          var payload = null;
+          try { payload = text ? JSON.parse(text) : null; } catch (e) { payload = null; }
+          throw new ApiError(globalThis.KgsmUtil.parseApiError(payload, res.status, 'Download failed'));
+        });
+      }, function () {
+        throw new ApiError({ code: 'worker-offline', message: 'Worker unreachable', status: 0 });
+      });
+    }
     function get(p, o) { return request('GET', p, undefined, o); }
     function post(p, b, o) { return request('POST', p, b, o); }
     function put(p, b, o) { return request('PUT', p, b, o); }
@@ -159,6 +173,9 @@
         return post(V1 + '/projects/' + encodeURIComponent(id) + '/exports', b, { timeoutMs: 300000 });
       },
       listExports: function (id) { return get(V1 + '/projects/' + encodeURIComponent(id) + '/exports'); },
+      downloadExport: function (id, file) {
+        return download(V1 + '/projects/' + encodeURIComponent(id) + '/exports/' + encodeURIComponent(file));
+      },
       godotExport: function (id, config) {
         var b = config ? { config: config } : {};
         return post(V1 + '/projects/' + encodeURIComponent(id) + '/exports/godot', b);

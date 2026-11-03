@@ -680,6 +680,39 @@ def test_export_flow(api):
     assert body["exports"][0]["createdAt"]
 
 
+def _get_bytes(base, path):
+    request = urllib.request.Request(base + path, method="GET")
+    try:
+        with urllib.request.urlopen(request) as response:
+            return response.status, response.headers, response.read()
+    except urllib.error.HTTPError as exc:
+        return exc.code, exc.headers, exc.read()
+
+
+def test_export_download_serves_build_zip(api):
+    pid = make_project(api, "Galaxy Strike")["id"]
+    status, _ = call(api, "PUT", f"/projects/{pid}/config",
+                     {"config": make_config()})
+    assert status == 200
+    status, body = call(api, "POST", f"/projects/{pid}/exports", {})
+    assert status == 201, body
+
+    name = body["playable"].rsplit("/", 1)[-1]
+    status, headers, data = _get_bytes(
+        api, f"/projects/{pid}/exports/{name}")
+    assert status == 200
+    assert headers.get_content_type() == "application/zip"
+    assert data == _project_file(api, pid, body["playable"]).read_bytes()
+
+    status, headers, raw = _get_bytes(
+        api, f"/projects/{pid}/exports/..%2Fconfig.json")
+    assert status == 404
+    status, headers, raw = _get_bytes(
+        api, f"/projects/{pid}/exports/missing-playable.zip")
+    assert status == 404
+    assert json.loads(raw)["error"]["code"] == "export-not-found"
+
+
 def _project_file(api_base, pid, rel):
     # Tests run in-process; resolve the project dir from the worker paths.
     import os
