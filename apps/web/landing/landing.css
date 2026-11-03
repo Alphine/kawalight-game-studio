@@ -239,8 +239,9 @@ section { padding: 56px 0; }
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px;
 }
 .feature p { color: var(--muted); margin: 0; }
+.feature picture { display: block; }
 .feature-art {
-  display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
+  display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover;
   border-radius: 12px; border: 1px solid var(--line); margin-bottom: 16px;
 }
 
