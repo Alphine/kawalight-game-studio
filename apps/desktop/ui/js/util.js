@@ -10,6 +10,7 @@
 
   var GENRES = [
     'space-shooter', 'endless-runner', 'side-scroller', 'battle-2d', 'farming',
+    'puzzle-match',
   ];
 
   // Schema-required control keys per genre (mirrors packages/schemas/*.schema.json).
@@ -19,6 +20,7 @@
     'endless-runner': ['jump', 'slide', 'pause'],
     'side-scroller': ['left', 'right', 'jump', 'pause'],
     farming: ['toolPlant', 'toolWater', 'toolHarvest', 'nextDay', 'pause'],
+    'puzzle-match': ['hint', 'reshuffle', 'pause'],
   };
 
   function controlsKeysFor(genre) {
@@ -141,6 +143,15 @@
           F('Target coins', 'scoring.targetCoins', 'min="1" max="100000000"'),
         ] },
       ],
+      'puzzle-match': [
+        { title: 'World', fields: worldWH },
+        { title: 'Scoring & moves', fields: [
+          F('Target score', 'scoring.targetScore', 'min="1" max="10000000"'),
+          F('Points per gem', 'scoring.pointsPerGem', 'min="1" max="1000"'),
+          F('Cascade bonus %', 'scoring.cascadeBonusPercent', 'min="0" max="200"'),
+          F('Move limit', 'moves.limit', 'min="1" max="999"'),
+        ] },
+      ],
     };
     if (!specs[genre]) throw new Error('unknown genre: ' + genre);
     return { sections: specs[genre], controls: controlsKeysFor(genre) };
@@ -222,7 +233,8 @@
   // Foe-list key per genre (mirrors blueprint.schema.json allOf):
   // space-shooter + battle-2d require `enemies`, the other genres `obstacles`.
   function foeKeyFor(genre) {
-    return (genre === 'endless-runner' || genre === 'side-scroller' || genre === 'farming')
+    return (genre === 'endless-runner' || genre === 'side-scroller' || genre === 'farming'
+      || genre === 'puzzle-match')
       ? 'obstacles' : 'enemies';
   }
 

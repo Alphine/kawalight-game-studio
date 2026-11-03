@@ -6,18 +6,46 @@
       "theme": "Neon Swarm over Vega Prime",
       "visualStyle": "pixel-art",
       "gameLoop": "Pilot the last starfighter above Vega Prime: weave through glowing bug-ship swarms, chain kills for combo power, grab shield cells, and survive all 5 waves to clear the sector.",
-      "player": { "abilities": ["move", "shoot", "dash"], "health": 3, "lives": 3 },
+      "player": {
+        "abilities": [
+          "move",
+          "shoot",
+          "dash"
+        ],
+        "health": 3,
+        "lives": 3
+      },
       "enemies": [
-        { "id": "ember-drone", "role": "basic drifter that flies straight at the player" },
-        { "id": "volt-weaver", "role": "sine-wave mover that is hard to lead with shots" },
-        { "id": "rift-diver", "role": "fast diver that breaks formation and lunges" }
+        {
+          "id": "ember-drone",
+          "role": "basic drifter that flies straight at the player"
+        },
+        {
+          "id": "volt-weaver",
+          "role": "sine-wave mover that is hard to lead with shots"
+        },
+        {
+          "id": "rift-diver",
+          "role": "fast diver that breaks formation and lunges"
+        }
       ],
       "progression": "Five waves with growing counts and speed; a shield cell drops before each wave.",
       "scoring": "100 per kill, combo multiplier up to x5 for chained kills, 250 bonus per cleared wave.",
       "winCondition": "Clear all 5 waves.",
       "loseCondition": "Lose all 3 lives.",
-      "controls": { "scheme": "keyboard", "actions": ["move", "shoot", "dash", "pause"] },
-      "difficulty": { "preset": "normal", "ramp": "gradual" }
+      "controls": {
+        "scheme": "keyboard",
+        "actions": [
+          "move",
+          "shoot",
+          "dash",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
     },
     {
       "id": "rust-convoy",
@@ -25,18 +53,46 @@
       "theme": "Rust Convoy escort run",
       "visualStyle": "illustrated-2d",
       "gameLoop": "Ride shotgun on a rust-bucket freighter convoy: intercept raiders before they reach the freighters, magnetize scrap for repairs, and keep at least one freighter alive through the belt.",
-      "player": { "abilities": ["move", "shoot", "shield"], "health": 4, "lives": 1 },
+      "player": {
+        "abilities": [
+          "move",
+          "shoot",
+          "shield"
+        ],
+        "health": 4,
+        "lives": 1
+      },
       "enemies": [
-        { "id": "scrap-fighter", "role": "nimble raider that strafes the convoy line" },
-        { "id": "magnet-mine", "role": "drifting mine that pulls the player in close" },
-        { "id": "boarding-pod", "role": "slow pod that latches onto a freighter and drains hull" }
+        {
+          "id": "scrap-fighter",
+          "role": "nimble raider that strafes the convoy line"
+        },
+        {
+          "id": "magnet-mine",
+          "role": "drifting mine that pulls the player in close"
+        },
+        {
+          "id": "boarding-pod",
+          "role": "slow pod that latches onto a freighter and drains hull"
+        }
       ],
       "progression": "Three belt sectors; raider count and mine density rise per sector.",
       "scoring": "150 per raider destroyed, 300 per freighter kept at full hull, scrap restores 1 health per 5 pickups.",
       "winCondition": "Escort at least one freighter through all 3 sectors.",
       "loseCondition": "All freighters destroyed, or the escort ship falls.",
-      "controls": { "scheme": "keyboard-gamepad", "actions": ["move", "shoot", "shield", "pause"] },
-      "difficulty": { "preset": "easy", "ramp": "gradual" }
+      "controls": {
+        "scheme": "keyboard-gamepad",
+        "actions": [
+          "move",
+          "shoot",
+          "shield",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "easy",
+        "ramp": "gradual"
+      }
     },
     {
       "id": "void-choir",
@@ -44,18 +100,46 @@
       "theme": "Hymn of the Void Choir",
       "visualStyle": "pixel-art",
       "gameLoop": "Face the singing void: silence choir-wisps before their hymn completes, dodge tightening rings of bellfire, and shatter the Silence Ark in a final duel.",
-      "player": { "abilities": ["move", "shoot", "charge-shot"], "health": 3, "lives": 3 },
+      "player": {
+        "abilities": [
+          "move",
+          "shoot",
+          "charge-shot"
+        ],
+        "health": 3,
+        "lives": 3
+      },
       "enemies": [
-        { "id": "hymn-wisp", "role": "chanter that buffs nearby foes until silenced" },
-        { "id": "bell-herald", "role": "ring-shaped gunner firing slow bellfire spirals" },
-        { "id": "silence-ark", "role": "final ark that alternates spiral barrages and lunges" }
+        {
+          "id": "hymn-wisp",
+          "role": "chanter that buffs nearby foes until silenced"
+        },
+        {
+          "id": "bell-herald",
+          "role": "ring-shaped gunner firing slow bellfire spirals"
+        },
+        {
+          "id": "silence-ark",
+          "role": "final ark that alternates spiral barrages and lunges"
+        }
       ],
       "progression": "Four hymn movements of rising density, then the Silence Ark duel.",
       "scoring": "120 per wisp, 200 per herald, 1000 for the ark; no-hit movement bonus of 500.",
       "winCondition": "Shatter the Silence Ark.",
       "loseCondition": "Lose all 3 lives.",
-      "controls": { "scheme": "keyboard", "actions": ["move", "shoot", "charge-shot", "pause"] },
-      "difficulty": { "preset": "hard", "ramp": "steep" }
+      "controls": {
+        "scheme": "keyboard",
+        "actions": [
+          "move",
+          "shoot",
+          "charge-shot",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "hard",
+        "ramp": "steep"
+      }
     }
   ],
   "endless-runner": [
@@ -65,19 +149,45 @@
       "theme": "Neon Rooftops sprint",
       "visualStyle": "pixel-art",
       "gameLoop": "Sprint across neon rooftops: jump vent spikes and billboard crates, slide under patrol drones, chain coin arcs, and outrun the ever-faster city scroll.",
-      "player": { "abilities": ["jump", "slide"], "health": 1, "lives": 1 },
+      "player": {
+        "abilities": [
+          "jump",
+          "slide"
+        ],
+        "health": 1,
+        "lives": 1
+      },
       "obstacles": [
-        { "id": "vent-spike", "role": "low rooftop spikes; jump over them" },
-        { "id": "billboard-crate", "role": "tall ad crate; needs a full jump" },
-        { "id": "patrol-drone", "role": "hovering drone; slide under it" }
+        {
+          "id": "vent-spike",
+          "role": "low rooftop spikes; jump over them"
+        },
+        {
+          "id": "billboard-crate",
+          "role": "tall ad crate; needs a full jump"
+        },
+        {
+          "id": "patrol-drone",
+          "role": "hovering drone; slide under it"
+        }
       ],
       "collectibles": "Coin lines and coin arcs over obstacles, 10 points each.",
       "progression": "Endless: scroll speed ramps from 280 to 560 px/s while spawn gaps tighten from 600 to 480 px.",
       "scoring": "1 point per meter travelled plus 10 per coin; best run persists locally.",
       "winCondition": "Endless: beat your best distance.",
       "loseCondition": "Hit any obstacle.",
-      "controls": { "scheme": "keyboard", "actions": ["jump", "slide", "pause"] },
-      "difficulty": { "preset": "normal", "ramp": "gradual" }
+      "controls": {
+        "scheme": "keyboard",
+        "actions": [
+          "jump",
+          "slide",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
     },
     {
       "id": "tide-caves",
@@ -85,19 +195,47 @@
       "theme": "Tide Caves escape",
       "visualStyle": "illustrated-2d",
       "gameLoop": "Flee the flooding tide caves: leap urchin beds, duck falling stalactites, time surge gates between waves, and ride the current as far as it takes you.",
-      "player": { "abilities": ["jump", "slide", "dive"], "health": 1, "lives": 1 },
+      "player": {
+        "abilities": [
+          "jump",
+          "slide",
+          "dive"
+        ],
+        "health": 1,
+        "lives": 1
+      },
       "obstacles": [
-        { "id": "urchin-bed", "role": "spiky seabed patch; jump clean over it" },
-        { "id": "stalactite", "role": "falling ceiling spike telegraphed by drips" },
-        { "id": "surge-gate", "role": "tide gate that slams shut on a rhythm; pass on the lull" }
+        {
+          "id": "urchin-bed",
+          "role": "spiky seabed patch; jump clean over it"
+        },
+        {
+          "id": "stalactite",
+          "role": "falling ceiling spike telegraphed by drips"
+        },
+        {
+          "id": "surge-gate",
+          "role": "tide gate that slams shut on a rhythm; pass on the lull"
+        }
       ],
       "collectibles": "Pearls tucked behind risky jumps, 25 points each.",
       "progression": "Endless: current speed and gate tempo rise the deeper you dive.",
       "scoring": "2 points per meter plus 25 per pearl; depth markers every 500 m.",
       "winCondition": "Endless: set a new depth record.",
       "loseCondition": "Touch an urchin, stalactite, or closed surge gate.",
-      "controls": { "scheme": "keyboard", "actions": ["jump", "slide", "dive", "pause"] },
-      "difficulty": { "preset": "normal", "ramp": "steep" }
+      "controls": {
+        "scheme": "keyboard",
+        "actions": [
+          "jump",
+          "slide",
+          "dive",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "steep"
+      }
     },
     {
       "id": "sand-express",
@@ -105,19 +243,45 @@
       "theme": "Sand Express rooftop run",
       "visualStyle": "pixel-art",
       "gameLoop": "Ride the roof of the Sand Express: hop cactus crates, leap dune gaps between cars, dodge swooping vultures, and hang on as the train keeps accelerating.",
-      "player": { "abilities": ["jump", "slide"], "health": 2, "lives": 1 },
+      "player": {
+        "abilities": [
+          "jump",
+          "slide"
+        ],
+        "health": 2,
+        "lives": 1
+      },
       "obstacles": [
-        { "id": "cactus-stack", "role": "prickly cargo stack; jump it or slide gaps beneath" },
-        { "id": "dune-gap", "role": "gap between cars; only a full jump clears it" },
-        { "id": "vulture", "role": "swooping bird; duck under its dive line" }
+        {
+          "id": "cactus-stack",
+          "role": "prickly cargo stack; jump it or slide gaps beneath"
+        },
+        {
+          "id": "dune-gap",
+          "role": "gap between cars; only a full jump clears it"
+        },
+        {
+          "id": "vulture",
+          "role": "swooping bird; duck under its dive line"
+        }
       ],
       "collectibles": "Passenger tickets fluttering above gaps, 15 points each.",
       "progression": "Endless: train speed climbs per car passed; sandstorm gusts narrow jump windows.",
       "scoring": "1 point per meter plus 15 per ticket; car milestones grant 100.",
       "winCondition": "Endless: ride further than your best run.",
       "loseCondition": "Fall in a dune gap or take 2 hits.",
-      "controls": { "scheme": "keyboard-gamepad", "actions": ["jump", "slide", "pause"] },
-      "difficulty": { "preset": "easy", "ramp": "gradual" }
+      "controls": {
+        "scheme": "keyboard-gamepad",
+        "actions": [
+          "jump",
+          "slide",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "easy",
+        "ramp": "gradual"
+      }
     }
   ],
   "side-scroller": [
@@ -127,19 +291,47 @@
       "theme": "Lantern trek through Mosslight Hollow",
       "visualStyle": "illustrated-2d",
       "gameLoop": "Carry a fading lantern through Mosslight Hollow: platform across glowing grottos, dodge thorn pits and spore clouds, relight beacon braziers, and reach the Heartcap gate.",
-      "player": { "abilities": ["run", "jump", "double-jump"], "health": 3, "lives": 3 },
+      "player": {
+        "abilities": [
+          "run",
+          "jump",
+          "double-jump"
+        ],
+        "health": 3,
+        "lives": 3
+      },
       "obstacles": [
-        { "id": "thorn-pit", "role": "spiked hollow floor; jump or double-jump across" },
-        { "id": "spore-cloud", "role": "drifting toxic puff; time your pass between pulses" },
-        { "id": "crumbling-ledge", "role": "moss ledge that falls away after one landing" }
+        {
+          "id": "thorn-pit",
+          "role": "spiked hollow floor; jump or double-jump across"
+        },
+        {
+          "id": "spore-cloud",
+          "role": "drifting toxic puff; time your pass between pulses"
+        },
+        {
+          "id": "crumbling-ledge",
+          "role": "moss ledge that falls away after one landing"
+        }
       ],
       "collectibles": "Fireflies that extend lantern light, plus beacon braziers as checkpoints.",
       "progression": "Six grotto stages ending at the Heartcap gate; lantern dims faster in later stages.",
       "scoring": "50 per firefly, 200 per lit brazier, time bonus per stage.",
       "winCondition": "Reach the Heartcap gate with the lantern lit.",
       "loseCondition": "Lose all 3 lives, or the lantern dies in darkness.",
-      "controls": { "scheme": "keyboard", "actions": ["run", "jump", "double-jump", "pause"] },
-      "difficulty": { "preset": "normal", "ramp": "gradual" }
+      "controls": {
+        "scheme": "keyboard",
+        "actions": [
+          "run",
+          "jump",
+          "double-jump",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
     },
     {
       "id": "clockwork-foundry",
@@ -147,19 +339,47 @@
       "theme": "Breakout from the Clockwork Foundry",
       "visualStyle": "pixel-art",
       "gameLoop": "Escape the foundry floor: ride piston platforms, dodge steam vents and gear crushers, short the spark conduits, and climb from the furnace to the skylight.",
-      "player": { "abilities": ["run", "jump", "wall-slide"], "health": 3, "lives": 3 },
+      "player": {
+        "abilities": [
+          "run",
+          "jump",
+          "wall-slide"
+        ],
+        "health": 3,
+        "lives": 3
+      },
       "obstacles": [
-        { "id": "steam-vent", "role": "timed floor vent; cross between blasts" },
-        { "id": "gear-crusher", "role": "syncopated press; slip through on the open beat" },
-        { "id": "spark-conduit", "role": "live wire bridge; cross only while it flickers off" }
+        {
+          "id": "steam-vent",
+          "role": "timed floor vent; cross between blasts"
+        },
+        {
+          "id": "gear-crusher",
+          "role": "syncopated press; slip through on the open beat"
+        },
+        {
+          "id": "spark-conduit",
+          "role": "live wire bridge; cross only while it flickers off"
+        }
       ],
       "collectibles": "Brass cogs hidden on risky routes, 25 points each.",
       "progression": "Four foundry floors of rising machine tempo, then the skylight climb.",
       "scoring": "25 per cog, 150 per floor cleared, 500 no-damage floor bonus.",
       "winCondition": "Reach the skylight and escape the foundry.",
       "loseCondition": "Lose all 3 lives.",
-      "controls": { "scheme": "keyboard-gamepad", "actions": ["run", "jump", "wall-slide", "pause"] },
-      "difficulty": { "preset": "hard", "ramp": "steep" }
+      "controls": {
+        "scheme": "keyboard-gamepad",
+        "actions": [
+          "run",
+          "jump",
+          "wall-slide",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "hard",
+        "ramp": "steep"
+      }
     },
     {
       "id": "tidebreak-docks",
@@ -167,19 +387,45 @@
       "theme": "Courier dash across Tidebreak Docks",
       "visualStyle": "pixel-art",
       "gameLoop": "Deliver parcels across the harbor: hop moored boats, squeeze past barrel stacks, dodge swooping gulls, and beat the tide clock to the lighthouse post.",
-      "player": { "abilities": ["run", "jump"], "health": 2, "lives": 3 },
+      "player": {
+        "abilities": [
+          "run",
+          "jump"
+        ],
+        "health": 2,
+        "lives": 3
+      },
       "obstacles": [
-        { "id": "rope-gap", "role": "swaying gap between boats; jump on the swing" },
-        { "id": "barrel-stack", "role": "toppling cargo; pass before it falls" },
-        { "id": "gull-swarm", "role": "swooping gulls that dive at parcel carriers" }
+        {
+          "id": "rope-gap",
+          "role": "swaying gap between boats; jump on the swing"
+        },
+        {
+          "id": "barrel-stack",
+          "role": "toppling cargo; pass before it falls"
+        },
+        {
+          "id": "gull-swarm",
+          "role": "swooping gulls that dive at parcel carriers"
+        }
       ],
       "collectibles": "Stamps on risky detours, 10 points each; parcels delivered add 100.",
       "progression": "Five piers ending at the lighthouse; the tide clock shortens each leg.",
       "scoring": "100 per delivered parcel plus 10 per stamp, minus 5 per second over par.",
       "winCondition": "Deliver 6 parcels to the lighthouse post.",
       "loseCondition": "Lose all 3 lives, or the tide clock floods the route.",
-      "controls": { "scheme": "keyboard", "actions": ["run", "jump", "pause"] },
-      "difficulty": { "preset": "easy", "ramp": "flat" }
+      "controls": {
+        "scheme": "keyboard",
+        "actions": [
+          "run",
+          "jump",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "easy",
+        "ramp": "flat"
+      }
     }
   ],
   "battle-2d": [
@@ -189,18 +435,46 @@
       "theme": "Trial by fire in the Ember Arena",
       "visualStyle": "pixel-art",
       "gameLoop": "Enter the Ember Arena: duel waves of cinder foes, dash through flame volleys, slam brutes into braziers, and stand as the last fighter across 5 rounds.",
-      "player": { "abilities": ["move", "melee", "dash"], "health": 5, "lives": 1 },
+      "player": {
+        "abilities": [
+          "move",
+          "melee",
+          "dash"
+        ],
+        "health": 5,
+        "lives": 1
+      },
       "enemies": [
-        { "id": "ash-imp", "role": "quick skirmisher that nips in packs" },
-        { "id": "cinder-brute", "role": "slow heavy with a sweeping slam" },
-        { "id": "flame-archer", "role": "ranged foe firing arcing fire bolts" }
+        {
+          "id": "ash-imp",
+          "role": "quick skirmisher that nips in packs"
+        },
+        {
+          "id": "cinder-brute",
+          "role": "slow heavy with a sweeping slam"
+        },
+        {
+          "id": "flame-archer",
+          "role": "ranged foe firing arcing fire bolts"
+        }
       ],
       "progression": "Five elimination rounds; round 5 fields a brute pair with archer cover.",
       "scoring": "100 per imp, 250 per archer, 400 per brute; round-clear heal of 1.",
       "winCondition": "Win all 5 rounds.",
       "loseCondition": "Fighter health reaches zero.",
-      "controls": { "scheme": "keyboard-gamepad", "actions": ["move", "melee", "dash", "pause"] },
-      "difficulty": { "preset": "normal", "ramp": "gradual" }
+      "controls": {
+        "scheme": "keyboard-gamepad",
+        "actions": [
+          "move",
+          "melee",
+          "dash",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
     },
     {
       "id": "frostmoot-ring",
@@ -208,18 +482,46 @@
       "theme": "Honor duel at the Frostmoot Ring",
       "visualStyle": "illustrated-2d",
       "gameLoop": "Fight for the Frostmoot crown: circle duellists on cracking ice, bait charges into snowdrifts, shatter the glacier troll's armor plates, and claim three banners.",
-      "player": { "abilities": ["move", "shoot", "frost-nova"], "health": 4, "lives": 1 },
+      "player": {
+        "abilities": [
+          "move",
+          "shoot",
+          "frost-nova"
+        ],
+        "health": 4,
+        "lives": 1
+      },
       "enemies": [
-        { "id": "ice-pup", "role": "fast yipper that circles and nips" },
-        { "id": "shard-thrower", "role": "mid-range duellist hurling ice shards" },
-        { "id": "glacier-troll", "role": "armored mini-boss; crack plates then strike flesh" }
+        {
+          "id": "ice-pup",
+          "role": "fast yipper that circles and nips"
+        },
+        {
+          "id": "shard-thrower",
+          "role": "mid-range duellist hurling ice shards"
+        },
+        {
+          "id": "glacier-troll",
+          "role": "armored mini-boss; crack plates then strike flesh"
+        }
       ],
       "progression": "Three banners: pups, then shard-throwers, then the glacier troll bout.",
       "scoring": "120 per pup, 220 per thrower, 800 for the troll; style bonus for untouched rounds.",
       "winCondition": "Claim all 3 banners.",
       "loseCondition": "Fighter health reaches zero.",
-      "controls": { "scheme": "keyboard-gamepad", "actions": ["move", "shoot", "frost-nova", "pause"] },
-      "difficulty": { "preset": "normal", "ramp": "gradual" }
+      "controls": {
+        "scheme": "keyboard-gamepad",
+        "actions": [
+          "move",
+          "shoot",
+          "frost-nova",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
     },
     {
       "id": "junkyard-rumble",
@@ -227,18 +529,46 @@
       "theme": "Scrap brawl in the Junkyard Rumble",
       "visualStyle": "pixel-art",
       "gameLoop": "Brawl through the junkyard: bonk can-chuckers with their own cans, outrun the magnet hound's pull, topple the compactor boss's stacks onto it, and rule the scrap heap.",
-      "player": { "abilities": ["move", "melee", "throw"], "health": 5, "lives": 1 },
+      "player": {
+        "abilities": [
+          "move",
+          "melee",
+          "throw"
+        ],
+        "health": 5,
+        "lives": 1
+      },
       "enemies": [
-        { "id": "can-chucker", "role": "lobber whose cans can be batted back" },
-        { "id": "magnet-hound", "role": "charger that drags metal and fighters alike" },
-        { "id": "compactor-boss", "role": "boss that drops crush stacks; bait it under them" }
+        {
+          "id": "can-chucker",
+          "role": "lobber whose cans can be batted back"
+        },
+        {
+          "id": "magnet-hound",
+          "role": "charger that drags metal and fighters alike"
+        },
+        {
+          "id": "compactor-boss",
+          "role": "boss that drops crush stacks; bait it under them"
+        }
       ],
       "progression": "Two warm-up brawls then the compactor boss bout.",
       "scoring": "100 per chucker, 200 per hound, 1000 for the boss; batted-can KOs pay double.",
       "winCondition": "Defeat the compactor boss.",
       "loseCondition": "Fighter health reaches zero.",
-      "controls": { "scheme": "keyboard", "actions": ["move", "melee", "throw", "pause"] },
-      "difficulty": { "preset": "easy", "ramp": "flat" }
+      "controls": {
+        "scheme": "keyboard",
+        "actions": [
+          "move",
+          "melee",
+          "throw",
+          "pause"
+        ]
+      },
+      "difficulty": {
+        "preset": "easy",
+        "ramp": "flat"
+      }
     }
   ],
   "farming": [
@@ -248,18 +578,43 @@
       "theme": "First harvest at Sunny Acres",
       "visualStyle": "pixel-art",
       "gameLoop": "Work a 6x4 field: plant turnip or pumpkin seeds, water every growth stage, harvest ripe crops for coins, and bank 500 coins to win.",
-      "player": { "abilities": ["plant", "water", "harvest"], "health": 1, "lives": 1 },
+      "player": {
+        "abilities": [
+          "plant",
+          "water",
+          "harvest"
+        ],
+        "health": 1,
+        "lives": 1
+      },
       "obstacles": [
-        { "id": "thirst", "role": "each growth stage needs watering before it grows" },
-        { "id": "funds", "role": "seeds cost coins; pumpkins pay best but tie up plots longest" }
+        {
+          "id": "thirst",
+          "role": "each growth stage needs watering before it grows"
+        },
+        {
+          "id": "funds",
+          "role": "seeds cost coins; pumpkins pay best but tie up plots longest"
+        }
       ],
       "collectibles": "Harvest payouts: 12 coins per turnip, 55 per pumpkin.",
       "progression": "Day cycle: 60-second days; morning rain may water thirsty plots.",
       "scoring": "Coins from harvests; banked total persists as the local best.",
       "winCondition": "Bank 500 coins from harvests.",
       "loseCondition": "None: endless cozy farming until the goal is banked.",
-      "controls": { "scheme": "mouse-keyboard", "actions": ["plant", "water", "harvest", "sleep"] },
-      "difficulty": { "preset": "normal", "ramp": "gradual" }
+      "controls": {
+        "scheme": "mouse-keyboard",
+        "actions": [
+          "plant",
+          "water",
+          "harvest",
+          "sleep"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
     },
     {
       "id": "moonpetal-greenhouse",
@@ -267,19 +622,49 @@
       "theme": "Night shift at the Moonpetal Greenhouse",
       "visualStyle": "illustrated-2d",
       "gameLoop": "Tend a moonlit greenhouse: plant glowpetals and starbeans, shield beds from frost drafts, prune spore blight before it spreads, and fill the 300-bloom order book.",
-      "player": { "abilities": ["plant", "water", "harvest", "prune"], "health": 1, "lives": 1 },
+      "player": {
+        "abilities": [
+          "plant",
+          "water",
+          "harvest",
+          "prune"
+        ],
+        "health": 1,
+        "lives": 1
+      },
       "obstacles": [
-        { "id": "frost-draft", "role": "night chill that stalls unshielded beds" },
-        { "id": "spore-blight", "role": "spreading blight; prune fast or lose the row" },
-        { "id": "power-cell", "role": "grow-lights drain the cell; harvests recharge it" }
+        {
+          "id": "frost-draft",
+          "role": "night chill that stalls unshielded beds"
+        },
+        {
+          "id": "spore-blight",
+          "role": "spreading blight; prune fast or lose the row"
+        },
+        {
+          "id": "power-cell",
+          "role": "grow-lights drain the cell; harvests recharge it"
+        }
       ],
       "collectibles": "Bloom orders: glowpetals fill 1 slot, starbeans fill 3.",
       "progression": "Night shifts of 90 seconds; drafts and blight intensify per shift.",
       "scoring": "Blooms banked toward the 300 order; wilted rows subtract 10.",
       "winCondition": "Fill all 300 bloom orders.",
       "loseCondition": "None: endless shifts until the order book is full.",
-      "controls": { "scheme": "mouse-keyboard", "actions": ["plant", "water", "harvest", "prune", "sleep"] },
-      "difficulty": { "preset": "normal", "ramp": "gradual" }
+      "controls": {
+        "scheme": "mouse-keyboard",
+        "actions": [
+          "plant",
+          "water",
+          "harvest",
+          "prune",
+          "sleep"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
     },
     {
       "id": "ember-terraces",
@@ -287,19 +672,180 @@
       "theme": "Dry season on the Ember Terraces",
       "visualStyle": "pixel-art",
       "gameLoop": "Farm volcanic terraces: plant ember peppers and ash melons, ration well water across tiers, clear ash-fall before it smothers sprouts, and ship 400 crates before the season ends.",
-      "player": { "abilities": ["plant", "water", "harvest", "clear-ash"], "health": 1, "lives": 1 },
+      "player": {
+        "abilities": [
+          "plant",
+          "water",
+          "harvest",
+          "clear-ash"
+        ],
+        "health": 1,
+        "lives": 1
+      },
       "obstacles": [
-        { "id": "ash-fall", "role": "falling ash that smothers unwatched sprouts" },
-        { "id": "water-ration", "role": "limited well water shared across all tiers" },
-        { "id": "lava-seep", "role": "hot cracks that retire plots until cooled" }
+        {
+          "id": "ash-fall",
+          "role": "falling ash that smothers unwatched sprouts"
+        },
+        {
+          "id": "water-ration",
+          "role": "limited well water shared across all tiers"
+        },
+        {
+          "id": "lava-seep",
+          "role": "hot cracks that retire plots until cooled"
+        }
       ],
       "collectibles": "Crate shipments: peppers ship 1 crate, melons ship 3.",
       "progression": "Ten 60-second days; ash-fall thickens and rations tighten each day.",
       "scoring": "Crates shipped toward the 400 goal; retired plots slow the pace.",
       "winCondition": "Ship 400 crates before day 10 ends.",
       "loseCondition": "Season ends with fewer than 400 crates shipped.",
-      "controls": { "scheme": "keyboard", "actions": ["plant", "water", "harvest", "clear-ash", "sleep"] },
-      "difficulty": { "preset": "hard", "ramp": "steep" }
+      "controls": {
+        "scheme": "keyboard",
+        "actions": [
+          "plant",
+          "water",
+          "harvest",
+          "clear-ash",
+          "sleep"
+        ]
+      },
+      "difficulty": {
+        "preset": "hard",
+        "ramp": "steep"
+      }
+    }
+  ],
+  "puzzle-match": [
+    {
+      "id": "gem-rush",
+      "name": "Gem Rush",
+      "theme": "A rush of gems on a 7x7 board",
+      "visualStyle": "pixel-art",
+      "gameLoop": "Swap neighbouring gems to match three or more. Cascades pay a bonus. Reach the target before the moves run out.",
+      "player": {
+        "abilities": [
+          "swap",
+          "hint",
+          "reshuffle"
+        ],
+        "health": 1,
+        "lives": 1
+      },
+      "obstacles": [
+        {
+          "id": "move-limit",
+          "role": "every swap costs one of 25 moves"
+        },
+        {
+          "id": "dead-board",
+          "role": "a locked board reshuffles and breaks plans"
+        }
+      ],
+      "collectibles": "Gems score 10 points each; cascades add 50% per level.",
+      "progression": "Five gem kinds; a reshuffle happens only when no move is left.",
+      "scoring": "10 points per cleared gem, plus a 50% cascade bonus.",
+      "winCondition": "Reach 1300 points before the moves run out.",
+      "loseCondition": "Run out of moves below the target.",
+      "controls": {
+        "scheme": "mouse-keyboard",
+        "actions": [
+          "swap",
+          "hint",
+          "reshuffle"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
+    },
+    {
+      "id": "crystal-caverns",
+      "name": "Crystal Caverns",
+      "theme": "Glowing gems in a dim cave",
+      "visualStyle": "pixel-art",
+      "gameLoop": "Match glowing crystals in a dim cave. Long chains light up the cavern and pay the most.",
+      "player": {
+        "abilities": [
+          "swap",
+          "hint",
+          "reshuffle"
+        ],
+        "health": 1,
+        "lives": 1
+      },
+      "obstacles": [
+        {
+          "id": "dim-light",
+          "role": "gems glow faintly and are harder to spot"
+        },
+        {
+          "id": "echo-moves",
+          "role": "cascades reward long chains"
+        }
+      ],
+      "collectibles": "Crystals score 10 points each; deep cascades multiply.",
+      "progression": "Same five gem kinds; the cave gets darker on harder presets.",
+      "scoring": "Points per crystal with a cascade bonus.",
+      "winCondition": "Reach the cavern's target score before the moves run out.",
+      "loseCondition": "Run out of moves below the target.",
+      "controls": {
+        "scheme": "mouse-keyboard",
+        "actions": [
+          "swap",
+          "hint",
+          "reshuffle"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
+    },
+    {
+      "id": "sunset-bazaar",
+      "name": "Sunset Bazaar",
+      "theme": "Market stalls at sunset",
+      "visualStyle": "pixel-art",
+      "gameLoop": "Trade colourful wares across a market board. Every move is a bargain: make it count.",
+      "player": {
+        "abilities": [
+          "swap",
+          "hint",
+          "reshuffle"
+        ],
+        "health": 1,
+        "lives": 1
+      },
+      "obstacles": [
+        {
+          "id": "haggling",
+          "role": "every swap costs a move in the market"
+        },
+        {
+          "id": "rush-hour",
+          "role": "stalls empty fast and the board tightens"
+        }
+      ],
+      "collectibles": "Wares score 10 points each; combos pay extra.",
+      "progression": "Warm palette; the bazaar fills up on harder presets.",
+      "scoring": "Points per ware with a cascade bonus.",
+      "winCondition": "Reach the bazaar's target score before the moves run out.",
+      "loseCondition": "Run out of moves below the target.",
+      "controls": {
+        "scheme": "mouse-keyboard",
+        "actions": [
+          "swap",
+          "hint",
+          "reshuffle"
+        ]
+      },
+      "difficulty": {
+        "preset": "normal",
+        "ramp": "gradual"
+      }
     }
   ]
 }

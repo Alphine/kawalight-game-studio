@@ -217,6 +217,7 @@ section { padding: 56px 0; }
 .g3::before { background: linear-gradient(135deg, #0e7490, #22d3ee); }
 .g4::before { background: linear-gradient(135deg, #b45309, #fbbf24); }
 .g5::before { background: linear-gradient(135deg, #047857, #a3e635); }
+.g6::before { background: linear-gradient(135deg, #a21caf, #e879f9); }
 
 .feature-grid {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 26px;

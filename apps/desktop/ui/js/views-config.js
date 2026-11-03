@@ -193,6 +193,7 @@
     'endless-runner': 'pacing, spawning, obstacles.',
     'side-scroller': 'level geometry, hazards, enemies, checkpoints, exit.',
     farming: 'field layout, crops.',
+    'puzzle-match': 'board size, gem kinds, scoring and moves.',
   };
 
   function renderLevels(root) {
@@ -209,6 +210,7 @@
     if (p.genre === 'endless-runner') showRunnerLevels(body, p, cfg);
     else if (p.genre === 'side-scroller') showScrollerLevels(body, p, cfg);
     else if (p.genre === 'farming') showFarmLevels(body, p, cfg);
+    else if (p.genre === 'puzzle-match') showPuzzleLevels(body, p, cfg);
     else showWaveLevels(body, p, cfg);
   }
 
@@ -382,6 +384,35 @@
             + ncell(pre + 'stageTimeSec', c.stageTimeSec, '5.5em') + '</tr>';
         }).join('')) + ROW_NOTE : '<p class="muted">No crops in config.</p>')
       + '</section>'
+      + footer();
+    wireFooter(body, p, function () { return collect(body, cfg); });
+  }
+
+  // puzzle-match: board layout, gem kinds, scoring and moves.
+  function showPuzzleLevels(body, p, cfg) {
+    var gems = cfg.gems || [];
+    body.innerHTML =
+      '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('levels') + 'Board</h3></div><div class="form-grid">'
+      + num('Columns', 'board.cols', cfg, 'min="4" max="10"')
+      + num('Rows', 'board.rows', cfg, 'min="4" max="10"')
+      + num('Tile size', 'board.tileSize', cfg, 'min="24" max="128"')
+      + num('Origin X', 'board.originX', cfg, '')
+      + num('Origin Y', 'board.originY', cfg, '')
+      + '</div></section>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('dot') + 'Gems (' + gems.length + ')</h3></div>'
+      + (gems.length ? table(['id', 'name', 'sprite'],
+        gems.map(function (g, i) {
+          var pre = 'gems.' + i + '.';
+          return '<tr>' + cell(pre + 'id', g.id, '8em') + cell(pre + 'name', g.name, '8em')
+            + cell(pre + 'sprite', g.sprite, '10em') + '</tr>';
+        }).join('')) + ROW_NOTE : '<p class="muted">No gems in config.</p>')
+      + '</section>'
+      + '<section class="panel glass-panel"><div class="panel-head"><h3>' + icon('sliders') + 'Scoring & moves</h3></div><div class="form-grid">'
+      + num('Target score', 'scoring.targetScore', cfg, 'min="1" max="10000000"')
+      + num('Points per gem', 'scoring.pointsPerGem', cfg, 'min="1" max="1000"')
+      + num('Cascade bonus %', 'scoring.cascadeBonusPercent', cfg, 'min="0" max="200"')
+      + num('Move limit', 'moves.limit', cfg, 'min="1" max="999"')
+      + '</div></section>'
       + footer();
     wireFooter(body, p, function () { return collect(body, cfg); });
   }

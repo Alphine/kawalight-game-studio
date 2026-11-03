@@ -24,6 +24,8 @@
       blurb: 'Bounded 2D action combat with waves and loot.', tags: ['Action', 'Combat', 'Fantasy'] },
     farming: { name: 'Farming', color: '#22c55e', icon: 'barn',
       blurb: 'Plant, grow, harvest, and build your dream farm.', tags: ['Farming', 'Life Sim', 'Management'] },
+    'puzzle-match': { name: 'Puzzle Match', color: '#e879f9', icon: 'bolt',
+      blurb: 'Swap gems to match three, chain cascades, and beat the move limit.', tags: ['Puzzle', 'Casual', 'Match-3'] },
   };
 
   var ICONS = {
@@ -652,6 +654,11 @@
       ['sunny-acres', 'Sunny Acres (default)'],
       ['moonlit-grove', 'Moonlit Grove'],
       ['tidepool-farm', 'Tidepool Farm'],
+    ],
+    'puzzle-match': [
+      ['gem-rush', 'Gem Rush (default)'],
+      ['crystal-caverns', 'Crystal Caverns'],
+      ['sunset-bazaar', 'Sunset Bazaar'],
     ],
   };
 

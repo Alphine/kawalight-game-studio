@@ -203,7 +203,7 @@
       'KGSM builds the game from a tested template and lets you play it in the browser.': 'KGSM merakit game dari template yang sudah teruji dan bisa kamu mainkan di browser.',
       'Export': 'Ekspor',
       'Download a Phaser project as a ZIP, or a Godot 4 project, and keep full ownership.': 'Unduh proyek Phaser sebagai ZIP, atau proyek Godot 4, dan tetap memegang kepemilikan penuh.',
-      'Five genres, ready to play': 'Lima genre, siap dimainkan',
+      'Six genres, ready to play': 'Enam genre, siap dimainkan',
       'Each genre is a tested template. Your theme, story, and assets fill it in.': 'Setiap genre adalah template yang sudah teruji. Tema, cerita, dan asset-mu yang mengisinya.',
       'Waves of enemies and bosses in a classic 2D shooter.': 'Gelombang musuh dan bos dalam shooter 2D klasik.',
       'Platform adventure with levels, checkpoints, and enemies.': 'Petualangan platform dengan level, checkpoint, dan musuh.',
@@ -254,6 +254,9 @@
       'playable games': 'game yang bisa dimainkan',
       'with AI, from concept to playtest.': 'dengan AI, dari konsep sampai playtest.',
       'A creative, AI-assisted 2D game maker for indie creators, educators, and anyone who wants to build games faster.': 'Pembuat game 2D berbantuan AI untuk kreator indie, pendidik, dan siapa pun yang ingin membuat game lebih cepat.',
+      'Puzzle Match': 'Puzzle Match',
+      'Swap gems to match three, chain cascades, and beat the move limit.': 'Tukar permata untuk mencocokkan tiga, sambung kaskade, dan selesaikan sebelum langkah habis.',
+      'Puzzle': 'Puzzle',
     },
   };
 })();

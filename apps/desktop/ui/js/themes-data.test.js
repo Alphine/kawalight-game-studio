@@ -7,7 +7,7 @@ const THEMES_PATH = path.join(__dirname, '..', 'data', 'themes.json');
 const SCHEMA_PATH = path.join(__dirname, '..', '..', '..', '..',
   'packages', 'schemas', 'blueprint.schema.json');
 
-const GENRES = ['space-shooter', 'endless-runner', 'side-scroller', 'battle-2d', 'farming'];
+const GENRES = ['space-shooter', 'endless-runner', 'side-scroller', 'battle-2d', 'farming', 'puzzle-match'];
 // space-shooter + battle-2d use enemies; the other three use obstacles (schema allOf).
 const FOE_KEY = {
   'space-shooter': 'enemies',
@@ -15,6 +15,7 @@ const FOE_KEY = {
   'endless-runner': 'obstacles',
   'side-scroller': 'obstacles',
   farming: 'obstacles',
+  'puzzle-match': 'obstacles',
 };
 const REQUIRED_KEYS = ['theme', 'visualStyle', 'gameLoop', 'player',
   'progression', 'scoring', 'winCondition', 'loseCondition', 'controls', 'difficulty'];
