@@ -10,6 +10,20 @@ game → test and tune → export the project.**
 Core design: template-driven game factory. AI assists content/config; deterministic,
 tested genre templates run gameplay.
 
+## Live app
+
+- **Landing page:** https://basyid.dev/kgsm/
+- **Studio (sign-in required):** https://basyid.dev/kgsm/app/
+
+The live site runs the same worker and studio UI as this repo. See the
+[Web bundle](#web-bundle-static-hosting) section for how it is deployed.
+
+## Wiki
+
+The player and maker guide lives in [`wiki/`](wiki/Home.md): getting started,
+genres, AI providers, playtest and export, architecture, and troubleshooting.
+The `docs/` folder keeps the exact API and runbook contracts.
+
 ## Layout (maps to SDD §5)
 
 ```text
