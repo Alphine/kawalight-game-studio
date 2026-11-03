@@ -39,9 +39,8 @@ projects/                  local project data root (user content, git-ignored)
 ## Quickstart
 
 ```powershell
-# worker tests (359 passed + 4 skipped; 34 test_api.py socket tests
-# error where localhost listen() is blocked — run outside such sandboxes
-# for the full green)
+# worker tests (396 passed + 4 skipped; test_api.py uses live localhost
+# sockets, so run where listen() on 127.0.0.1 is allowed)
 .\.venv\Scripts\python.exe -m pytest apps\worker\tests -q
 
 # godot exporter tests (72, no sockets needed)

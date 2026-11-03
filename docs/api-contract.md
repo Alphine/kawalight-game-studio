@@ -243,6 +243,12 @@ are write-only: no endpoint ever returns one.
 - CORS: reflect only `http(s)` origins on `127.0.0.1`/`localhost` plus
   the `tauri` scheme / `tauri.localhost`; the opaque `null` origin is
   explicitly rejected. Still bind-local.
+- Cross-site guard: CORS alone does not stop a simple cross-origin POST
+  from running its side effects, so any request carrying an `Origin` outside
+  the allowlist above gets `403 forbidden-origin`, and every mutating method
+  (`POST`/`PUT`/`PATCH`/`DELETE`) must send `Content-Type: application/json`
+  or gets `415 unsupported-media-type`. Requests without an `Origin` header
+  (CLI, scripts, tests) are unaffected by the origin check.
 - `src`/path inputs are confined as in Conventions; `..` and symlink escapes
   are rejected before any filesystem write.
 - Secrets: never in responses, logs, builds, ZIPs, or manifests; export scans

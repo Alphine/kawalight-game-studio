@@ -200,6 +200,13 @@ def dispatch(req: Request) -> tuple[int, dict | RawBody]:
 # --------------------------------------------------------------------------
 
 _JSON_CONTENT = "application/json; charset=utf-8"
+_MUTATING_METHODS = ("POST", "PUT", "PATCH", "DELETE")
+
+
+def _is_json_content(content_type: str | None) -> bool:
+    """True when the media type (ignoring parameters) is application/json."""
+    media = (content_type or "").split(";", 1)[0].strip().lower()
+    return media == "application/json"
 
 
 def _allowed_origin(origin: str | None) -> str | None:
@@ -316,6 +323,25 @@ class Handler(BaseHTTPRequestHandler):
             return
         if len(api_path) > 1:
             api_path = api_path.rstrip("/") or "/"
+
+        # Cross-site guard. CORS headers only stop a page from *reading* the
+        # reply; a simple cross-origin POST (text/plain, no preflight) would
+        # still run its side effects (spend, import, secret writes). So refuse
+        # foreign browser origins outright and require JSON for mutations,
+        # which a simple request cannot set without a preflight.
+        origin = self.headers.get("Origin")
+        if origin and _allowed_origin(origin) is None:
+            self._send_json(403, ApiError(
+                "forbidden-origin",
+                "request origin is not allowed", 403).to_body())
+            return
+        if self.command in _MUTATING_METHODS and not _is_json_content(
+                self.headers.get("Content-Type")):
+            self._send_json(415, ApiError(
+                "unsupported-media-type",
+                "mutating requests must use Content-Type: application/json",
+                415).to_body())
+            return
 
         try:
             length_raw = self.headers.get("Content-Length")

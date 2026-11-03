@@ -44,9 +44,10 @@ _NO_BODY = object()
 def call(base, method, path, body=_NO_BODY):
     data = None
     headers = {"Accept": "application/json"}
+    # Mirror the desktop UI: every request declares JSON, body or not.
+    headers["Content-Type"] = "application/json"
     if body is not _NO_BODY:
         data = json.dumps(body).encode("utf-8")
-        headers["Content-Type"] = "application/json"
     request = urllib.request.Request(base + path, data=data, method=method,
                                      headers=headers)
     try:
@@ -135,6 +136,48 @@ def test_non_object_json_body_is_bad_request(api):
     status, body = call_raw(api, "POST", "/projects", b"[1,2]")
     assert status == 400
     assert body["error"]["code"] == "bad-request"
+
+
+def _raw_request(base, method, path, data, headers):
+    request = urllib.request.Request(base + path, data=data, method=method,
+                                     headers=headers)
+    try:
+        with urllib.request.urlopen(request) as response:
+            return response.status, json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        return exc.code, json.loads(exc.read().decode("utf-8"))
+
+
+def test_foreign_origin_is_refused_before_any_side_effect(api, store):
+    # A drive-by page on another origin must not reach the handler at all.
+    status, body = _raw_request(
+        api, "POST", "/projects",
+        json.dumps({"name": "Drive-by", "genre": "space-shooter"}).encode(),
+        {"Content-Type": "application/json", "Origin": "https://evil.example"})
+    assert status == 403
+    assert body["error"]["code"] == "forbidden-origin"
+    status, listing = call(api, "GET", "/projects")
+    assert status == 200
+    assert "Drive-by" not in json.dumps(listing)
+
+
+def test_simple_cross_origin_post_is_refused_without_json_type(api):
+    # text/plain POSTs need no CORS preflight, so the type check is the guard.
+    status, body = _raw_request(
+        api, "POST", "/projects",
+        json.dumps({"name": "Simple", "genre": "space-shooter"}).encode(),
+        {"Content-Type": "text/plain"})
+    assert status == 415
+    assert body["error"]["code"] == "unsupported-media-type"
+
+
+def test_local_dev_origin_is_still_allowed(api):
+    status, _ = _raw_request(
+        api, "POST", "/projects",
+        json.dumps({"name": "Dev Origin", "genre": "space-shooter"}).encode(),
+        {"Content-Type": "application/json",
+         "Origin": "http://localhost:1420"})
+    assert status == 201
 
 
 # --------------------------------------------------------------------------
