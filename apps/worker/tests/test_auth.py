@@ -11,7 +11,7 @@ import urllib.request
 
 import pytest
 
-from kgsm import auth
+from kgsm import auth, mailer
 from kgsm.api.server import create_server
 
 ADMIN = "admin@example.com"
@@ -24,6 +24,9 @@ PASSWORD = "correct-horse-battery"
 def live(store, monkeypatch):
     monkeypatch.setenv("KGSM_REQUIRE_AUTH", "1")
     monkeypatch.setenv("KGSM_ADMIN_EMAIL", ADMIN)
+    monkeypatch.setenv("KGSM_MAIL_MODE", "memory")
+    monkeypatch.setenv("KGSM_PUBLIC_URL", "https://basyid.dev/kgsm")
+    mailer.OUTBOX.clear()
     auth.reset_throttle()
     server = create_server("127.0.0.1", 0)
     thread = threading.Thread(target=server.serve_forever,
@@ -59,10 +62,24 @@ def session_token(set_cookie):
     return set_cookie.split(";", 1)[0].split("=", 1)[1]
 
 
+def last_link(email, marker):
+    """Return the token from the newest mail to ``email`` containing ``marker``."""
+    for message in reversed(mailer.OUTBOX):
+        if message["to"] == email and marker in message["text"]:
+            for word in message["text"].split():
+                if marker in word:
+                    return word.split("=", 1)[1]
+    raise AssertionError(f"no {marker} mail for {email}")
+
+
 def signup(base, email):
-    status, body, cookie = request(base, "POST", "/auth/register",
-                                   {"email": email, "password": PASSWORD})
+    """Register, confirm the emailed link, and return the session token."""
+    status, body, _ = request(base, "POST", "/auth/register",
+                              {"email": email, "password": PASSWORD})
     assert status == 201, body
+    token = last_link(email, "?verify=")
+    status, body, cookie = request(base, "POST", "/auth/verify", {"token": token})
+    assert status == 200, body
     return session_token(cookie)
 
 
@@ -82,18 +99,122 @@ def test_health_and_auth_probe_stay_public(live):
     assert status == 401 and body["error"]["code"] == "unauthenticated"
 
 
-def test_register_sets_hardened_cookie_and_signs_in(live):
+def test_register_sends_a_confirmation_and_issues_no_session(live):
     status, body, cookie = request(live, "POST", "/auth/register",
                                    {"email": ALICE, "password": PASSWORD})
     assert status == 201
+    assert body == {"status": "verification-sent", "email": ALICE}
+    assert cookie is None
+    assert any(m["to"] == ALICE and "?verify=" in m["text"] for m in mailer.OUTBOX)
+
+
+def test_verifying_signs_in_with_hardened_cookie(live):
+    request(live, "POST", "/auth/register", {"email": ALICE, "password": PASSWORD})
+    token = last_link(ALICE, "?verify=")
+    status, body, cookie = request(live, "POST", "/auth/verify", {"token": token})
+    assert status == 200
     assert body["user"] == {"id": body["user"]["id"], "email": ALICE,
                             "isAdmin": False}
     for flag in ("HttpOnly", "Secure", "SameSite=Strict"):
         assert flag in cookie
-    # The raw token must never appear in the JSON body.
+    # The raw session token never appears in the JSON body.
     assert session_token(cookie) not in json.dumps(body)
     status, me, _ = request(live, "GET", "/auth/me", cookie=session_token(cookie))
     assert status == 200 and me["user"]["email"] == ALICE
+
+
+def test_unverified_account_cannot_sign_in_even_with_the_right_password(live):
+    request(live, "POST", "/auth/register", {"email": ALICE, "password": PASSWORD})
+    status, body, cookie = request(live, "POST", "/auth/login",
+                                   {"email": ALICE, "password": PASSWORD})
+    assert status == 403 and body["error"]["code"] == "email-not-verified"
+    assert cookie is None
+
+
+def test_verification_link_works_once_and_expires(live, store):
+    import sqlite3
+    request(live, "POST", "/auth/register", {"email": ALICE, "password": PASSWORD})
+    token = last_link(ALICE, "?verify=")
+    assert request(live, "POST", "/auth/verify", {"token": token})[0] == 200
+    status, body, _ = request(live, "POST", "/auth/verify", {"token": token})
+    assert status == 400 and body["error"]["code"] == "invalid-token"
+
+    request(live, "POST", "/auth/register", {"email": BOB, "password": PASSWORD})
+    bob_token = last_link(BOB, "?verify=")
+    db = sqlite3.connect(store["data_dir"] / "kgsm.db")
+    db.execute("UPDATE email_tokens SET expires_at = '2000-01-01T00:00:00+00:00'"
+               " WHERE purpose = 'verify' AND used_at IS NULL")
+    db.commit()
+    db.close()
+    status, body, _ = request(live, "POST", "/auth/verify", {"token": bob_token})
+    assert status == 400 and body["error"]["code"] == "invalid-token"
+
+
+def test_tokens_are_stored_hashed_not_raw(live, store):
+    import hashlib
+    import sqlite3
+    request(live, "POST", "/auth/register", {"email": ALICE, "password": PASSWORD})
+    token = last_link(ALICE, "?verify=")
+    db = sqlite3.connect(store["data_dir"] / "kgsm.db")
+    stored = [r[0] for r in db.execute("SELECT token_hash FROM email_tokens")]
+    db.close()
+    assert hashlib.sha256(token.encode()).hexdigest() in stored
+    assert token not in stored
+
+
+def test_resend_is_silent_for_unknown_and_sends_only_when_pending(live):
+    status, body, _ = request(live, "POST", "/auth/resend-verification",
+                              {"email": "nobody@example.com"})
+    assert status == 200 and body["status"] == "sent-if-pending"
+    assert not any(m["to"] == "nobody@example.com" for m in mailer.OUTBOX)
+    request(live, "POST", "/auth/register", {"email": ALICE, "password": PASSWORD})
+    before = len(mailer.OUTBOX)
+    status, body, _ = request(live, "POST", "/auth/resend-verification",
+                              {"email": ALICE})
+    assert status == 200 and len(mailer.OUTBOX) == before + 1
+    # Only the newest link stays live; the older one is retired.
+    assert request(live, "POST", "/auth/verify",
+                   {"token": last_link(ALICE, "?verify=")})[0] == 200
+
+
+def test_password_reset_sets_new_password_and_revokes_sessions(live):
+    token = signup(live, ALICE)
+    status, body, _ = request(live, "POST", "/auth/forgot-password", {"email": ALICE})
+    assert status == 200 and body["status"] == "sent-if-registered"
+    reset = last_link(ALICE, "?reset=")
+    new_password = "a-brand-new-password"
+    status, body, _ = request(live, "POST", "/auth/reset-password",
+                              {"token": reset, "password": new_password})
+    assert status == 200 and body["status"] == "password-updated"
+    # The old session is gone, the old password fails, the new one works.
+    assert request(live, "GET", "/projects", cookie=token)[0] == 401
+    assert request(live, "POST", "/auth/login",
+                   {"email": ALICE, "password": PASSWORD})[0] == 401
+    assert request(live, "POST", "/auth/login",
+                   {"email": ALICE, "password": new_password})[0] == 200
+    # The reset link is single-use.
+    status, body, _ = request(live, "POST", "/auth/reset-password",
+                              {"token": reset, "password": "yet-another-password"})
+    assert status == 400 and body["error"]["code"] == "invalid-token"
+
+
+def test_forgot_password_is_silent_for_unknown_addresses(live):
+    status, body, _ = request(live, "POST", "/auth/forgot-password",
+                              {"email": "ghost@example.com"})
+    assert status == 200 and body["status"] == "sent-if-registered"
+    assert not any(m["to"] == "ghost@example.com" for m in mailer.OUTBOX)
+
+
+def test_registration_fails_cleanly_when_mail_is_not_configured(live, monkeypatch):
+    monkeypatch.setenv("KGSM_MAIL_MODE", "off")
+    status, body, _ = request(live, "POST", "/auth/register",
+                              {"email": BOB, "password": PASSWORD})
+    assert status == 503 and body["error"]["code"] == "mail-unavailable"
+    # The half-created account was removed, so the same address can retry.
+    monkeypatch.setenv("KGSM_MAIL_MODE", "memory")
+    status, body, _ = request(live, "POST", "/auth/register",
+                              {"email": BOB, "password": PASSWORD})
+    assert status == 201
 
 
 def test_register_rejects_duplicates_and_bad_input(live):
@@ -139,9 +260,10 @@ def test_logout_revokes_the_session(live):
 
 
 def test_session_cookie_uses_host_prefix_and_strict_flags(live):
-    status, _, cookie = request(live, "POST", "/auth/register",
-                                {"email": ALICE, "password": PASSWORD})
-    assert status == 201
+    request(live, "POST", "/auth/register", {"email": ALICE, "password": PASSWORD})
+    status, _, cookie = request(live, "POST", "/auth/verify",
+                                {"token": last_link(ALICE, "?verify=")})
+    assert status == 200
     assert cookie.startswith("__Host-kgsm_session=")
     assert "Path=/" in cookie and "Secure" in cookie and "Domain" not in cookie
 

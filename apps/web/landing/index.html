@@ -5,87 +5,197 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'">
 <title>Kawalight Game Studio Maker</title>
-<meta name="description" content="Make 2D games from a theme and a genre. AI helps with story and assets, you assemble a playable game, then export it.">
+<meta name="description" content="KGSM is an AI-assisted 2D game maker. Pick a theme and genre, generate story and assets, playtest, and export.">
 <link rel="stylesheet" href="landing.css">
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
+
 <header class="top">
-  <a class="brand" href="/kgsm/" aria-label="Kawalight Game Studio Maker">
+  <a class="brand" href="/kgsm/" aria-label="KGSM home">
     <span class="mark" aria-hidden="true">K</span>
-    <span>Kawalight <strong>Game Studio Maker</strong></span>
+    <span class="brand-text"><strong>KGSM</strong><span>Kawalight Game Studio Maker</span></span>
   </a>
-  <nav aria-label="Main">
-    <a href="#fitur">Features</a>
-    <a href="#akun" class="pill-link" data-tab-target="login">Sign in</a>
+  <nav class="nav" aria-label="Main">
+    <a href="#how">How it works</a>
+    <a href="#genres">Genres</a>
+    <a href="#akun" class="nav-signin" data-tab-target="login">Sign in</a>
     <button type="button" id="langToggle" class="lang-toggle" aria-label="Language" title="Language">EN</button>
+    <a href="#akun" class="btn primary small" data-tab-target="register">Get started free</a>
   </nav>
 </header>
 
-<main>
+<main id="main">
   <section class="hero">
-    <p class="eyebrow">A 2D game studio for everyone</p>
-    <h1>From a theme to a playable game, in one workflow.</h1>
-    <p class="lead">Pick a theme and genre, let AI help with the story and assets, assemble a game you can play right away, test it, then export to Phaser or Godot.</p>
-    <div class="cta">
-      <a class="btn primary" href="#akun" data-tab-target="register">Sign up free</a>
-      <a class="btn ghost" href="#akun" data-tab-target="login">I already have an account</a>
+    <div class="hero-copy">
+      <p class="pill"><span aria-hidden="true">✦</span> AI Creative Game Studio</p>
+      <h1>
+        <span class="kgsm">KGSM</span>
+        <span class="full">Kawalight Game Studio Maker</span>
+      </h1>
+      <p class="tagline">Turn your game ideas into <span class="accent">playable games</span> with AI, from concept to playtest.</p>
+      <p class="lead">A creative, AI-assisted 2D game maker for indie creators, educators, and anyone who wants to build games faster.</p>
+      <div class="cta">
+        <a class="btn primary" href="#akun" data-tab-target="register">Start creating free</a>
+        <a class="btn ghost" href="#how">See how it works</a>
+      </div>
+      <ul class="checks">
+        <li>Prompt to game</li>
+        <li>AI story and assets</li>
+        <li>Playable export</li>
+      </ul>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+      <div class="laptop">
+        <div class="screen">
+          <div class="screen-bar"><span class="mark sm">K</span><span>Kawalight Game Studio Maker</span></div>
+          <div class="screen-body">
+            <ul class="side">
+              <li class="on">Home</li>
+              <li>New Game</li>
+              <li>Blueprint</li>
+              <li>Asset Forge</li>
+              <li>Asset Lab</li>
+              <li>Playtest</li>
+            </ul>
+            <div class="stage">
+              <p class="stage-title">Choose a genre</p>
+              <div class="tiles">
+                <span class="tile t1"><b>Space Shooter</b></span>
+                <span class="tile t2"><b>Endless Runner</b></span>
+                <span class="tile t3"><b>Farming</b></span>
+              </div>
+              <span class="fake-btn">Create New Game</span>
+            </div>
+          </div>
+        </div>
+        <div class="base"></div>
+      </div>
     </div>
   </section>
 
-  <section id="fitur" class="features" aria-labelledby="fitur-judul">
-    <h2 id="fitur-judul">What you can do</h2>
-    <div class="grid">
-      <article class="card">
-        <h3>5 genre siap pakai</h3>
-        <p>Space shooter, endless runner, side-scroller, battle 2D, and farming. Each genre is tested and playable.</p>
-      </article>
-      <article class="card">
+  <section id="how" class="steps" aria-labelledby="how-title">
+    <h2 id="how-title">How KGSM works</h2>
+    <p class="section-sub">From a simple idea to a playable game in four steps.</p>
+    <ol class="step-grid">
+      <li class="step">
+        <span class="step-num">1</span>
+        <h3>Choose a theme</h3>
+        <p>Pick a genre and describe your world in plain language.</p>
+      </li>
+      <li class="step">
+        <span class="step-num">2</span>
+        <h3>Generate story and assets</h3>
+        <p>AI drafts the story opening and pixel-art assets, with each prompt saved.</p>
+      </li>
+      <li class="step">
+        <span class="step-num">3</span>
+        <h3>Assemble and playtest</h3>
+        <p>KGSM builds the game from a tested template and lets you play it in the browser.</p>
+      </li>
+      <li class="step">
+        <span class="step-num">4</span>
+        <h3>Export</h3>
+        <p>Download a Phaser project as a ZIP, or a Godot 4 project, and keep full ownership.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section id="genres" class="genres" aria-labelledby="genres-title">
+    <h2 id="genres-title">Five genres, ready to play</h2>
+    <p class="section-sub">Each genre is a tested template. Your theme, story, and assets fill it in.</p>
+    <div class="genre-grid">
+      <article class="genre g1"><h3>Space Shooter</h3><p>Waves of enemies and bosses in a classic 2D shooter.</p></article>
+      <article class="genre g2"><h3>Endless Runner</h3><p>Auto-run with obstacles, power-ups, and high scores.</p></article>
+      <article class="genre g3"><h3>Side-Scroller</h3><p>Platform adventure with levels, checkpoints, and enemies.</p></article>
+      <article class="genre g4"><h3>Battle 2D</h3><p>Bounded arena combat with waves and loot.</p></article>
+      <article class="genre g5"><h3>Farming</h3><p>Plant, grow, harvest, and build your dream farm.</p></article>
+    </div>
+  </section>
+
+  <section class="features" aria-labelledby="features-title">
+    <h2 id="features-title">Built for makers</h2>
+    <div class="feature-grid">
+      <article class="feature">
         <h3>AI story and assets</h3>
-        <p>Write story openings and generate pixel-art images with Meta AI. Each account gets a daily quota.</p>
+        <p>Write story openings and generate pixel-art images with Meta AI. Every account gets a daily quota.</p>
       </article>
-      <article class="card">
-        <h3>Test in your browser</h3>
-        <p>Play the built game in the playtest view without installing anything, then tune balance and config until it feels right.</p>
+      <article class="feature">
+        <h3>Playtest in your browser</h3>
+        <p>Play the built game without installing anything, then tune balance and config until it feels right.</p>
       </article>
-      <article class="card">
-        <h3>Export to Phaser or Godot</h3>
-        <p>Download the project as a ZIP. You keep full ownership of your work.</p>
+      <article class="feature">
+        <h3>Your work, exported</h3>
+        <p>Download a Phaser ZIP or a Godot 4 project. You keep full ownership of what you make.</p>
       </article>
     </div>
   </section>
 
-  <section id="akun" class="account" aria-labelledby="akun-judul">
+  <section id="akun" class="account" aria-labelledby="akun-title">
     <div class="auth-card">
-      <h2 id="akun-judul">Sign in to the studio</h2>
-      <div class="tabs" role="tablist" aria-label="Sign in or sign up">
-        <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="form-login" data-tab="login">Sign in</button>
-        <button type="button" role="tab" id="tab-register" aria-selected="false" aria-controls="form-register" data-tab="register" tabindex="-1">Sign up</button>
+
+      <!-- Sign in / sign up -->
+      <div data-panel="auth">
+        <h2 id="akun-title">Get into the studio</h2>
+        <div class="tabs" role="tablist" aria-label="Sign in or sign up">
+          <button type="button" role="tab" id="tab-login" aria-selected="true" aria-controls="form-login" data-tab="login">Sign in</button>
+          <button type="button" role="tab" id="tab-register" aria-selected="false" aria-controls="form-register" data-tab="register" tabindex="-1">Sign up</button>
+        </div>
+
+        <form id="form-login" role="tabpanel" aria-labelledby="tab-login" novalidate>
+          <label class="fld"><span>Email</span>
+            <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label class="fld"><span>Password</span>
+            <input name="password" type="password" autocomplete="current-password" required maxlength="200"></label>
+          <button type="submit" class="btn primary wide">Sign in</button>
+          <p class="inline-links"><a href="#akun" data-go="forgot">Forgot password?</a></p>
+        </form>
+
+        <form id="form-register" role="tabpanel" aria-labelledby="tab-register" novalidate hidden>
+          <label class="fld"><span>Email</span>
+            <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+          <label class="fld"><span>Password (at least 10 characters)</span>
+            <input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200"></label>
+          <button type="submit" class="btn primary wide">Create account</button>
+          <p class="fine">We email you a link to confirm the address. Daily AI quotas apply per account.</p>
+        </form>
       </div>
 
-      <form id="form-login" role="tabpanel" aria-labelledby="tab-login" novalidate>
-        <label class="fld">
-          <span>Email</span>
-          <input name="email" type="email" autocomplete="email" required maxlength="254">
-        </label>
-        <label class="fld">
-          <span>Password</span>
-          <input name="password" type="password" autocomplete="current-password" required maxlength="200">
-        </label>
-        <button type="submit" class="btn primary wide">Sign in</button>
+      <!-- After sign-up: confirm the email -->
+      <div data-panel="pending" hidden>
+        <h2>Check your inbox</h2>
+        <p class="panel-text">We sent a confirmation link to <strong data-slot="pending-email"></strong>. Open it to activate your account. The link expires in 24 hours.</p>
+        <button type="button" class="btn ghost wide" data-a="resend">Send the link again</button>
+        <p class="inline-links"><a href="#akun" data-go="login">Back to sign in</a></p>
+      </div>
+
+      <!-- Forgot password -->
+      <form data-panel="forgot" id="form-forgot" novalidate hidden>
+        <h2>Reset your password</h2>
+        <p class="panel-text">Enter your email and we will send a link to choose a new password.</p>
+        <label class="fld"><span>Email</span>
+          <input name="email" type="email" autocomplete="email" required maxlength="254"></label>
+        <button type="submit" class="btn primary wide">Send reset link</button>
+        <p class="inline-links"><a href="#akun" data-go="login">Back to sign in</a></p>
       </form>
 
-      <form id="form-register" role="tabpanel" aria-labelledby="tab-register" novalidate hidden>
-        <label class="fld">
-          <span>Email</span>
-          <input name="email" type="email" autocomplete="email" required maxlength="254">
-        </label>
-        <label class="fld">
-          <span>Password (at least 10 characters)</span>
-          <input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200">
-        </label>
-        <button type="submit" class="btn primary wide">Create account</button>
-        <p class="fine">Daily AI quotas apply per account. Your email is only used to sign in.</p>
+      <!-- Choose a new password from the emailed link -->
+      <form data-panel="reset" id="form-reset" novalidate hidden>
+        <h2>Choose a new password</h2>
+        <label class="fld"><span>New password (at least 10 characters)</span>
+          <input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="200"></label>
+        <label class="fld"><span>Confirm new password</span>
+          <input name="confirm" type="password" autocomplete="new-password" required minlength="10" maxlength="200"></label>
+        <button type="submit" class="btn primary wide">Update password</button>
       </form>
+
+      <!-- Result of an emailed link -->
+      <div data-panel="result" hidden>
+        <h2 data-slot="result-title">Confirming your email…</h2>
+        <p class="panel-text" data-slot="result-text"></p>
+        <p class="inline-links"><a href="#akun" data-go="login">Go to sign in</a></p>
+      </div>
 
       <p id="status" class="status" role="status" aria-live="polite"></p>
     </div>

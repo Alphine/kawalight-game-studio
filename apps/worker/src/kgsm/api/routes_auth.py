@@ -1,4 +1,7 @@
-"""Account routes: register, login, logout, and the current-user probe.
+"""Account routes: register, confirm email, sign in/out, and password reset.
+
+Replies that must not reveal whether an address has an account (resend,
+forgot password) always look the same.
 
 Session tokens travel only in an HttpOnly cookie (never in JSON), so page
 scripts cannot read them. The cookie is SameSite=Strict, and mutating
@@ -20,15 +23,13 @@ def _raise(exc: auth_mod.AuthError) -> ApiError:
 
 
 def register(req: Request) -> tuple[int, dict]:
-    email = req.body.get("email")
-    password = req.body.get("password")
     try:
-        ctx = auth_mod.register(email, password, req.client_ip)
-        token, _ = auth_mod.login(email, password, req.client_ip)
+        ctx = auth_mod.register(req.body.get("email"), req.body.get("password"),
+                                req.client_ip)
     except auth_mod.AuthError as exc:
         raise _raise(exc) from None
-    req.set_cookie = auth_mod.session_cookie(token)
-    return 201, {"user": _user(ctx)}
+    # No session yet: the address must be confirmed from the emailed link first.
+    return 201, {"status": "verification-sent", "email": ctx.email}
 
 
 def login(req: Request) -> tuple[int, dict]:
@@ -39,6 +40,39 @@ def login(req: Request) -> tuple[int, dict]:
         raise _raise(exc) from None
     req.set_cookie = auth_mod.session_cookie(token)
     return 200, {"user": _user(ctx)}
+
+
+def verify(req: Request) -> tuple[int, dict]:
+    try:
+        token, ctx = auth_mod.verify_email(req.body.get("token"))
+    except auth_mod.AuthError as exc:
+        raise _raise(exc) from None
+    req.set_cookie = auth_mod.session_cookie(token)
+    return 200, {"user": _user(ctx)}
+
+
+def resend_verification(req: Request) -> tuple[int, dict]:
+    try:
+        auth_mod.resend_verification(req.body.get("email"), req.client_ip)
+    except auth_mod.AuthError as exc:
+        raise _raise(exc) from None
+    return 200, {"status": "sent-if-pending"}
+
+
+def forgot_password(req: Request) -> tuple[int, dict]:
+    try:
+        auth_mod.request_password_reset(req.body.get("email"), req.client_ip)
+    except auth_mod.AuthError as exc:
+        raise _raise(exc) from None
+    return 200, {"status": "sent-if-registered"}
+
+
+def reset_password(req: Request) -> tuple[int, dict]:
+    try:
+        auth_mod.reset_password(req.body.get("token"), req.body.get("password"))
+    except auth_mod.AuthError as exc:
+        raise _raise(exc) from None
+    return 200, {"status": "password-updated"}
 
 
 def logout(req: Request) -> tuple[int, dict]:
@@ -60,6 +94,10 @@ def me(req: Request) -> tuple[int, dict]:
 ROUTES = [
     ("POST", r"/auth/register", register),
     ("POST", r"/auth/login", login),
+    ("POST", r"/auth/verify", verify),
+    ("POST", r"/auth/resend-verification", resend_verification),
+    ("POST", r"/auth/forgot-password", forgot_password),
+    ("POST", r"/auth/reset-password", reset_password),
     ("POST", r"/auth/logout", logout),
     ("GET", r"/auth/me", me),
 ]

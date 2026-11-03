@@ -29,6 +29,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from . import db as db_mod
+from . import mailer
 
 # __Host- prefix: browsers only accept it with Secure, Path=/, and no Domain.
 SESSION_COOKIE = "__Host-kgsm_session"
@@ -43,6 +44,9 @@ LOGIN_WINDOW_S = 900
 # Account creation is cheap to script, so cap sign-ups per client IP.
 REGISTER_MAX = 20
 REGISTER_WINDOW_S = 3600
+# Confirmation and reset mail: a few per address and per client per window.
+MAIL_MAX = 5
+MAIL_WINDOW_S = 900
 
 _SCRYPT_N = 2 ** 14
 _SCRYPT_R = 8
@@ -60,6 +64,14 @@ CREATE TABLE IF NOT EXISTS sessions (
     user_id TEXT NOT NULL,
     created_at TEXT NOT NULL,
     expires_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS email_tokens (
+    token_hash TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    purpose TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used_at TEXT NULL
 );
 CREATE TABLE IF NOT EXISTS ai_usage (
     user_id TEXT NOT NULL,
@@ -134,7 +146,18 @@ def _is_admin(email: str) -> bool:
 def _conn():
     conn = db_mod.connect()
     conn.executescript(_SCHEMA)
+    _migrate_users(conn)
     return conn
+
+
+def _migrate_users(conn) -> None:
+    """Add email verification. Accounts created before it are grandfathered
+    as verified. Runs once, when the column first appears."""
+    cols = {row["name"] for row in conn.execute("PRAGMA table_info(users)")}
+    if "email_verified_at" not in cols:
+        conn.execute("ALTER TABLE users ADD COLUMN email_verified_at TEXT NULL")
+        conn.execute("UPDATE users SET email_verified_at = created_at")
+        conn.commit()
 
 
 def _now() -> datetime:
@@ -229,7 +252,60 @@ def _check_password(password: object) -> str:
     return password
 
 
+def _open_session(conn, user_id: str) -> str:
+    token = os.urandom(32).hex()
+    now = _now()
+    conn.execute(
+        "INSERT INTO sessions (token_hash, user_id, created_at, expires_at)"
+        " VALUES (?, ?, ?, ?)",
+        (_digest(token), user_id, now.isoformat(),
+         (now + timedelta(days=SESSION_DAYS)).isoformat()))
+    return token
+
+
+def _issue_email_token(conn, user_id: str, purpose: str, ttl: timedelta) -> str:
+    """Create a single-use token and retire older unused tokens of the same purpose."""
+    now = _now()
+    conn.execute(
+        "UPDATE email_tokens SET used_at = ? WHERE user_id = ? AND purpose = ?"
+        " AND used_at IS NULL", (now.isoformat(), user_id, purpose))
+    token = os.urandom(32).hex()
+    conn.execute(
+        "INSERT INTO email_tokens (token_hash, user_id, purpose, created_at,"
+        " expires_at, used_at) VALUES (?, ?, ?, ?, ?, NULL)",
+        (_digest(token), user_id, purpose, now.isoformat(),
+         (now + ttl).isoformat()))
+    return token
+
+
+def _take_email_token(conn, token: object, purpose: str) -> str:
+    """Validate and consume a token. Returns the user id or raises AuthError."""
+    if not isinstance(token, str) or len(token) != 64:
+        raise AuthError("invalid-token", "this link is invalid or has expired", 400)
+    row = conn.execute(
+        "SELECT user_id, expires_at, used_at FROM email_tokens"
+        " WHERE token_hash = ? AND purpose = ?", (_digest(token), purpose)).fetchone()
+    if row is None or row["used_at"] is not None \
+            or datetime.fromisoformat(row["expires_at"]) <= _now():
+        raise AuthError("invalid-token", "this link is invalid or has expired", 400)
+    conn.execute("UPDATE email_tokens SET used_at = ? WHERE token_hash = ?",
+                 (_now().isoformat(), _digest(token)))
+    return row["user_id"]
+
+
+def _send_verification(conn, user_id: str, email: str) -> None:
+    token = _issue_email_token(conn, user_id, "verify", timedelta(hours=24))
+    subject, text = mailer.verification_message(
+        f"{mailer.public_url()}/?verify={token}")
+    mailer.send(email, subject, text)
+
+
 def register(email: object, password: object, client_ip: str = "") -> AuthContext:
+    """Create an unverified account and email a confirmation link.
+
+    No session is issued here; the account signs in after confirming. If the
+    email cannot be sent, the account is removed so the user can retry.
+    """
     email_n = normalize_email(email)
     password_s = _check_password(password)
     ip_key = f"register:{client_ip}"
@@ -238,18 +314,25 @@ def register(email: object, password: object, client_ip: str = "") -> AuthContex
                         "too many sign-ups from this network; try again later", 429)
     _record_failure([ip_key])
     conn = _conn()
+    user_id = uuid.uuid4().hex
     try:
         exists = conn.execute("SELECT 1 FROM users WHERE email = ?",
                               (email_n,)).fetchone()
         if exists:
             raise AuthError("email-taken",
                             "an account with this email already exists", 409)
-        user_id = uuid.uuid4().hex
         conn.execute(
-            "INSERT INTO users (id, email, password_hash, created_at)"
-            " VALUES (?, ?, ?, ?)",
+            "INSERT INTO users (id, email, password_hash, created_at,"
+            " email_verified_at) VALUES (?, ?, ?, ?, NULL)",
             (user_id, email_n, hash_password(password_s), _now().isoformat()))
         conn.commit()
+        try:
+            _send_verification(conn, user_id, email_n)
+            conn.commit()
+        except mailer.MailError as exc:
+            conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            conn.commit()
+            raise AuthError("mail-unavailable", str(exc), 503) from None
     finally:
         conn.close()
     return AuthContext(user_id=user_id, email=email_n,
@@ -269,26 +352,106 @@ def login(email: object, password: object, client_ip: str) -> tuple[str, AuthCon
                         "too many failed logins; wait 15 minutes", 429)
     conn = _conn()
     try:
-        row = conn.execute("SELECT id, email, password_hash FROM users"
-                           " WHERE email = ?", (email_n,)).fetchone()
+        row = conn.execute("SELECT id, email, password_hash, email_verified_at"
+                           " FROM users WHERE email = ?", (email_n,)).fetchone()
         stored = row["password_hash"] if row else _DUMMY_HASH
         ok = verify_password(password, stored)
         if row is None or not ok:
             _record_failure(keys)
             raise AuthError("invalid-credentials",
                             "email or password is incorrect", 401)
-        token = os.urandom(32).hex()
-        now = _now()
-        conn.execute(
-            "INSERT INTO sessions (token_hash, user_id, created_at, expires_at)"
-            " VALUES (?, ?, ?, ?)",
-            (_digest(token), row["id"], now.isoformat(),
-             (now + timedelta(days=SESSION_DAYS)).isoformat()))
+        if row["email_verified_at"] is None:
+            raise AuthError("email-not-verified",
+                            "confirm your email first; we sent a link to your inbox", 403)
+        token = _open_session(conn, row["id"])
         conn.commit()
     finally:
         conn.close()
     return token, AuthContext(user_id=row["id"], email=row["email"],
                               is_admin=_is_admin(row["email"]))
+
+
+def verify_email(token: object) -> tuple[str, AuthContext]:
+    """Confirm the address from an emailed link, then sign the user in."""
+    conn = _conn()
+    try:
+        user_id = _take_email_token(conn, token, "verify")
+        conn.execute("UPDATE users SET email_verified_at = ?"
+                     " WHERE id = ? AND email_verified_at IS NULL",
+                     (_now().isoformat(), user_id))
+        row = conn.execute("SELECT id, email FROM users WHERE id = ?",
+                           (user_id,)).fetchone()
+        session = _open_session(conn, user_id)
+        conn.commit()
+    finally:
+        conn.close()
+    return session, AuthContext(user_id=row["id"], email=row["email"],
+                                is_admin=_is_admin(row["email"]))
+
+
+def resend_verification(email: object, client_ip: str = "") -> None:
+    """Send a fresh confirmation link if the account is still unverified.
+
+    Always returns normally, so the reply never reveals whether an account exists.
+    """
+    email_n = normalize_email(email)
+    keys = [f"mail:{email_n}", f"mailip:{client_ip}"]
+    if _throttled(keys, MAIL_MAX, MAIL_WINDOW_S):
+        return
+    _record_failure(keys)
+    conn = _conn()
+    try:
+        row = conn.execute("SELECT id, email, email_verified_at FROM users"
+                           " WHERE email = ?", (email_n,)).fetchone()
+        if row is not None and row["email_verified_at"] is None:
+            try:
+                _send_verification(conn, row["id"], row["email"])
+                conn.commit()
+            except mailer.MailError:
+                conn.rollback()
+    finally:
+        conn.close()
+
+
+def request_password_reset(email: object, client_ip: str = "") -> None:
+    """Email a one-hour reset link if the account exists. Same reply either way."""
+    email_n = normalize_email(email)
+    keys = [f"mail:{email_n}", f"mailip:{client_ip}"]
+    if _throttled(keys, MAIL_MAX, MAIL_WINDOW_S):
+        return
+    _record_failure(keys)
+    conn = _conn()
+    try:
+        row = conn.execute("SELECT id, email FROM users WHERE email = ?",
+                           (email_n,)).fetchone()
+        if row is not None:
+            token = _issue_email_token(conn, row["id"], "reset", timedelta(hours=1))
+            subject, text = mailer.reset_message(
+                f"{mailer.public_url()}/?reset={token}")
+            try:
+                mailer.send(row["email"], subject, text)
+                conn.commit()
+            except mailer.MailError:
+                conn.rollback()
+    finally:
+        conn.close()
+
+
+def reset_password(token: object, password: object) -> None:
+    """Set a new password from a reset link and revoke every existing session."""
+    password_s = _check_password(password)
+    conn = _conn()
+    try:
+        user_id = _take_email_token(conn, token, "reset")
+        # A reset link proves the inbox, so it also verifies the address.
+        conn.execute("UPDATE users SET password_hash = ?,"
+                     " email_verified_at = COALESCE(email_verified_at, ?)"
+                     " WHERE id = ?",
+                     (hash_password(password_s), _now().isoformat(), user_id))
+        conn.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def _digest(token: str) -> str:

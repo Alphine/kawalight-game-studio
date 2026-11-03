@@ -177,8 +177,9 @@ CORE_ROUTES = [
 
 # Routes anyone may call. Everything else needs a session when auth is enforced.
 PUBLIC_HANDLERS = {
-    health, routes_auth.register, routes_auth.login, routes_auth.logout,
-    routes_auth.me,
+    health, routes_auth.register, routes_auth.login, routes_auth.verify,
+    routes_auth.resend_verification, routes_auth.forgot_password,
+    routes_auth.reset_password, routes_auth.logout, routes_auth.me,
 }
 
 # Routes that touch shared state or read server-side paths: admin only.
