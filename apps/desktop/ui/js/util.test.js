@@ -179,14 +179,18 @@ describe('buildPreviewPage', () => {
       const html = U.buildPreviewPage(cfg, 'Demo ' + genre);
       assert.ok(html.includes('<!doctype html>'), genre);
       assert.ok(html.includes('<canvas id="cv">'), genre);
-      assert.ok(html.includes('kgsm-game'), genre);
-      assert.ok(html.includes('kgsm-shell'), genre);
-      assert.ok(html.includes('run') && html.includes('pause') && html.includes('restart'), genre);
-      // Config values are embedded so the schematic draws real data.
+      // Drawing code is an external file (CSP forbids inline scripts).
+      assert.ok(html.includes('<script src="js/schematic-runtime.js">'), genre);
+      assert.equal(html.includes('<script>'), false, genre + ' no inline script');
+      // Config values are embedded as JSON so the schematic draws real data.
       assert.ok(html.includes('"' + cfg.world.width + '"') || html.includes(':' + cfg.world.width),
         genre + ' world width embedded');
-      // Exactly one script close: no breakout possible.
-      assert.equal(html.split('</scr' + 'ipt>').length - 1, 1, genre);
+      // Two script closes: the data block and the runtime tag. No breakout.
+      assert.equal(html.split('</scr' + 'ipt>').length - 1, 2, genre);
+
+      const runtime = fs.readFileSync(path.join(__dirname, 'schematic-runtime.js'), 'utf-8');
+      assert.ok(runtime.includes('kgsm-game') && runtime.includes('kgsm-shell'), genre);
+      assert.ok(runtime.includes('run') && runtime.includes('pause') && runtime.includes('restart'), genre);
     }
   });
 
