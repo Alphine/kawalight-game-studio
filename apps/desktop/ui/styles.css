@@ -40,18 +40,18 @@
 
 html:not(.dark) {
   color-scheme: light;
-  --bg: #f8fafc;
-  --bg-glow-a: rgba(2, 132, 199, 0.08);
-  --bg-glow-b: rgba(79, 70, 229, 0.05);
-  --panel: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(241, 245, 249, 0.9) 100%);
+  --bg: #eef4ff;
+  --bg-glow-a: rgba(14, 165, 233, 0.22);
+  --bg-glow-b: rgba(124, 58, 237, 0.16);
+  --panel: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(246, 249, 255, 0.95) 100%);
   --panel-solid: #ffffff;
-  --card: #f1f5f9;
+  --card: #e6eefc;
   --inset: #ffffff;
-  --border: rgba(203, 213, 225, 0.8);
-  --border-strong: #cbd5e1;
-  --text: #334155;
-  --heading: #0f172a;
-  --muted: #64748b;
+  --border: rgba(148, 163, 184, 0.45);
+  --border-strong: #94a3b8;
+  --text: #1e293b;
+  --heading: #0b1220;
+  --muted: #475569;
   --accent: #0284c7;
   --accent-strong: #0369a1;
   --accent-soft: rgba(2, 132, 199, 0.1);
@@ -67,8 +67,8 @@ html:not(.dark) {
   --amber-bg: #fef3c7;
   --code-ink: #0369a1;
   --code-bg: rgba(2, 132, 199, 0.1);
-  --shadow: 0 10px 25px -5px rgba(148, 163, 184, 0.25);
-  --chrome-bg: rgba(255, 255, 255, 0.8);
+  --shadow: 0 14px 34px -10px rgba(30, 41, 99, 0.22);
+  --chrome-bg: rgba(255, 255, 255, 0.9);
 }
 
 /* ---------- Base ---------- */
@@ -98,14 +98,14 @@ body {
 }
 html:not(.dark) .bg-fx {
   background-image:
-    linear-gradient(180deg, rgba(248, 250, 252, 0.85), rgba(248, 250, 252, 0.95)),
+    linear-gradient(180deg, rgba(238, 244, 255, 0.55), rgba(238, 244, 255, 0.8)),
     url("img/backdrop-light.webp");
   background-size: cover;
   background-position: center top;
 }
 html:not(.dark) .hero {
   background:
-    linear-gradient(90deg, rgba(248, 250, 252, 0.96) 0%, rgba(248, 250, 252, 0.78) 55%, rgba(248, 250, 252, 0.5) 100%),
+    linear-gradient(90deg, rgba(238, 244, 255, 0.92) 0%, rgba(238, 244, 255, 0.6) 55%, rgba(238, 244, 255, 0.2) 100%),
     url("img/backdrop-light.webp") center / cover,
     var(--panel);
 }
@@ -151,8 +151,8 @@ html.dark .glass-panel-glow {
   box-shadow: 0 0 25px rgba(56, 189, 248, 0.1), inset 0 0 15px rgba(56, 189, 248, 0.05);
 }
 html:not(.dark) .glass-panel-glow {
-  border: 1px solid rgba(2, 132, 199, 0.4);
-  box-shadow: 0 0 25px rgba(2, 132, 199, 0.15), inset 0 0 15px rgba(2, 132, 199, 0.05);
+  border: 1px solid rgba(2, 132, 199, 0.5);
+  box-shadow: 0 10px 30px -8px rgba(2, 132, 199, 0.28), inset 0 0 15px rgba(2, 132, 199, 0.06);
 }
 
 /* ---------- Header ---------- */

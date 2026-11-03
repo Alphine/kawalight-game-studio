@@ -13,6 +13,9 @@
   --mint: #34d399;
   --ok: #5fe3b0;
   --err: #ff8c8c;
+  --kgsm-grad: linear-gradient(90deg, #c084fc, #f0abfc 45%, #67e8f9);
+  --accent-grad: linear-gradient(90deg, #67e8f9, #a5b4fc);
+  --card-shadow: none;
   --grad: linear-gradient(90deg, var(--violet), var(--magenta));
   --radius: 16px;
   /* Scenery and surfaces that differ by theme. */
@@ -43,8 +46,11 @@
     --line: rgba(90, 80, 200, 0.2);
     --ok: #0b7a55;
     --err: #b3261e;
-    --scene-hero: linear-gradient(180deg, rgba(245, 243, 255, .55), rgba(245, 243, 255, .45) 50%, rgba(245, 243, 255, .8)),
-      linear-gradient(90deg, rgba(245, 243, 255, .85) 0%, rgba(245, 243, 255, .4) 55%, rgba(245, 243, 255, .15) 100%),
+    --kgsm-grad: linear-gradient(90deg, #6d28d9, #be185d 55%, #0e7490);
+    --accent-grad: linear-gradient(90deg, #6d28d9, #0e7490);
+    --card-shadow: 0 14px 36px rgba(109, 40, 217, .14);
+    --scene-hero: linear-gradient(180deg, rgba(245, 243, 255, .05), rgba(245, 243, 255, .02) 50%, rgba(245, 243, 255, .35)),
+      linear-gradient(90deg, rgba(245, 243, 255, .92) 0%, rgba(245, 243, 255, .5) 40%, rgba(245, 243, 255, 0) 75%),
       url("img/world-light.webp") center top / cover no-repeat;
     --scene-genres: linear-gradient(180deg, rgba(245, 243, 255, .72), rgba(245, 243, 255, .94)), url("img/backdrop-light.webp") center / cover;
     --scene-stage: linear-gradient(rgba(255, 255, 255, .72), rgba(255, 255, 255, .8)), url("img/backdrop-light.webp") center / cover;
@@ -68,8 +74,11 @@
   --line: rgba(90, 80, 200, 0.2);
   --ok: #0b7a55;
   --err: #b3261e;
-  --scene-hero: linear-gradient(180deg, rgba(245, 243, 255, .55), rgba(245, 243, 255, .45) 50%, rgba(245, 243, 255, .8)),
-    linear-gradient(90deg, rgba(245, 243, 255, .85) 0%, rgba(245, 243, 255, .4) 55%, rgba(245, 243, 255, .15) 100%),
+  --kgsm-grad: linear-gradient(90deg, #6d28d9, #be185d 55%, #0e7490);
+  --accent-grad: linear-gradient(90deg, #6d28d9, #0e7490);
+  --card-shadow: 0 14px 36px rgba(109, 40, 217, .14);
+  --scene-hero: linear-gradient(180deg, rgba(245, 243, 255, .05), rgba(245, 243, 255, .02) 50%, rgba(245, 243, 255, .35)),
+    linear-gradient(90deg, rgba(245, 243, 255, .92) 0%, rgba(245, 243, 255, .5) 40%, rgba(245, 243, 255, 0) 75%),
     url("img/world-light.webp") center top / cover no-repeat;
   --scene-genres: linear-gradient(180deg, rgba(245, 243, 255, .72), rgba(245, 243, 255, .94)), url("img/backdrop-light.webp") center / cover;
   --scene-stage: linear-gradient(rgba(255, 255, 255, .72), rgba(255, 255, 255, .8)), url("img/backdrop-light.webp") center / cover;
@@ -184,13 +193,13 @@ main { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 .hero h1 { margin: 0 0 14px; }
 .kgsm {
   display: block; font-size: clamp(3.6rem, 9vw, 6.2rem); font-weight: 900; letter-spacing: -0.03em; line-height: .95;
-  background: linear-gradient(90deg, #c084fc, #f0abfc 45%, #67e8f9);
+  background: var(--kgsm-grad);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .full { display: block; font-size: clamp(1.35rem, 2.6vw, 1.9rem); font-weight: 700; }
 .tagline { font-size: clamp(1.15rem, 2.2vw, 1.45rem); font-weight: 600; margin-bottom: 10px; }
 .accent {
-  background: linear-gradient(90deg, #67e8f9, #a5b4fc);
+  background: var(--accent-grad);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .lead { color: var(--muted); max-width: 56ch; font-size: 1.02rem; }
@@ -251,6 +260,7 @@ section { padding: 56px 0; }
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px;
 }
 .step {
+  box-shadow: var(--card-shadow);
   position: relative; background: var(--panel); border: 1px solid var(--line);
   border-radius: var(--radius); padding: 22px 18px; backdrop-filter: blur(8px);
 }
@@ -272,6 +282,7 @@ section { padding: 56px 0; }
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 26px;
 }
 .genre {
+  box-shadow: var(--card-shadow);
   border-radius: var(--radius); padding: 18px 16px; min-height: 270px;
   border: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; justify-content: flex-end;
   position: relative; overflow: hidden; transition: transform .2s ease, border-color .2s ease;
@@ -296,6 +307,7 @@ section { padding: 56px 0; }
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 26px;
 }
 .feature {
+  box-shadow: var(--card-shadow);
   background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px;
 }
 .feature p { color: var(--muted); margin: 0; }
